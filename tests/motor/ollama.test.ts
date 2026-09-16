@@ -59,40 +59,47 @@ describe("llm/ollama", () => {
     expect(duracionMs).toBeLessThan(1000);
   });
 
-  // BUG SERIO: la rama de reintento (`catch` de JSON.parse) hace
-  // `llamadasRealizadas++` y LUEGO llama a `triage(...)` recursivamente,
-  // pero esa llamada recursiva vuelve a incrementar el contador al tope de
-  // la función. Con una respuesta consistentemente mal formada (modelo con
-  // un formato roto, no un fallo puntual), esto NO reintenta "una vez": se
-  // llama a sí misma una y otra vez, consumiendo el contador de a 2 por
-  // vuelta, hasta chocar contra MAX_LLAMADAS=15. En este test, un solo
-  // candidato problemático gasta 8 de las 15 llamadas de IA de TODO el
-  // escaneo — puede dejar sin presupuesto a otros hallazgos legítimos que
-  // sí necesitaban triage. Ver PRUEBAS_RESULTADO.md.
-  it.fails("el reintento en JSON malformado debería consumir como máximo 2 llamadas (1 original + 1 reintento)", async () => {
+  it("el reintento en JSON malformado consume como máximo 2 llamadas (1 original + 1 reintento)", async () => {
+    const fetchMock = vi.fn(async () => new Response(
+      JSON.stringify({ message: { content: "{clasificacion: benigno, sin comillas}" } }),
+      { status: 200 },
+    ));
+    vi.stubGlobal("fetch", fetchMock);
+    const r = await triage("a.md", "regla", 1, "contenido");
+    expect(r).toBeNull();
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+  });
+
+  it("un solo candidato problemático nunca agota el presupuesto de 15 llamadas del escaneo", async () => {
+    // Antes (bug): una respuesta consistentemente mal formada consumía ~8
+    // llamadas por la recursión con doble incremento de contador. Ahora,
+    // cada candidato consume como máximo 2 (1 + 1 reintento).
     const fetchMock = vi.fn(async () => new Response(
       JSON.stringify({ message: { content: "{clasificacion: benigno, sin comillas}" } }),
       { status: 200 },
     ));
     vi.stubGlobal("fetch", fetchMock);
     await triage("a.md", "regla", 1, "contenido");
-    expect(fetchMock).toHaveBeenCalledTimes(2);
+    expect(fetchMock.mock.calls.length).toBeLessThanOrEqual(2);
   });
 
-  // BUG menor: si la respuesta del modelo no contiene NADA con forma de
-  // objeto ({...}), el código devuelve null directo (rama `else`) SIN
-  // reintentar — el reintento solo existe para el caso "había un {...} pero
-  // JSON.parse tiró". La especificación pide "reintenta una vez" para
-  // cualquier JSON inválido, sin distinguir estos dos casos. Un modelo que
-  // responde solo prosa (sin llaves) pierde la chance de reintento.
-  it.fails("respuesta sin ninguna forma de JSON también debería reintentar antes de rendirse", async () => {
+  it("respuesta sin ninguna forma de JSON también reintenta antes de rendirse", async () => {
     const fetchMock = vi.fn(async () => new Response(
       JSON.stringify({ message: { content: "no puedo ayudarte con eso" } }),
       { status: 200 },
     ));
     vi.stubGlobal("fetch", fetchMock);
-    await triage("a.md", "regla", 1, "contenido");
+    const r = await triage("a.md", "regla", 1, "contenido");
+    expect(r).toBeNull();
     expect(fetchMock).toHaveBeenCalledTimes(2);
+  });
+
+  it("un error de red/HTTP no se reintenta automáticamente (solo 1 llamada)", async () => {
+    const fetchMock = vi.fn(async () => new Response("", { status: 500 }));
+    vi.stubGlobal("fetch", fetchMock);
+    const r = await triage("a.md", "regla", 1, "contenido");
+    expect(r).toBeNull();
+    expect(fetchMock).toHaveBeenCalledTimes(1);
   });
 
   it("respuesta que no matchea el schema zod (AnalisisIA) → null", async () => {

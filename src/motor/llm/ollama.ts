@@ -41,16 +41,18 @@ export function resetContador(): void {
   llamadasRealizadas = 0;
 }
 
-export async function triage(
+type ResultadoIntento =
+  | { tipo: "ok"; valor: RespuestaTriage }
+  | { tipo: "parseo-invalido" } // respuesta sin JSON, JSON mal formado, o que no matchea el schema
+  | { tipo: "error" }; // fallo de red/HTTP/timeout — no se reintenta automáticamente
+
+async function unIntento(
   archivo: string,
   regla: string,
   linea: number | undefined,
   contenido: string,
   signal?: AbortSignal,
-): Promise<RespuestaTriage | null> {
-  if (llamadasRealizadas >= MAX_LLAMADAS) return null;
-  llamadasRealizadas++;
-
+): Promise<ResultadoIntento> {
   const prompt = `<contenido_no_confiable>
 ${contenido.slice(0, 8000)}
 </contenido_no_confiable>
@@ -99,38 +101,51 @@ Respondé SOLO con el JSON:
       signal: signal ?? AbortSignal.timeout(TIMEOUT_MS),
     });
 
-    if (!resp.ok) return null;
+    if (!resp.ok) return { tipo: "error" };
 
     const data = (await resp.json()) as any;
     const contenidoRespuesta = data?.message?.content ?? "";
 
-    // Intentar parsear JSON de la respuesta
+    // Buscar JSON en la respuesta (el modelo podría envolverlo en prosa)
+    const jsonMatch = contenidoRespuesta.match(/\{[\s\S]*\}/);
+    if (!jsonMatch) return { tipo: "parseo-invalido" };
+
     let parsed: any;
     try {
-      // Buscar JSON en la respuesta (el modelo podría envolverlo)
-      const jsonMatch = contenidoRespuesta.match(/\{[\s\S]*\}/);
-      if (jsonMatch) {
-        parsed = JSON.parse(jsonMatch[0]);
-      } else {
-        return null;
-      }
+      parsed = JSON.parse(jsonMatch[0]);
     } catch {
-      // Reintentar una vez
-      if (llamadasRealizadas < MAX_LLAMADAS) {
-        llamadasRealizadas++;
-        return triage(archivo, regla, linea, contenido, signal);
-      }
-      return null;
+      return { tipo: "parseo-invalido" };
     }
 
     const validacion = AnalisisIA.safeParse(parsed);
-    if (!validacion.success) return null;
+    if (!validacion.success) return { tipo: "parseo-invalido" };
 
-    return {
-      ...validacion.data,
-      explicacion: parsed.explicacion ?? "",
-    };
+    return { tipo: "ok", valor: { ...validacion.data, explicacion: parsed.explicacion ?? "" } };
   } catch {
-    return null;
+    return { tipo: "error" };
   }
+}
+
+export async function triage(
+  archivo: string,
+  regla: string,
+  linea: number | undefined,
+  contenido: string,
+  signal?: AbortSignal,
+): Promise<RespuestaTriage | null> {
+  // Un solo reintento real: si la respuesta no trae JSON válido, se prueba
+  // una vez más; un error de red/HTTP/timeout no se reintenta (evitaría
+  // duplicar una espera ya larga). Como mucho 2 llamadas HTTP por
+  // invocación — el contador global (MAX_LLAMADAS por escaneo) se
+  // incrementa una sola vez por llamada real, sin recursión.
+  for (let intento = 0; intento < 2; intento++) {
+    if (llamadasRealizadas >= MAX_LLAMADAS) return null;
+    llamadasRealizadas++;
+
+    const resultado = await unIntento(archivo, regla, linea, contenido, signal);
+    if (resultado.tipo === "ok") return resultado.valor;
+    if (resultado.tipo === "error") return null;
+    // "parseo-invalido": la próxima vuelta del for es el único reintento.
+  }
+  return null;
 }
