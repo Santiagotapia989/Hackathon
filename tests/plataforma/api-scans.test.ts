@@ -86,7 +86,7 @@ describe("POST /api/scans", () => {
     });
   }
 
-  it("body de más de 10KB → rechazado (no crea el scan)", async () => {
+  it("body de más de 10KB → rechazado (no crea el scan, y el error no filtra stack trace ni rutas internas)", async () => {
     const resp = await fetch(`${servidor.baseUrl}/api/scans`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -95,6 +95,10 @@ describe("POST /api/scans", () => {
     expect(resp.status).toBeGreaterThanOrEqual(400); // sí rechaza, ver bug de código abajo
     const body = await resp.json().catch(() => null);
     expect(body?.id).toBeUndefined();
+    // El error-handler solo expone err.message (no err.stack): confirmamos
+    // que no se filtra ninguna ruta del filesystem ni un stack trace.
+    const texto = JSON.stringify(body);
+    expect(texto).not.toMatch(/\/home\/|\/src\/|at Object|at async|node_modules/);
   });
 
   // BUG: el límite de 10KB de express.json({ limit: "10kb" }) SÍ rechaza el
