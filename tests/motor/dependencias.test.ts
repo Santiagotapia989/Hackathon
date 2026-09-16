@@ -40,6 +40,64 @@ describe("analyzer de dependencias", () => {
     expect(h?.evidencia).toContain("react");
   });
 
+  it("un paquete idéntico a uno popular nunca se marca (@types/node, @types/react)", async () => {
+    const a = archivo("package.json", JSON.stringify({
+      dependencies: { "@types/node": "^20.0.0", "@types/react": "^18.0.0" },
+    }));
+    const hallazgos = await analizarDependencias([a], { offline: true });
+    expect(hallazgos.find((f) => f.regla === "dep-typosquatting")).toBeUndefined();
+  });
+
+  it("pygame (nombre corto real) no se marca como typosquatting", async () => {
+    const a = archivo("requirements.txt", "pygame==2.5.0\n");
+    const hallazgos = await analizarDependencias([a], { offline: true });
+    expect(hallazgos.find((f) => f.regla === "dep-typosquatting")).toBeUndefined();
+  });
+
+  it("nombres de menos de 8 caracteres solo admiten distancia 1", async () => {
+    // "ret" está a distancia 2 de "react" — con la regla <8 ya no se marca
+    const a = archivo("package.json", JSON.stringify({
+      dependencies: { "ret": "^1.0.0" },
+    }));
+    const hallazgos = await analizarDependencias([a], { offline: true });
+    expect(hallazgos.find((f) => f.regla === "dep-typosquatting")).toBeUndefined();
+  });
+
+  it("nombres de 8+ caracteres sí admiten distancia 2", async () => {
+    // "reqeusts" está a distancia 2 de "requests"
+    const a = archivo("requirements.txt", "reqeusts==1.0.0\n");
+    const hallazgos = await analizarDependencias([a], { offline: true });
+    expect(hallazgos.find((f) => f.regla === "dep-typosquatting")).toBeDefined();
+  });
+
+  it("un paquete con más de 1 año en el registro no se marca como typosquatting", async () => {
+    vi.spyOn(cliente, "verificarNombre").mockResolvedValue({
+      nombre: "expres",
+      existe: true,
+      diasCreacion: 800,
+      descargasSemanales: 50000,
+    });
+    const a = archivo("package.json", JSON.stringify({
+      dependencies: { "expres": "^1.0.0" },
+    }));
+    const hallazgos = await analizarDependencias([a], { offline: false });
+    expect(hallazgos.find((f) => f.regla === "dep-typosquatting")).toBeUndefined();
+  });
+
+  it("un paquete joven con nombre similar sí se marca", async () => {
+    vi.spyOn(cliente, "verificarNombre").mockResolvedValue({
+      nombre: "expres",
+      existe: true,
+      diasCreacion: 10,
+      descargasSemanales: 3,
+    });
+    const a = archivo("package.json", JSON.stringify({
+      dependencies: { "expres": "^1.0.0" },
+    }));
+    const hallazgos = await analizarDependencias([a], { offline: false });
+    expect(hallazgos.find((f) => f.regla === "dep-typosquatting")).toBeDefined();
+  });
+
   it("offline: no consulta registro, existe = null, no reporta alucinado", async () => {
     const a = archivo("package.json", JSON.stringify({
       dependencies: { "paquete-inexistente-xyz-123": "^1.0.0" },

@@ -15,7 +15,7 @@ import { ejecutarPipeline } from "./pipeline.js";
 import { verificarNombre } from "./registro/cliente.js";
 import { verificarGitleaks } from "./analizadores/secretos.js";
 import { consultarEstado as consultarOllama } from "./llm/ollama.js";
-import { CONFUNDIBLES, TOP_NPM, TOP_PYPI, buscarTyposquatting } from "./analizadores/dependencias.js";
+import { CONFUNDIBLES, TOP_NPM, TOP_PYPI, buscarTyposquatting, ANTIGUEDAD_MINIMA_TYPOSQUAT_DIAS } from "./analizadores/dependencias.js";
 import { normalizarNombre } from "./util.js";
 
 // ─── Motor ──────────────────────────────────────────────────────────────────
@@ -40,7 +40,11 @@ export const motor: Motor = {
 
     const topList = ecosistema === "npm" ? TOP_NPM : TOP_PYPI;
     const confundible = CONFUNDIBLES[normalizarNombre(nombre)];
-    const typosquat = confundible ? null : buscarTyposquatting(nombre, topList);
+    // Un paquete con más de 1 año en el registro no es typosquatting.
+    const esAntiguo =
+      resultado.diasCreacion !== undefined &&
+      resultado.diasCreacion > ANTIGUEDAD_MINIMA_TYPOSQUAT_DIAS;
+    const typosquat = confundible || esAntiguo ? null : buscarTyposquatting(nombre, topList);
     const sugerencia: string | undefined = confundible?.sugerencia ?? typosquat ?? undefined;
 
     // Mismos chequeos que analizarDependencias (dep-paquete-alucinado,
