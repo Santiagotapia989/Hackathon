@@ -35,7 +35,7 @@ export function Header() {
   return (
     <div className="bg-noche">
       <div className="border-b border-tactico">
-        <div className="mx-auto flex h-8 w-full max-w-6xl items-center justify-between px-4">
+        <div className="w-full flex justify-between items-center px-6">
           <p className="font-mono text-[10px] uppercase tracking-[0.22em] text-texto-2">
             SISTEMA ADUANERO DE CONTROL PREVIO DE SOFTWARE · UNDEF / FIE
           </p>
@@ -50,9 +50,9 @@ export function Header() {
       </div>
 
       <header className="border-b border-tactico bg-panel/50 backdrop-blur">
-        <div className="mx-auto flex h-16 w-full max-w-6xl items-center justify-between px-4">
+        <div className="w-full flex justify-between items-center px-6">
           <NavLink to="/" className="flex items-center gap-3">
-            <img src="/logo.png" alt="Logo FIE" className="h-12 w-auto" />
+            <img src="/logo.png" alt="Logo FIE" className="h-12 w-12 rounded-full object-cover bg-white" />
             <span className="h-8 w-px bg-tactico" aria-hidden="true" />
             <span className="flex items-center gap-2.5">
               <EscudoAduana className="h-7 w-7 text-cian" />
