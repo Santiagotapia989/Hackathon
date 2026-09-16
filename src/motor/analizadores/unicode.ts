@@ -68,6 +68,12 @@ type CmdUnicode = {
 // ─── Contexto Unicode ───────────────────────────────────────────────────────
 
 const RE_IDEOGRAFO_CJK = /\p{Ideographic}/u;
+const RE_EMOJI = /\p{Emoji}/u;
+
+// Escrituras donde U+200C (ZWNJ) es un carácter legítimo y necesario:
+// arábiga/persa e índicas (conjuntos y semiformas consonánticas).
+const RE_ESCRITURA_CON_ZWNJ =
+  /[\p{Script=Arabic}\p{Script=Syriac}\p{Script=Thaana}\p{Script=Nko}\p{Script=Devanagari}\p{Script=Bengali}\p{Script=Gurmukhi}\p{Script=Gujarati}\p{Script=Oriya}\p{Script=Tamil}\p{Script=Telugu}\p{Script=Kannada}\p{Script=Malayalam}\p{Script=Sinhala}\p{Script=Myanmar}\p{Script=Khmer}\p{Script=Lao}\p{Script=Thai}]/u;
 
 function esSelectorVariacion(cp: number): boolean {
   return (cp >= 0xFE00 && cp <= 0xFE0F) || (cp >= 0xE0100 && cp <= 0xE01EF);
@@ -90,6 +96,19 @@ function codePointAntes(contenido: string, indice: number): number | undefined {
 
 function esIdeografoCJK(cp: number | undefined): boolean {
   return cp !== undefined && RE_IDEOGRAFO_CJK.test(String.fromCodePoint(cp));
+}
+
+function esDeEscrituraConZWNJ(cp: number | undefined): boolean {
+  return cp !== undefined && RE_ESCRITURA_CON_ZWNJ.test(String.fromCodePoint(cp));
+}
+
+/** El code point visible antes de `indice` es un emoji (salta un selector de presentación intermedio). */
+function emojiAntesDe(contenido: string, indice: number): boolean {
+  let anterior = codePointAntes(contenido, indice);
+  if (anterior !== undefined && esSelectorPresentacion(anterior)) {
+    anterior = codePointAntes(contenido, indice - 1); // FE0E/FE0F son BMP: 1 code unit
+  }
+  return anterior !== undefined && RE_EMOJI.test(String.fromCodePoint(anterior));
 }
 
 // ─── Detección ──────────────────────────────────────────────────────────────
@@ -130,6 +149,23 @@ function detectarInvisibles(contenido: string): CmdUnicode[] {
 
     // Zero-width: U+200B–U+200F, U+2060–U+2064
     if ((cp >= 0x200B && cp <= 0x200F) || (cp >= 0x2060 && cp <= 0x2064)) {
+      const inicio = i - (cp > 0xFFFF ? 2 : 1);
+      const siguiente = i < contenido.length ? contenido.codePointAt(i) : undefined;
+
+      // U+200C (ZWNJ) junto a caracteres de escrituras que lo usan
+      // (arábiga/persa, índicas) es legítimo: no se reporta.
+      if (cp === 0x200C) {
+        const anterior = codePointAntes(contenido, inicio);
+        if (esDeEscrituraConZWNJ(anterior) || esDeEscrituraConZWNJ(siguiente)) continue;
+      }
+
+      // U+200D (ZWJ) entre emojis forma secuencias legítimas (👨‍👩‍👧, ❤️‍🔥).
+      if (cp === 0x200D) {
+        const esEmoji = (c: number | undefined) =>
+          c !== undefined && RE_EMOJI.test(String.fromCodePoint(c));
+        if (emojiAntesDe(contenido, inicio) && esEmoji(siguiente)) continue;
+      }
+
       resultados.push({ cp, linea: lineaDeIndice(contenido, i), tipo: "unicode-ancho-cero", bloque: [cp] });
       continue;
     }

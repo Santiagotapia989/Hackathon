@@ -101,6 +101,49 @@ describe("analizador unicode", () => {
     expect(h).toBeUndefined();
   });
 
+  it("U+200C entre caracteres persas/arábigos es legítimo y no se reporta", () => {
+    // می‌بینی — "mibini" en persa con ZWNJ entre letras
+    const a = archivo("locales/fa.yml", "saludo: می\u200Cبینی");
+    const hallazgos = analizarArchivoUnicode(a);
+    const h = hallazgos.find((h) => h.regla === "unicode-ancho-cero");
+    expect(h).toBeUndefined();
+  });
+
+  it("U+200C entre caracteres devanagari es legítimo y no se reporta", () => {
+    const a = archivo("locales/hi.yml", "texto: क\u200Cष");
+    const hallazgos = analizarArchivoUnicode(a);
+    const h = hallazgos.find((h) => h.regla === "unicode-ancho-cero");
+    expect(h).toBeUndefined();
+  });
+
+  it("U+200C entre caracteres latinos sí se reporta", () => {
+    const a = archivo("src/foo.ts", "const x = a\u200Cb;");
+    const hallazgos = analizarArchivoUnicode(a);
+    const h = hallazgos.find((h) => h.regla === "unicode-ancho-cero");
+    expect(h).toBeDefined();
+  });
+
+  it("U+200D entre emojis es legítimo y no se reporta", () => {
+    const a = archivo("README.md", "Hecho con 👨\u200D👩\u200D👧 para todos.");
+    const hallazgos = analizarArchivoUnicode(a);
+    const h = hallazgos.find((h) => h.regla === "unicode-ancho-cero");
+    expect(h).toBeUndefined();
+  });
+
+  it("U+200D tras emoji+FE0F y antes de emoji tampoco se reporta", () => {
+    const a = archivo("README.md", "Corazón de fuego: ❤️\u200D🔥");
+    const hallazgos = analizarArchivoUnicode(a);
+    const h = hallazgos.find((h) => h.regla === "unicode-ancho-cero");
+    expect(h).toBeUndefined();
+  });
+
+  it("U+200D fuera de contexto emoji sí se reporta", () => {
+    const a = archivo("src/foo.ts", "const x = a\u200Db;");
+    const hallazgos = analizarArchivoUnicode(a);
+    const h = hallazgos.find((h) => h.regla === "unicode-ancho-cero");
+    expect(h).toBeDefined();
+  });
+
   it("ignora BOM al inicio", () => {
     const a = archivo("src/foo.ts", "\uFEFFconst x = 1;");
     const hallazgos = analizarArchivoUnicode(a);
