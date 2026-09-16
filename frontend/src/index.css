@@ -1,0 +1,242 @@
+@import "tailwindcss";
+
+@theme {
+  --color-noche: var(--noche);
+  --color-panel: var(--panel);
+  --color-tactico: var(--tactico);
+  --color-texto: var(--texto);
+  --color-texto-2: var(--texto-2);
+  --color-cian: var(--cian);
+  --color-ele: var(--ele);
+  --color-ambar: var(--ambar);
+  --color-emergencia: var(--emergencia);
+
+  --color-sello-liberado: var(--sello-liberado);
+  --color-sello-revisar: var(--sello-revisar);
+  --color-sello-retenido: var(--sello-retenido);
+
+  --font-sans: "Atkinson Hyperlegible", system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, monospace;
+}
+
+:root {
+  --noche: #0A1128;
+  --panel: #101F42;
+  --tactico: #243B6B;
+  --texto: #F1F5F9;
+  --texto-2: #94A3B8;
+  --cian: #3B82F6;
+  --ele: #2563EB;
+  --ambar: #F59E0B;
+  --emergencia: #EF4444;
+
+  --sello-liberado: #10B981;
+  --sello-revisar: #F59E0B;
+  --sello-retenido: #EF4444;
+
+  --gradient-color: rgba(37, 99, 235, 0.08);
+  --grid-color: rgba(37, 99, 235, 0.02);
+  --grid-color-dynamic: rgba(37, 99, 235, 0.03);
+}
+
+:root.light {
+  --noche: #F8FAFC;
+  --panel: #FFFFFF;
+  --tactico: #CBD5E1;
+  --texto: #0F172A;
+  --texto-2: #64748B;
+  --cian: #1E40AF;
+  --ele: #2563EB;
+  --ambar: #D97706;
+  --emergencia: #DC2626;
+
+  --sello-liberado: #16A34A;
+  --sello-revisar: #D97706;
+  --sello-retenido: #DC2626;
+
+  --gradient-color: rgba(30, 64, 175, 0.02);
+  --grid-color: rgba(30, 64, 175, 0.01);
+  --grid-color-dynamic: rgba(30, 64, 175, 0.01);
+}
+
+body {
+  margin: 0;
+  font-family: var(--font-sans);
+  background-color: var(--color-noche);
+  background-image:
+    radial-gradient(ellipse 90% 55% at 50% -12%, var(--gradient-color), transparent),
+    linear-gradient(var(--grid-color) 1px, transparent 1px),
+    linear-gradient(90deg, var(--grid-color) 1px, transparent 1px);
+  background-size: auto, 48px 48px, 48px 48px;
+  color: var(--color-texto);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+::selection {
+  background-color: var(--color-cian);
+  color: var(--color-noche);
+}
+
+:focus-visible {
+  outline: 2px solid var(--color-cian);
+  outline-offset: 2px;
+}
+
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+::-webkit-scrollbar-track {
+  background: var(--color-noche);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--color-tactico);
+  border: 2px solid var(--color-noche);
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-ele);
+}
+
+/* Grilla que se desplaza lentamente (overlay animado) */
+.grid-fondo {
+  background-image:
+    linear-gradient(var(--grid-color-dynamic) 1px, transparent 1px),
+    linear-gradient(90deg, var(--grid-color-dynamic) 1px, transparent 1px);
+  background-size: 42px 42px;
+  animation: grid-desplazamiento 28s linear infinite;
+}
+
+@keyframes grid-desplazamiento {
+  from {
+    background-position: 0 0, 0 0;
+  }
+  to {
+    background-position: 0 42px, 42px 0;
+  }
+}
+
+/* Panel táctico translúcido */
+.panel-cyber {
+  background-color: var(--color-panel);
+  border: 1px solid var(--color-tactico);
+}
+
+/* Barra de escaneo vertical tenue */
+.barra-escaneo {
+  position: relative;
+  overflow: hidden;
+}
+.barra-escaneo::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(
+    to bottom,
+    transparent 0%,
+    rgba(37, 99, 235, 0.04) 48%,
+    transparent 100%
+  );
+  animation: barrido-vertical 7s linear infinite;
+}
+
+@keyframes barrido-vertical {
+  0% {
+    transform: translateY(-100%);
+  }
+  100% {
+    transform: translateY(100%);
+  }
+}
+
+/* Brillo cian sutil */
+.brillo-cian {
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+.brillo-cian-borde {
+  border-color: var(--color-tactico);
+}
+
+/* Parpadeo de estado en vivo */
+.parpadeo {
+  animation: parpadeo 1.6s ease-in-out infinite;
+}
+@keyframes parpadeo {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.25;
+  }
+}
+
+/* Efecto de escritura (typing) */
+.efecto-tipeo {
+  display: inline-block;
+  max-width: 100%;
+  overflow: hidden;
+  white-space: nowrap;
+}
+
+/* Aparición escalonada (hero) */
+.aparecer {
+  opacity: 0;
+  animation: aparecer-arriba 0.5s ease-out forwards;
+}
+@keyframes aparecer-arriba {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* Estampado del veredicto al llegar (única animación automática) */
+.sello-entrada {
+  animation: estampado 0.5s cubic-bezier(0.2, 0.9, 0.3, 1.4) both;
+}
+@keyframes estampado {
+  0% {
+    transform: scale(1.32);
+    opacity: 0;
+  }
+  60% {
+    transform: scale(0.96);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+/* Esquinas biseladas estilo táctico */
+.clip-esquina {
+  /* removed clip-path polygon for a cleaner, modern institutional aesthetic with rounded corners */
+  border-radius: 6px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
