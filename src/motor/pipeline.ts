@@ -18,27 +18,26 @@ async function ejecutarEtapa<T>(
   nombre: Etapa["nombre"],
   emitir: (e: EventoMotor) => void,
   _signal: AbortSignal,
+  etapasAcumuladas: Etapa[],
   fn: () => Promise<T>,
 ): Promise<T> {
   emitir({ tipo: "etapa", etapa: { nombre, estado: "en_curso" } });
   const inicio = Date.now();
   try {
     const resultado = await fn();
-    emitir({
-      tipo: "etapa",
-      etapa: { nombre, estado: "lista", duracionMs: Date.now() - inicio },
-    });
+    const etapa: Etapa = { nombre, estado: "lista", duracionMs: Date.now() - inicio };
+    etapasAcumuladas.push(etapa);
+    emitir({ tipo: "etapa", etapa });
     return resultado;
   } catch (err) {
-    emitir({
-      tipo: "etapa",
-      etapa: {
-        nombre,
-        estado: "error",
-        duracionMs: Date.now() - inicio,
-        error: err instanceof Error ? err.message : String(err),
-      },
-    });
+    const etapa: Etapa = {
+      nombre,
+      estado: "error",
+      duracionMs: Date.now() - inicio,
+      error: err instanceof Error ? err.message : String(err),
+    };
+    etapasAcumuladas.push(etapa);
+    emitir({ tipo: "etapa", etapa });
     throw err;
   }
 }
@@ -55,7 +54,7 @@ export async function ejecutarPipeline(
   resetContador();
 
   // ── Ingesta (recorrer directorio) ────────────────────────────────────
-  const recorrido = await ejecutarEtapa("ingesta" as any, emitir, ctx.signal, async () => {
+  const recorrido = await ejecutarEtapa("ingesta" as any, emitir, ctx.signal, allEtapas, async () => {
     return recorrerDirectorio(dir);
   });
 
@@ -96,19 +95,19 @@ export async function ejecutarPipeline(
   }
 
   // ── Unicode ──────────────────────────────────────────────────────────
-  const unicodeHallazgos = await ejecutarEtapa("unicode", emitir, ctx.signal, async () => {
+  const unicodeHallazgos = await ejecutarEtapa("unicode", emitir, ctx.signal, allEtapas, async () => {
     return analizarUnicode(recorrido.archivos);
   });
   for (const h of unicodeHallazgos) agregarHallazgo(h);
 
   // ── Instrucciones ────────────────────────────────────────────────────
-  const instruccionesHallazgos = await ejecutarEtapa("instrucciones", emitir, ctx.signal, async () => {
+  const instruccionesHallazgos = await ejecutarEtapa("instrucciones", emitir, ctx.signal, allEtapas, async () => {
     return analizarInstrucciones(recorrido.archivos);
   });
   for (const h of instruccionesHallazgos) agregarHallazgo(h);
 
   // ── Dependencias ─────────────────────────────────────────────────────
-  const dependenciasHallazgos = await ejecutarEtapa("dependencias", emitir, ctx.signal, async () => {
+  const dependenciasHallazgos = await ejecutarEtapa("dependencias", emitir, ctx.signal, allEtapas, async () => {
     return analizarDependencias(recorrido.archivos, {
       offline: ctx.offline,
       signal: ctx.signal,
@@ -117,18 +116,23 @@ export async function ejecutarPipeline(
   for (const h of dependenciasHallazgos) agregarHallazgo(h);
 
   // ── Secretos ─────────────────────────────────────────────────────────
-  const secretosHallazgos = await ejecutarEtapa("secretos", emitir, ctx.signal, async () => {
+  // Si gitleaks no está disponible (o falla), analizarSecretos() ahora deja
+  // el error propagar: ejecutarEtapa ya marcó la etapa "secretos" en error
+  // (y quedó en allEtapas) antes de este catch — scoring.ts fuerza al menos
+  // "revisar" por esa etapa en error. El escaneo sigue igual, sin abortar
+  // el resto del pipeline, con [] hallazgos de este módulo.
+  const secretosHallazgos = await ejecutarEtapa("secretos", emitir, ctx.signal, allEtapas, async () => {
     return analizarSecretos(dir, {
       tieneHistorialGit: ctx.tieneHistorialGit,
       offline: ctx.offline,
       signal: ctx.signal,
     });
-  });
+  }).catch(() => []);
   for (const h of secretosHallazgos) agregarHallazgo(h);
 
   // ── Triage con IA ────────────────────────────────────────────────────
   const candidatos = allHallazgos.filter((h) => !h.determinista);
-  const triageResult = await ejecutarEtapa("triage_ia", emitir, ctx.signal, async () => {
+  const triageResult = await ejecutarEtapa("triage_ia", emitir, ctx.signal, allEtapas, async () => {
     const resultados: { hallazgoId: string; resultado: NonNullable<ReturnType<typeof triage> extends Promise<infer R> ? R : never> }[] = [];
 
     if (candidatos.length === 0) return resultados;

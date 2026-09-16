@@ -180,7 +180,12 @@ export async function analizarSecretos(
 ): Promise<Finding[]> {
   const runner = opts.runner ?? crearGitleaksRunner();
 
-  try {
+  // No atrapamos errores de runner.ejecutar() acá: si gitleaks no está
+  // disponible o falla, dejamos que la excepción suba. pipeline.ts la
+  // captura, marca la etapa "secretos" en error, y scoring.ts fuerza que
+  // el veredicto sea como mínimo "revisar" — "gitleaks ausente" nunca debe
+  // ser indistinguible de "no se encontraron secretos".
+  {
     const { reporte } = await runner.ejecutar(
       dir,
       opts.tieneHistorialGit,
@@ -224,9 +229,6 @@ export async function analizarSecretos(
     }
 
     return hallazgos;
-  } catch (err) {
-    // Error de ejecución de gitleaks (no encontrado, timeout, etc.)
-    return [];
   }
 }
 
