@@ -9,6 +9,7 @@
   },
   "scripts": {
     "build": "tsc -p tsconfig.json",
+    "prepare": "npm run build",
     "server": "tsx watch src/plataforma/server.ts",
     "server:stub": "cross-env ADUANA_MOTOR=stub tsx watch src/plataforma/server.ts",
     "mcp": "tsx src/plataforma/mcp.ts",
