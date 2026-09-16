@@ -37,27 +37,34 @@ export async function clonarRepo(
   return { bytes };
 }
 
+/**
+ * Args del git clone de ingesta. `credential.helper=` vacío anula cualquier
+ * helper configurado (global, system o por env): solo se pueden clonar repos
+ * públicos — un repo privado falla aunque haya credenciales guardadas.
+ */
+export function argsGitClone(url: string, destino: string): string[] {
+  return [
+    "-c",
+    "core.symlinks=false",
+    "-c",
+    "protocol.file.allow=never",
+    "-c",
+    "credential.helper=",
+    "clone",
+    "--no-recurse-submodules",
+    "--",
+    url,
+    destino,
+  ];
+}
+
 async function ejecutarGitClone(url: string, destino: string, signal?: AbortSignal): Promise<void> {
   try {
-    await execFileAsync(
-      "git",
-      [
-        "-c",
-        "core.symlinks=false",
-        "-c",
-        "protocol.file.allow=never",
-        "clone",
-        "--no-recurse-submodules",
-        "--",
-        url,
-        destino,
-      ],
-      {
-        timeout: LIMITES.timeoutCloneMs,
-        env: { ...process.env, GIT_TERMINAL_PROMPT: "0" },
-        signal,
-      },
-    );
+    await execFileAsync("git", argsGitClone(url, destino), {
+      timeout: LIMITES.timeoutCloneMs,
+      env: { ...process.env, GIT_TERMINAL_PROMPT: "0" },
+      signal,
+    });
   } catch (err) {
     const mensaje = err instanceof Error ? err.message : String(err);
     throw new ClonadoFallidoError(`No se pudo clonar el repositorio: ${mensaje}`);
