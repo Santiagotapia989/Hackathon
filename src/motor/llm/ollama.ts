@@ -46,6 +46,20 @@ type ResultadoIntento =
   | { tipo: "parseo-invalido" } // respuesta sin JSON, JSON mal formado, o que no matchea el schema
   | { tipo: "error" }; // fallo de red/HTTP/timeout — no se reintenta automáticamente
 
+// Neutraliza cualquier <contenido_no_confiable> o </contenido_no_confiable>
+// que venga DENTRO del contenido analizado, sin importar mayúsculas/
+// minúsculas ni espacios (o guiones bajos) internos entre "contenido",
+// "no" y "confiable" — ej. "< / Contenido_No_Confiable >" también matchea.
+// Sin esto, un archivo malicioso podría incluir una etiqueta de cierre
+// falsa e intentar hacerle creer al modelo que el bloque de datos no
+// confiables terminó antes, colando texto como si fuera una instrucción
+// nuestra en vez de contenido a analizar.
+const RE_DELIMITADOR_TRIAGE = /<\s*(\/)?\s*contenido[\s_]*no[\s_]*confiable\s*>/gi;
+
+function neutralizarDelimitadorTriage(texto: string): string {
+  return texto.replace(RE_DELIMITADOR_TRIAGE, (_m, barra) => `[TAG-NEUTRALIZADO${barra ? "-CIERRE" : "-APERTURA"}]`);
+}
+
 async function unIntento(
   archivo: string,
   regla: string,
@@ -53,8 +67,9 @@ async function unIntento(
   contenido: string,
   signal?: AbortSignal,
 ): Promise<ResultadoIntento> {
+  const contenidoSeguro = neutralizarDelimitadorTriage(contenido.slice(0, 8000));
   const prompt = `<contenido_no_confiable>
-${contenido.slice(0, 8000)}
+${contenidoSeguro}
 </contenido_no_confiable>
 
 Archivo: ${archivo}
