@@ -59,9 +59,15 @@ export async function ejecutarPipeline(
     return recorrerDirectorio(dir);
   });
 
+  // Helper: agrega un hallazgo al acumulado y lo emite de inmediato (SSE + persistencia en B).
+  const agregarHallazgo = (hallazgo: Finding): void => {
+    allHallazgos.push(hallazgo);
+    emitir({ tipo: "hallazgo", hallazgo });
+  };
+
   // Agregar hallazgo de recorrido parcial
   if (recorrido.parcial) {
-    allHallazgos.push({
+    agregarHallazgo({
       id: "recorrido-parcial",
       modulo: "instrucciones",
       regla: "recorrido-parcial",
@@ -76,7 +82,7 @@ export async function ejecutarPipeline(
 
   // Agregar hallazgos de desvíos de symlinks
   for (const desvio of recorrido.desvios) {
-    allHallazgos.push({
+    agregarHallazgo({
       id: `desvio:${desvio.ruta}`,
       modulo: "instrucciones",
       regla: "symlink-fuera-de-raiz",
@@ -93,13 +99,13 @@ export async function ejecutarPipeline(
   const unicodeHallazgos = await ejecutarEtapa("unicode", emitir, ctx.signal, async () => {
     return analizarUnicode(recorrido.archivos);
   });
-  allHallazgos.push(...unicodeHallazgos);
+  for (const h of unicodeHallazgos) agregarHallazgo(h);
 
   // ── Instrucciones ────────────────────────────────────────────────────
   const instruccionesHallazgos = await ejecutarEtapa("instrucciones", emitir, ctx.signal, async () => {
     return analizarInstrucciones(recorrido.archivos);
   });
-  allHallazgos.push(...instruccionesHallazgos);
+  for (const h of instruccionesHallazgos) agregarHallazgo(h);
 
   // ── Dependencias ─────────────────────────────────────────────────────
   const dependenciasHallazgos = await ejecutarEtapa("dependencias", emitir, ctx.signal, async () => {
@@ -108,7 +114,7 @@ export async function ejecutarPipeline(
       signal: ctx.signal,
     });
   });
-  allHallazgos.push(...dependenciasHallazgos);
+  for (const h of dependenciasHallazgos) agregarHallazgo(h);
 
   // ── Secretos ─────────────────────────────────────────────────────────
   const secretosHallazgos = await ejecutarEtapa("secretos", emitir, ctx.signal, async () => {
@@ -118,7 +124,7 @@ export async function ejecutarPipeline(
       signal: ctx.signal,
     });
   });
-  allHallazgos.push(...secretosHallazgos);
+  for (const h of secretosHallazgos) agregarHallazgo(h);
 
   // ── Triage con IA ────────────────────────────────────────────────────
   const candidatos = allHallazgos.filter((h) => !h.determinista);
