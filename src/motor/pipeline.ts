@@ -7,6 +7,7 @@ import type { Finding, Etapa, ContextoAnalisis, ResultadoAnalisis, EventoMotor }
 import { recorrerDirectorio } from "./archivos.js";
 import { analizarUnicode } from "./analizadores/unicode.js";
 import { analizarInstrucciones } from "./analizadores/instrucciones.js";
+import { analizarSAST } from "./analizadores/sast.js";
 import { analizarDependencias } from "./analizadores/dependencias.js";
 import { analizarSecretos } from "./analizadores/secretos.js";
 import { triage, resetContador } from "./llm/ollama.js";
@@ -100,9 +101,11 @@ export async function ejecutarPipeline(
   });
   for (const h of unicodeHallazgos) agregarHallazgo(h);
 
-  // ── Instrucciones ────────────────────────────────────────────────────
+  // ── Instrucciones & SAST ─────────────────────────────────────────────
   const instruccionesHallazgos = await ejecutarEtapa("instrucciones", emitir, ctx.signal, allEtapas, async () => {
-    return analizarInstrucciones(recorrido.archivos);
+    const i = analizarInstrucciones(recorrido.archivos);
+    const s = analizarSAST(recorrido.archivos);
+    return [...i, ...s];
   });
   for (const h of instruccionesHallazgos) agregarHallazgo(h);
 

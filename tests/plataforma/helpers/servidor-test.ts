@@ -18,11 +18,13 @@ export type ServidorTest = {
 
 export async function levantarServidorTest(opts: { puerto: number; motor?: "stub" | "real"; offline?: boolean }): Promise<ServidorTest> {
   const baseUrl = `http://127.0.0.1:${opts.puerto}`;
+  const comandoNpx = process.platform === "win32" ? "npx.cmd" : "npx";
   const proceso = spawn(
-    "npx",
+    comandoNpx,
     ["tsx", "src/plataforma/server.ts"],
     {
       cwd: RAIZ,
+      shell: true,
       env: {
         ...process.env,
         ADUANA_PORT: String(opts.puerto),

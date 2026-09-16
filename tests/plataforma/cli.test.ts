@@ -19,8 +19,10 @@ afterAll(async () => {
 
 function correrCli(args: string[], env: Record<string, string> = {}, timeoutMs = 15_000): Promise<{ codigo: number | null; stdout: string; stderr: string }> {
   return new Promise((resolve) => {
-    const proceso = spawn("npx", ["tsx", "src/plataforma/cli.ts", ...args], {
+    const cmd = process.platform === "win32" ? "npx.cmd" : "npx";
+    const proceso = spawn(cmd, ["tsx", "src/plataforma/cli.ts", ...args], {
       cwd: RAIZ,
+      shell: true,
       env: { ...process.env, ADUANA_API_URL: servidor.baseUrl, ...env },
       stdio: ["ignore", "pipe", "pipe"],
     });

@@ -91,3 +91,43 @@ scansRouter.get("/scans/:id/events", (req, res) => {
   });
 });
 
+scansRouter.get("/scans/:id/reporte-defensa", (req, res) => {
+  const scan = db.obtenerScan(req.params.id);
+  if (!scan) {
+    res.status(404).json({ error: "Escaneo no encontrado." });
+    return;
+  }
+
+  const hallazgosCriticos = scan.hallazgos.filter((h) => h.severidad === "critica").length;
+  const hallazgosAltos = scan.hallazgos.filter((h) => h.severidad === "alta").length;
+
+  let nivelRiesgo = "BAJO";
+  if (scan.veredicto === "retenido" || hallazgosCriticos > 0) {
+    nivelRiesgo = "CRÍTICO";
+  } else if (scan.veredicto === "revisar" || hallazgosAltos > 0) {
+    nivelRiesgo = "ALTO";
+  }
+
+  const reporteDefensa = {
+    cumplimiento: {
+      marcosNormativos: ["NIST SP 800-30", "NIST SSDF", "ISO 27001", "ISO 31000"],
+      coberturaMitre: ["MITRE ATLAS AML.T0051 (Prompt Injection)", "MITRE ATLAS AML.T0010 (Supply Chain)", "MITRE ATLAS AML.T0043 (Adversarial SAST)"],
+      entornoDespliegue: "Local / Air-Gapped (Soberanía Tecnológica)",
+    },
+    auditoria: {
+      scanId: scan.id,
+      tipo: scan.tipo,
+      objetivo: scan.objetivo,
+      fechaCreacion: scan.creadoEn,
+      veredicto: scan.veredicto,
+      nivelRiesgo,
+      resumenSeveridad: scan.resumen?.porSeveridad ?? { critica: 0, alta: 0, media: 0, baja: 0 },
+      resumenModulo: scan.resumen?.porModulo ?? { instrucciones: 0, unicode: 0, dependencias: 0, secretos: 0 },
+      hallazgos: scan.hallazgos,
+    },
+  };
+
+  res.json(reporteDefensa);
+});
+
+

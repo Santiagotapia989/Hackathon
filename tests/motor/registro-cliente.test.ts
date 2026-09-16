@@ -108,4 +108,19 @@ describe("registro/cliente", () => {
       expect(["registry.npmjs.org", "api.npmjs.org"]).toContain(host);
     }
   });
+
+  it("mirror local: respeta ADUANA_NPM_MIRROR y permite consulta a host privado", async () => {
+    process.env.ADUANA_NPM_MIRROR = "https://nexus.red-militar.local/repository/npm/";
+    try {
+      const fetchMock = vi.fn(async (url: string) => {
+        expect(String(url)).toContain("nexus.red-militar.local");
+        return respuestaJson(200, {});
+      });
+      vi.stubGlobal("fetch", fetchMock);
+      const r = await verificarNombre("npm", "paquete-militar", { offline: false });
+      expect(r.existe).toBe(true);
+    } finally {
+      delete process.env.ADUANA_NPM_MIRROR;
+    }
+  });
 });

@@ -38,6 +38,7 @@ export async function clonarRepo(
 }
 
 async function ejecutarGitClone(url: string, destino: string, signal?: AbortSignal): Promise<void> {
+  const nullHooks = process.platform === "win32" ? "NUL" : "/dev/null";
   try {
     await execFileAsync(
       "git",
@@ -46,6 +47,10 @@ async function ejecutarGitClone(url: string, destino: string, signal?: AbortSign
         "core.symlinks=false",
         "-c",
         "protocol.file.allow=never",
+        "-c",
+        `core.hooksPath=${nullHooks}`,
+        "-c",
+        "core.filter=never",
         "clone",
         "--no-recurse-submodules",
         "--",
