@@ -11,6 +11,7 @@ const MAX_SIMULTANEAS = 5;
 
 const HOSTS_ALLOWLIST = new Set([
   "registry.npmjs.org",
+  "api.npmjs.org", // descargas semanales (verificarNpm)
   "registry.yarnpkg.com",
   "pypi.org",
   "pypi.python.org",
@@ -115,7 +116,17 @@ async function verificarNpm(
     try {
       const dlResp = await fetchSeguro(`https://api.npmjs.org/downloads/point/last-week/${encodeURIComponent(nombre)}`, signal);
       descargasSemanales = (dlResp.body as any)?.downloads;
-    } catch { /* ignoro si falla descargas */ }
+    } catch (err) {
+      // No es crítico para el resultado (existe/diasCreacion siguen
+      // devolviéndose igual), pero antes esto era un catch {} vacío que
+      // tragaba el error sin dejar rastro — incluido el caso real en que
+      // api.npmjs.org no estaba en la allowlist. Dejamos un log para poder
+      // diagnosticar si vuelve a fallar.
+      console.error(
+        `[registro] no se pudieron obtener las descargas semanales de "${nombre}":`,
+        err instanceof Error ? err.message : err,
+      );
+    }
 
     const entry: CacheEntry = { existe: true, datos: { diasCreacion, descargasSemanales } };
     cache.set(cacheKey, entry);

@@ -41,14 +41,7 @@ describe("registro/cliente", () => {
     expect(r.diasCreacion).toBe(5);
   });
 
-  // BUG: "api.npmjs.org" (endpoint de descargas semanales) NO está en
-  // HOSTS_ALLOWLIST (solo registry.npmjs.org, registry.yarnpkg.com y los
-  // 3 hosts de PyPI). fetchSeguro() tira "Host no permitido: api.npmjs.org",
-  // y verificarNpm() lo traga con un catch {} vacío ("ignoro si falla
-  // descargas"). Resultado: descargasSemanales queda undefined SIEMPRE en
-  // producción real online, y la regla "paquete con pocas descargas → media"
-  // nunca puede dispararse de verdad. Ver PRUEBAS_RESULTADO.md.
-  it.fails("online: paquete existente debería devolver descargasSemanales", async () => {
+  it("online: paquete existente devuelve descargasSemanales (api.npmjs.org ya está en la allowlist)", async () => {
     const fetchMock = vi.fn(async (url: string) => {
       if (String(url).includes("registry.npmjs.org")) return respuestaJson(200, {});
       if (String(url).includes("api.npmjs.org")) return respuestaJson(200, { downloads: 42 });
