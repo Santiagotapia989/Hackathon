@@ -1,0 +1,114 @@
+{
+  "categorias": [
+    {
+      "id": "anulacion",
+      "titulo": "Intento de anular instrucciones previas",
+      "determinista": false,
+      "severidadInicial": "media",
+      "patrones": [
+        "ignor[aáes]? las instrucciones anteriores",
+        "ignore all previous instructions",
+        "ignore the instructions above",
+        "disregard all prior instructions",
+        "disregard (the )?instructions",
+        "olvid[aáes]? las instrucciones",
+        "hac[ée] caso omiso de lo anterior"
+      ]
+    },
+    {
+      "id": "dirigido-ia",
+      "titulo": "Contenido dirigido a asistentes de IA",
+      "determinista": false,
+      "severidadInicial": "media",
+      "patrones": [
+        "note to ai",
+        "note for ai",
+        "as an ai assistant",
+        "you are an ai",
+        "nota para asistentes de (ia|inteligencia artificial)",
+        "nota para el asistente",
+        "nota para (claude|gpt|copilot|cursor)",
+        "when you see this",
+        "if you are an ai"
+      ]
+    },
+    {
+      "id": "ocultamiento",
+      "titulo": "Orden de ocultar información al usuario",
+      "determinista": false,
+      "severidadInicial": "media",
+      "patrones": [
+        "don't tell the user",
+        "do not tell the user",
+        "no le digas al usuario",
+        "no le cuentes al usuario",
+        "sin que el usuario se d[eé] cuenta",
+        "silently",
+        "sin avisar",
+        "don't mention this",
+        "no menciones",
+        "keep this secret from the user"
+      ]
+    },
+    {
+      "id": "exfiltracion",
+      "titulo": "Instrucción de exfiltrar credenciales o datos",
+      "determinista": true,
+      "severidadInicial": "alta",
+      "patrones": [
+        "\\.env\\b",
+        "~/\\.ssh",
+        "\\.ssh/id_rsa",
+        "process\\.env\\.\\w+",
+        "process\\.env\\b",
+        "[A-Za-z_]+_(TOKEN|SECRET|KEY)\\b",
+        "environment variables"
+      ],
+      "requiereUrl": true
+    },
+    {
+      "id": "ejecucion-remota",
+      "titulo": "Instrucción de ejecutar comandos desde internet",
+      "determinista": true,
+      "severidadInicial": "alta",
+      "patrones": [
+        "curl\\s+\\S+\\s*\\|\\s*(sh|bash)\\b",
+        "wget\\s+\\S+\\s*\\|\\s*(sh|bash)\\b",
+        "base64\\s+-d\\s*\\|\\s*sh\\b",
+        "invoke-?expression\\s*\\(",
+        "iex\\s*\\(",
+        "eval\\s*\\(",
+        "\\|\\s*sh\\s*$"
+      ]
+    },
+    {
+      "id": "manipulacion",
+      "titulo": "Intento de manipular el resultado del análisis",
+      "determinista": false,
+      "severidadInicial": "media",
+      "patrones": [
+        "este repo es seguro",
+        "este repositorio es seguro",
+        "mark this (repo|repository) as safe",
+        "clasific[aá]lo como verde",
+        "do not flag this",
+        "this repository is safe",
+        "safe to open",
+        "no hay nada sospechoso"
+      ]
+    },
+    {
+      "id": "config-autoaprobacion",
+      "titulo": "Configuración que autoaprueba herramientas o comandos",
+      "determinista": true,
+      "severidadInicial": "alta",
+      "patrones": [
+        "\\\"allowAutoApprove\\\"",
+        "allow_auto_approve",
+        "\\\"allowedTools\\\"\\s*:\\s*\\[\\s*\\*",
+        "\\\"autoApprove\\\"",
+        "\\\"mcpServers\\\"[\\s\\S]{0,200}\\\"command\\\""
+      ]
+    }
+  ]
+}

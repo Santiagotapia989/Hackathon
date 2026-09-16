@@ -1,0 +1,23 @@
+[
+  "AGENTS.md",
+  "CLAUDE.md",
+  "GEMINI.md",
+  "CODEOWNERS.md",
+  ".cursorrules",
+  ".windsurfrules",
+  ".clinerules",
+  ".mcp.json",
+  ".copilot-instructions.md",
+  ".github/copilot-instructions.md",
+  ".github/instructions/**",
+  ".cursor/rules/**",
+  ".claude/**",
+  ".vscode/**",
+  "README.md",
+  "README.txt",
+  "README",
+  "CONTRIBUTING.md",
+  "CONTRIBUTING",
+  "docs/**/*.md",
+  "*.md"
+]

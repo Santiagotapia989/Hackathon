@@ -1,0 +1,25 @@
+{
+  "name": "aduana-motor",
+  "private": true,
+  "version": "0.1.0",
+  "description": "Aduana - Motor de análisis (parte A)",
+  "type": "module",
+  "scripts": {
+    "motor": "node --experimental-strip-types scripts/analizar.ts",
+    "generar-fixtures": "node --experimental-strip-types scripts/generar-fixture.ts",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "zod": "^3.24.1"
+  },
+  "devDependencies": {
+    "@types/node": "^24.0.0",
+    "typescript": "^5.8.3",
+    "vitest": "^3.1.1"
+  },
+  "allowScripts": {
+    "esbuild@0.28.2": true
+  }
+}
