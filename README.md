@@ -4,6 +4,18 @@ Proyecto desarrollado en el marco del **Hackathon Nacional de Ciberdefensa**.
 
 Frontend de **Aduana**, una interfaz para inspeccionar repositorios y paquetes antes de que sean consumidos por un agente. Permite crear escaneos, seguir una inspección en curso, revisar el historial y visualizar el informe final.
 
+## Objetivo
+
+Brindar un punto de control previo y visual para evaluar el riesgo de incorporar código externo en flujos asistidos por agentes, facilitando la detección temprana de instrucciones ocultas, caracteres invisibles, dependencias sospechosas y secretos expuestos.
+
+## Alcance del sistema
+
+- La interfaz permite ingresar objetivos de inspección, consultar el estado del análisis, revisar hallazgos y presentar el informe final.
+- El frontend consume la API bajo `/api` para crear escaneos, obtener el historial, consultar un escaneo puntual y suscribirse a eventos de progreso.
+- El procesamiento, almacenamiento y ejecución de las reglas de análisis corresponden al backend/servicio de inspección.
+- El modo `VITE_USE_MOCKS=true` permite demostrar el flujo completo de la interfaz sin depender del backend.
+- El frontend no ejecuta el código inspeccionado: solo muestra evidencia, métricas y resultados devueltos por la capa de análisis.
+
 ## Funcionalidades
 
 - Creación de inspecciones a partir de una URL de repositorio o un paquete con prefijo `npm:` / `pypi:`.
