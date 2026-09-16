@@ -12,9 +12,9 @@ import confundibles from "../datos/confundibles.json" with { type: "json" };
 import topNpm from "../datos/top-npm.json" with { type: "json" };
 import topPypi from "../datos/top-pypi.json" with { type: "json" };
 
-const CONFUNDIBLES: Record<string, { sugerencia: string | null; descripcion: string }> = confundibles as any;
-const TOP_NPM: string[] = topNpm as unknown as string[];
-const TOP_PYPI: string[] = topPypi as unknown as string[];
+export const CONFUNDIBLES: Record<string, { sugerencia: string | null; descripcion: string }> = confundibles as any;
+export const TOP_NPM: string[] = topNpm as unknown as string[];
+export const TOP_PYPI: string[] = topPypi as unknown as string[];
 
 // ─── Scripts de instalación ─────────────────────────────────────────────────
 
@@ -24,7 +24,7 @@ const SCRIPTS_CON_URL = /https?:\/\//i;
 
 // ─── Typosquatting ─────────────────────────────────────────────────────────
 
-function buscarTyposquatting(
+export function buscarTyposquatting(
   nombre: string,
   topList: string[],
 ): string | null {

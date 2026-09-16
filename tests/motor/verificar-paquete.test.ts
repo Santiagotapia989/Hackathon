@@ -31,16 +31,7 @@ describe("motor.verificarPaquete — matriz", () => {
     expect(r.resultado).toBe("permitido");
   });
 
-  // ── Casos que la especificación pide y el código NO implementa ──────────
-  // motor.verificarPaquete() solo mira `existe`; nunca consulta CONFUNDIBLES
-  // ni buscarTyposquatting ni diasCreacion/descargasSemanales (esa lógica
-  // vive en analizarDependencias, no está reutilizada acá). `sugerencia`
-  // queda siempre undefined. Los tres tests de abajo documentan el
-  // comportamiento ACTUAL (roto) con it.fails: van a empezar a fallar solos
-  // el día que se implemente la matriz completa, lo cual es la señal de que
-  // hay que borrar el it.fails.
-
-  it.fails("confundible conocido y existente → debería dar requiere_confirmacion con sugerencia", async () => {
+  it("confundible conocido y existente → requiere_confirmacion con sugerencia", async () => {
     // "unused-imports" es confundible conocido (ver datos/confundibles.json).
     // Simulamos que SÍ existe publicado en el registro (peor caso: alguien
     // registró el nombre trampa de verdad).
@@ -52,7 +43,7 @@ describe("motor.verificarPaquete — matriz", () => {
     expect(r.sugerencia).toBe("eslint-plugin-unused-imports");
   });
 
-  it.fails("typosquatting de un paquete popular y existente → debería dar requiere_confirmacion con sugerencia", async () => {
+  it("typosquatting de un paquete popular y existente → requiere_confirmacion con sugerencia", async () => {
     // "expres" (typo de "express") publicado de verdad por un atacante.
     vi.spyOn(cliente, "verificarNombre").mockResolvedValue({
       nombre: "expres", existe: true, diasCreacion: 10, descargasSemanales: 3,
@@ -62,7 +53,7 @@ describe("motor.verificarPaquete — matriz", () => {
     expect(r.sugerencia).toBe("express");
   });
 
-  it.fails("paquete recién publicado (10 días, 3 descargas/semana) → debería dar requiere_confirmacion", async () => {
+  it("paquete recién publicado (10 días, 3 descargas/semana) → requiere_confirmacion", async () => {
     vi.spyOn(cliente, "verificarNombre").mockResolvedValue({
       nombre: "paquete-nuevo-random", existe: true, diasCreacion: 10, descargasSemanales: 3,
     });
