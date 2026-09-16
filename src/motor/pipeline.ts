@@ -54,10 +54,10 @@ export async function ejecutarPipeline(
   const allEtapas: Etapa[] = [];
   resetContador();
 
-  // ── Ingesta (recorrer directorio) ────────────────────────────────────
-  const recorrido = await ejecutarEtapa("ingesta" as any, emitir, ctx.signal, allEtapas, async () => {
-    return recorrerDirectorio(dir);
-  });
+  // ── Recorrido del directorio ──────────────────────────────────────────
+  // No es una etapa propia: "ingesta" la emite la Plataforma (contrato).
+  // Emitirla acá la duplicaba en el SSE y en la CLI.
+  const recorrido = await recorrerDirectorio(dir);
 
   // Helper: agrega un hallazgo al acumulado y lo emite de inmediato (SSE + persistencia en B).
   const agregarHallazgo = (hallazgo: Finding): void => {

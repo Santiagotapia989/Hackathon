@@ -97,18 +97,55 @@ const COLOR_SEVERIDAD: Record<Severidad, (s: string) => string> = {
   baja: pc.dim,
 };
 
+// Cuántas líneas se imprimieron después de cada hallazgo mostrado: permite
+// actualizar en el lugar las re-emisiones del triage en vez de imprimirlas
+// de nuevo.
+const lineasDesdeHallazgo = new Map<string, number>();
+
+function imprimirLineaEnVivo(texto: string): void {
+  console.log(texto);
+  for (const [id, n] of lineasDesdeHallazgo) lineasDesdeHallazgo.set(id, n + 1);
+}
+
+function sufijoIA(h: Finding): string {
+  if (h.analisisIA) {
+    const pct = Math.round(h.analisisIA.confianza * 100);
+    return ` — IA: ${h.analisisIA.clasificacion} (${pct}%)` +
+      (h.analisisIA.intentoManipulacion ? ", intento de manipulación" : "");
+  }
+  if (h.sinEvaluar) return " — IA: sin evaluar";
+  return "";
+}
+
+function lineaHallazgo(h: Finding): string {
+  const color = COLOR_SEVERIDAD[h.severidad] ?? pc.white;
+  return `  ${color(`[${h.severidad}]`)} ${h.regla} — ${h.titulo} (${h.archivo})${pc.dim(sufijoIA(h))}`;
+}
+
 function mostrarEventoEnVivo(evento: string, data: unknown): void {
   if (evento === "etapa") {
     const e = data as Etapa;
     const marca = e.estado === "lista" ? pc.green("✓") : e.estado === "error" ? pc.red("✗") : pc.yellow("…");
-    console.log(`${marca} ${e.nombre}`);
+    imprimirLineaEnVivo(`${marca} ${e.nombre}`);
   } else if (evento === "hallazgo") {
     const h = data as Finding;
-    const color = COLOR_SEVERIDAD[h.severidad] ?? pc.white;
-    console.log(`  ${color(`[${h.severidad}]`)} ${h.regla} — ${h.titulo} (${h.archivo})`);
+    const previo = lineasDesdeHallazgo.get(h.id);
+    if (previo !== undefined) {
+      // Re-emisión post-triage: actualizar la línea ya impresa, en el lugar.
+      // Sin TTY no se puede reescribir; el resumen final muestra el estado
+      // actualizado igual.
+      if (process.stdout.isTTY) {
+        const n = previo + 1;
+        process.stdout.write(`\x1b[${n}A\r\x1b[2K${lineaHallazgo(h)}\x1b[${n}B\r`);
+      }
+      return;
+    }
+    imprimirLineaEnVivo(lineaHallazgo(h));
+    lineasDesdeHallazgo.set(h.id, 0);
   } else if (evento === "error") {
     const e = data as { error: string };
-    console.log(pc.red(`\nError: ${e.error}`));
+    imprimirLineaEnVivo("");
+    imprimirLineaEnVivo(pc.red(`Error: ${e.error}`));
   }
 }
 
@@ -161,6 +198,15 @@ function mostrarResumenFinal(scan: Scan): void {
         console.log(`  evidencia: ${marcarInvisibles(h.evidencia)}`);
         if (h.evidenciaDecodificada) {
           console.log(`  evidencia decodificada: ${marcarInvisibles(h.evidenciaDecodificada)}`);
+        }
+        if (h.analisisIA) {
+          const pct = Math.round(h.analisisIA.confianza * 100);
+          console.log(
+            `  IA: ${h.analisisIA.clasificacion} (confianza ${pct}%)` +
+              (h.analisisIA.intentoManipulacion ? ", intento de manipulación" : ""),
+          );
+        } else if (h.sinEvaluar) {
+          console.log("  IA: sin evaluar");
         }
         if (h.explicacion) console.log(`  ${h.explicacion}`);
       }
