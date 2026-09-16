@@ -1,0 +1,231 @@
+@import "tailwindcss";
+
+@theme {
+  --color-noche: #070B19;
+  --color-panel: #111827;
+  --color-tactico: #1E293B;
+  --color-texto: #E2E8F0;
+  --color-texto-2: #94A3B8;
+  --color-cian: #00E5FF;
+  --color-ele: #2563EB;
+  --color-ambar: #F59E0B;
+  --color-emergencia: #EF4444;
+
+  --color-sello-liberado: #00E5FF;
+  --color-sello-revisar: #F59E0B;
+  --color-sello-retenido: #EF4444;
+
+  --font-sans: "Atkinson Hyperlegible", system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, monospace;
+}
+
+body {
+  margin: 0;
+  font-family: var(--font-sans);
+  background-color: var(--color-noche);
+  background-image:
+    radial-gradient(ellipse 90% 55% at 50% -12%, rgba(37, 99, 235, 0.14), transparent),
+    linear-gradient(rgba(37, 99, 235, 0.045) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(37, 99, 235, 0.045) 1px, transparent 1px);
+  background-size: auto, 48px 48px, 48px 48px;
+  color: var(--color-texto);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+::selection {
+  background-color: var(--color-cian);
+  color: var(--color-noche);
+}
+
+:focus-visible {
+  outline: 2px solid var(--color-cian);
+  outline-offset: 2px;
+}
+
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+::-webkit-scrollbar-track {
+  background: var(--color-noche);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--color-tactico);
+  border: 2px solid var(--color-noche);
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-ele);
+}
+
+/* Grilla que se desplaza lentamente (overlay animado) */
+.grid-fondo {
+  background-image:
+    linear-gradient(rgba(37, 99, 235, 0.07) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(37, 99, 235, 0.07) 1px, transparent 1px);
+  background-size: 42px 42px;
+  animation: grid-desplazamiento 28s linear infinite;
+}
+
+@keyframes grid-desplazamiento {
+  from {
+    background-position: 0 0, 0 0;
+  }
+  to {
+    background-position: 0 42px, 42px 0;
+  }
+}
+
+/* Panel táctico translúcido */
+.panel-cyber {
+  background: linear-gradient(
+    180deg,
+    rgba(17, 24, 39, 0.78),
+    rgba(11, 16, 32, 0.92)
+  );
+  border: 1px solid var(--color-tactico);
+  backdrop-filter: blur(4px);
+}
+
+/* Barra de escaneo vertical tenue */
+.barra-escaneo {
+  position: relative;
+  overflow: hidden;
+}
+.barra-escaneo::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(
+    to bottom,
+    transparent 0%,
+    rgba(0, 229, 255, 0.07) 48%,
+    transparent 100%
+  );
+  animation: barrido-vertical 7s linear infinite;
+}
+
+@keyframes barrido-vertical {
+  0% {
+    transform: translateY(-100%);
+  }
+  100% {
+    transform: translateY(100%);
+  }
+}
+
+/* Brillo cian sutil */
+.brillo-cian {
+  box-shadow:
+    0 0 12px rgba(0, 229, 255, 0.22),
+    0 0 3px rgba(0, 229, 255, 0.5);
+}
+.brillo-cian-borde {
+  border-color: rgba(0, 229, 255, 0.45);
+  box-shadow:
+    inset 0 0 14px rgba(0, 229, 255, 0.06),
+    0 0 10px rgba(0, 229, 255, 0.12);
+}
+
+/* Parpadeo de estado en vivo */
+.parpadeo {
+  animation: parpadeo 1.6s ease-in-out infinite;
+}
+@keyframes parpadeo {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.25;
+  }
+}
+
+/* Efecto de escritura (typing) */
+.efecto-tipeo {
+  display: inline-block;
+  max-width: 100%;
+  overflow: hidden;
+  white-space: nowrap;
+  border-right: 2px solid var(--color-cian);
+  animation:
+    tipeo 2.2s steps(40, end) forwards,
+    parpadeo-caret 0.8s steps(1) infinite;
+}
+@keyframes tipeo {
+  from {
+    width: 0;
+  }
+  to {
+    width: 100%;
+  }
+}
+@keyframes parpadeo-caret {
+  0%,
+  100% {
+    border-color: var(--color-cian);
+  }
+  50% {
+    border-color: transparent;
+  }
+}
+
+/* Aparición escalonada (hero) */
+.aparecer {
+  opacity: 0;
+  animation: aparecer-arriba 0.5s ease-out forwards;
+}
+@keyframes aparecer-arriba {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* Estampado del veredicto al llegar (única animación automática) */
+.sello-entrada {
+  animation: estampado 0.5s cubic-bezier(0.2, 0.9, 0.3, 1.4) both;
+}
+@keyframes estampado {
+  0% {
+    transform: scale(1.32);
+    opacity: 0;
+  }
+  60% {
+    transform: scale(0.96);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+/* Esquinas biseladas estilo táctico */
+.clip-esquina {
+  clip-path: polygon(
+    14px 0,
+    calc(100% - 14px) 0,
+    100% 14px,
+    100% calc(100% - 14px),
+    calc(100% - 14px) 100%,
+    14px 100%,
+    0 calc(100% - 14px),
+    0 14px
+  );
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
