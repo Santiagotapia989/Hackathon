@@ -54,6 +54,29 @@ describe("analizador unicode", () => {
     expect(h?.determinista).toBe(true);
   });
 
+  it("bidi en texto (no-código) da severidad media, no alta", () => {
+    const a = archivo("README.md", "Estado del proyecto: ‮atpecxe‬ bien encaminado.");
+    const hallazgos = analizarArchivoUnicode(a);
+    const bidi = hallazgos.find((h) => h.regla === "unicode-bidi");
+    expect(bidi).toBeDefined();
+    expect(bidi?.severidad).toBe("media");
+  });
+
+  // BUG: un selector de variación DENTRO de un emoji real (ej. corazón + VS16,
+  // uso normalísimo en cualquier README) se reporta igual que uno fuera de
+  // contexto. La especificación pide explícitamente que el que está dentro
+  // de un emoji NO se reporte; el código no distingue los dos casos, siempre
+  // reporta. Este test documenta el comportamiento CORRECTO esperado con
+  // it.fails: hoy falla porque el emoji genera un hallazgo "media" (falso
+  // positivo). Ver PRUEBAS_RESULTADO.md.
+  it.fails("selector de variación dentro de un emoji real no debería reportarse", () => {
+    const corazonConVS16 = "❤️"; // ❤️
+    const a = archivo("README.md", `Estado: liberado. Hecho con ${corazonConVS16} para el hackathon.`);
+    const hallazgos = analizarArchivoUnicode(a);
+    const h = hallazgos.find((h) => h.regla === "unicode-selector-variacion");
+    expect(h).toBeUndefined();
+  });
+
   it("ignora BOM al inicio", () => {
     const a = archivo("src/foo.ts", "\uFEFFconst x = 1;");
     const hallazgos = analizarArchivoUnicode(a);
