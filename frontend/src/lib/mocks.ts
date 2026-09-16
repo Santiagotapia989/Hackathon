@@ -18,6 +18,62 @@ export type ScanEvento =
   | { tipo: "error"; data: { mensaje: string } };
 
 export const informeEjecutivoC4ISR: InformeEjecutivo = {
+  cabecera: {
+    caratula: "INFORME TÉCNICO DE AUDITORÍA Y CONTROL PREVIO DE SEGURIDAD OPERACIONAL",
+    codigoDocumento: "EMCO-DGC4-2026-084-SEC",
+    fecha: "16 de Septiembre de 2026",
+    revision: "Rev. 1.2 (Definitiva)",
+    paginas: "1 de 6",
+    caracter: "CONFIDENCIAL / DISTRIBUCIÓN RESTRINGIDA - SEGURIDAD NACIONAL",
+  },
+  objetivo:
+    "Establecer la inspección y verificación estricta de seguridad previa sobre el framework de arquitectura para interoperabilidad semántica y técnica C4ISR (Estado Mayor Conjunto) antes de autorizar su habilitación y consumo por agentes autónomos de código y operadores tácticos de la Fuerza de Despliegue Rápido (FDR).",
+  alcance:
+    "Comprende la totalidad del repositorio c4isr-fdr-framework (código fuente Python y Bash), árbol completo de dependencias directas e indirectas (requirements.txt), scripts de automatización de despliegue de nodos tácticos (scripts/despliegue-nodos-tacticos.sh) y documentación operativa (README.md), evaluando integridad criptográfica, vectores de manipulación para asistentes IA y exposición de secretos soberanos.",
+  problematicaAnterior:
+    "Capacidades C4ISR operando de manera aislada y heterogénea entre fuerzas (fragmentación del conocimiento situacional táctico). La necesidad de interoperabilidad conllevó la incorporación de buses de mensajería y librerías heredadas sin validación criptográfica, incrementando la superficie de ataque frente a interceptaciones y ataques asistidos por IA.",
+  introduccion:
+    "En cumplimiento de la Directiva Estratégica de Ciberdefensa y Soberanía Tecnológica, la plataforma Aduana ejecutó una auditoría integral, autónoma y desconectada (100% offline). El procedimiento combina análisis estático determinista (análisis léxico, reglas de secretos Gitleaks, Trojan Source Unicode) con triage semántico asistido por modelos de lenguaje soberanos (Ollama Llama-3.2:3b).",
+  indice: [
+    "1. Objetivo y Fundamentos Operacionales",
+    "2. Alcance Técnico y Perímetro de Auditoría",
+    "3. Problemática Anterior y Evaluación de Riesgos",
+    "4. Introducción y Marco Normativo de Ciberdefensa",
+    "5. Índice General del Documento",
+    "6. Desarrollo: Análisis Técnico, CVEs Detectados y Hallazgos",
+    "7. Conclusión y Dictamen de Habilitación",
+    "8. Personal Interviniente y Registro de Firmas de Responsabilidad",
+  ],
+  desarrollo:
+    "Durante la fase de inspección multidimensional se procesaron 4 módulos de control táctico: Ingesta, Instrucciones ocultas, Unicode encubierto, Dependencias y Secretos expuestos. Se detectaron 3 vulnerabilidades mayores, incluyendo una clave de cifrado soberano expuesta en texto plano y una vulnerabilidad crítica catalogada bajo CVE-2026-10482 en el bus de comunicaciones tácticas c4isr-messagebus==0.9.2. Asimismo, se neutralizó un intento de manipulación por comentario oculto en README.md destinado a engañar a los agentes de software.",
+  conclusion:
+    "El repositorio auditado NO REÚNE las condiciones de seguridad mínimas para su incorporación a la infraestructura crítica de la Fuerza de Despliegue Rápido. Se emite dictamen de RETENIDO con carácter vinculante hasta tanto se subsanen las vulnerabilidades críticas detectadas, se roten las claves expuestas y se migre el bus de transporte al protocolo militar cifrado conforme a los estándares de la DGC4.",
+  personal: [
+    {
+      grado: "Cnel. Ing.",
+      nombre: "Santiago Bazán",
+      cargo: "Director General de Ciberdefensa C4ISR",
+      firma: "REGISTRADA / TOKEN DEF-892",
+    },
+    {
+      grado: "My. Lic.",
+      nombre: "Tomás Rodríguez",
+      cargo: "Jefe de Auditoría de Código y Sistemas Críticos",
+      firma: "REGISTRADA / TOKEN DEF-411",
+    },
+    {
+      grado: "Cap. Ing.",
+      nombre: "Simón V.",
+      cargo: "Analista de Vulnerabilidades y Protocolos Tácticos",
+      firma: "REGISTRADA / TOKEN DEF-105",
+    },
+    {
+      grado: "Ten.",
+      nombre: "Emanuel M.",
+      cargo: "Oficial de Triage e Inteligencia Artificial Soberana",
+      firma: "REGISTRADA / TOKEN DEF-034",
+    },
+  ],
   desafioDetectado:
     "Capacidades C4ISR operando de manera aislada (fragmentación del conocimiento situacional).",
   objetivoRepo:
@@ -53,18 +109,22 @@ export const hallazgoDependenciaC4ISR: Finding = {
   id: "c4isr-d-1",
   modulo: "dependencias",
   regla: "protocolo-no-cifrado",
-  titulo: "Dependencia de protocolo de comunicación sin cifrado",
+  titulo: "Dependencia de protocolo de comunicación afectada por CVE-2026-10482",
   severidad: "alta",
   determinista: true,
   archivo: "requirements.txt",
   linea: 8,
   evidencia: '"c4isr-messagebus==0.9.2"',
+  cve: "CVE-2026-10482",
+  componenteAfectado: "c4isr-messagebus==0.9.2 (Protocolo de comunicación del bus táctico C4ISR)",
+  cveContexto:
+    "Un CVE es un diccionario o lista pública que cataloga fallos de seguridad y vulnerabilidades conocidas en programas de software y equipos de hardware. Cada fallo recibe un identificador único, por ejemplo, CVE-2026-XXXXX.",
   explicacion:
-    "La capa de unificación de datos del framework depende de un bus de mensajes cuya implementación transporta los datos de situación táctica en claro. Un nodo comprometido en la misma red puede interceptar la actualización de conocimiento situacional.",
+    "El componente crítico del sistema C4ISR 'c4isr-messagebus==0.9.2' está afectado por la vulnerabilidad conocida CVE-2026-10482. La capa de unificación de datos del framework depende de este bus de mensajes cuya implementación transporta los datos de situación táctica en claro y carece de autenticación mutua, permitiendo que un nodo comprometido en la red intercepte o inyecte órdenes operacionales.",
   remediacion: [
-    "Migrar la capa al canal cifrado definido por el protocolo militar abierto",
-    "Exigir TLS 1.3 en todos los extremos del bus de mensajes",
-    "Verificar la procedencia firmada del paquete en el repositorio interno",
+    "Actualizar o reemplazar c4isr-messagebus migrando al protocolo seguro certificado por DGC4",
+    "Exigir TLS 1.3 con certificados mutuos en todos los extremos del bus de mensajes",
+    "Verificar la procedencia y firma criptográfica del paquete en el repositorio militar interno",
   ],
 };
 

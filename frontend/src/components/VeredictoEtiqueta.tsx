@@ -23,7 +23,7 @@ export function VeredictoEtiqueta({
   return (
     <span
       className="inline-flex items-center gap-2 font-mono font-bold uppercase tracking-[0.18em]"
-      style={{ color, textShadow: `0 0 10px ${color}` }}
+      style={{ color }}
     >
       <span
         aria-hidden="true"

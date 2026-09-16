@@ -94,18 +94,13 @@ export function HomePage() {
             aria-labelledby="titulo-control"
             className="flex flex-col items-center pb-12 pt-14 sm:pt-20"
           >
-            <p
-              className="efecto-tipeo mb-4 font-mono text-[13px] font-bold uppercase tracking-[0.28em] text-cian [text-shadow:0_0_8px_currentColor]"
-            >
-              C4ISR · Control previo para agentes de código
-            </p>
             <h1
               id="titulo-control"
               className="aparecer max-w-4xl text-center text-[34px] font-bold leading-tight text-texto sm:text-[44px]"
               style={{ animationDelay: "0.1s" }}
             >
               Inspeccioná lo que entra{" "}
-              <span className="text-cian [text-shadow:0_0_18px_currentColor]">
+              <span className="text-cian font-extrabold">
                 antes de que toque tu agente.
               </span>
             </h1>
@@ -163,7 +158,7 @@ export function HomePage() {
                   <button
                     type="submit"
                     disabled={crearScan.isPending}
-                    className="shrink-0 bg-cian px-6 py-3 font-mono text-base font-bold uppercase tracking-[0.12em] text-noche [box-shadow:0_0_16px_rgba(0,229,255,0.4)] transition-colors hover:bg-cian/90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cian disabled:opacity-60"
+                    className="shrink-0 rounded bg-ele px-6 py-3 font-mono text-sm font-bold uppercase tracking-[0.14em] text-white transition-colors hover:bg-ele/90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ele disabled:opacity-60 shadow-sm"
                   >
                     {crearScan.isPending ? "Inspeccionando…" : "Inspeccionar"}
                   </button>
@@ -188,7 +183,7 @@ export function HomePage() {
               {error ? (
                 <p
                   role="alert"
-                  className="mt-3 border border-sello-retenido/60 bg-sello-retenido/10 px-3 py-2 font-mono text-sm text-sello-retenido"
+                  className="mt-3 border border-sello-retenido/60 bg-sello-retenido/10 px-3 py-2 font-mono text-sm text-sello-retenido rounded"
                 >
                   {error}
                 </p>
@@ -197,7 +192,7 @@ export function HomePage() {
 
             {health ? (
               <dl
-                className="aparecer mt-10 grid w-full max-w-2xl grid-cols-1 divide-y divide-tactico border border-tactico bg-panel/60 lg:grid-cols-3 lg:divide-x lg:divide-y-0"
+                className="aparecer mt-10 grid w-full max-w-2xl grid-cols-1 divide-y divide-tactico border border-tactico bg-panel/60 rounded lg:grid-cols-3 lg:divide-x lg:divide-y-0"
                 style={{ animationDelay: "0.5s" }}
               >
                 {[
@@ -226,10 +221,8 @@ export function HomePage() {
                       {item.label}
                     </dt>
                     <dd
-                      className={`mt-1 flex items-center gap-2 text-sm ${
-                        item.ok
-                          ? "text-sello-liberado [text-shadow:0_0_10px_rgba(0,229,255,0.4)]"
-                          : "text-sello-revisar [text-shadow:0_0_10px_rgba(245,158,11,0.4)]"
+                      className={`mt-1 flex items-center gap-2 text-sm font-medium ${
+                        item.ok ? "text-sello-liberado" : "text-sello-revisar"
                       }`}
                     >
                       <span

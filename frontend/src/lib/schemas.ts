@@ -43,6 +43,9 @@ export const FindingSchema = z.object({
   explicacion: z.string().optional(),
   remediacion: z.array(z.string()).optional(),
   analisisIA: AnalisisIASchema.optional(),
+  cve: z.string().optional(),
+  cveContexto: z.string().optional(),
+  componenteAfectado: z.string().optional(),
 });
 export type Finding = z.infer<typeof FindingSchema>;
 
@@ -68,11 +71,43 @@ export const ResumenSchema = z.object({
 });
 export type Resumen = z.infer<typeof ResumenSchema>;
 
+export const CabeceraInformeSchema = z.object({
+  caratula: z.string(),
+  codigoDocumento: z.string(),
+  fecha: z.string(),
+  revision: z.string(),
+  paginas: z.string(),
+  caracter: z.string(),
+});
+export type CabeceraInforme = z.infer<typeof CabeceraInformeSchema>;
+
+export const PersonalInformeSchema = z.object({
+  nombre: z.string(),
+  cargo: z.string(),
+  grado: z.string().optional(),
+  firma: z.string().optional(),
+});
+export type PersonalInforme = z.infer<typeof PersonalInformeSchema>;
+
 export const InformeEjecutivoSchema = z.object({
-  desafioDetectado: z.string(),
-  objetivoRepo: z.string(),
-  metricasImpacto: z.array(z.string()),
-  faseEjecucion: z.string(),
+  // Cabecera formal militar
+  cabecera: CabeceraInformeSchema.optional(),
+
+  // Secciones del documento formal (en orden estricto)
+  objetivo: z.string().optional(),
+  alcance: z.string().optional(),
+  problematicaAnterior: z.string().optional(),
+  introduccion: z.string().optional(),
+  indice: z.array(z.string()).optional(),
+  desarrollo: z.string().optional(),
+  conclusion: z.string().optional(),
+  personal: z.array(PersonalInformeSchema).optional(),
+
+  // Compatibilidad hacia atrás
+  desafioDetectado: z.string().optional(),
+  objetivoRepo: z.string().optional(),
+  metricasImpacto: z.array(z.string()).optional(),
+  faseEjecucion: z.string().optional(),
 });
 export type InformeEjecutivo = z.infer<typeof InformeEjecutivoSchema>;
 

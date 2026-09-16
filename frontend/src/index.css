@@ -1,22 +1,62 @@
 @import "tailwindcss";
 
 @theme {
-  --color-noche: #070B19;
-  --color-panel: #111827;
-  --color-tactico: #1E293B;
-  --color-texto: #E2E8F0;
-  --color-texto-2: #94A3B8;
-  --color-cian: #00E5FF;
-  --color-ele: #2563EB;
-  --color-ambar: #F59E0B;
-  --color-emergencia: #EF4444;
+  --color-noche: var(--noche);
+  --color-panel: var(--panel);
+  --color-tactico: var(--tactico);
+  --color-texto: var(--texto);
+  --color-texto-2: var(--texto-2);
+  --color-cian: var(--cian);
+  --color-ele: var(--ele);
+  --color-ambar: var(--ambar);
+  --color-emergencia: var(--emergencia);
 
-  --color-sello-liberado: #00E5FF;
-  --color-sello-revisar: #F59E0B;
-  --color-sello-retenido: #EF4444;
+  --color-sello-liberado: var(--sello-liberado);
+  --color-sello-revisar: var(--sello-revisar);
+  --color-sello-retenido: var(--sello-retenido);
 
   --font-sans: "Atkinson Hyperlegible", system-ui, sans-serif;
   --font-mono: "JetBrains Mono", ui-monospace, monospace;
+}
+
+:root {
+  --noche: #0A1128;
+  --panel: #101F42;
+  --tactico: #243B6B;
+  --texto: #F1F5F9;
+  --texto-2: #94A3B8;
+  --cian: #3B82F6;
+  --ele: #2563EB;
+  --ambar: #F59E0B;
+  --emergencia: #EF4444;
+
+  --sello-liberado: #10B981;
+  --sello-revisar: #F59E0B;
+  --sello-retenido: #EF4444;
+
+  --gradient-color: rgba(37, 99, 235, 0.08);
+  --grid-color: rgba(37, 99, 235, 0.02);
+  --grid-color-dynamic: rgba(37, 99, 235, 0.03);
+}
+
+:root.light {
+  --noche: #F8FAFC;
+  --panel: #FFFFFF;
+  --tactico: #CBD5E1;
+  --texto: #0F172A;
+  --texto-2: #64748B;
+  --cian: #1E40AF;
+  --ele: #2563EB;
+  --ambar: #D97706;
+  --emergencia: #DC2626;
+
+  --sello-liberado: #16A34A;
+  --sello-revisar: #D97706;
+  --sello-retenido: #DC2626;
+
+  --gradient-color: rgba(30, 64, 175, 0.02);
+  --grid-color: rgba(30, 64, 175, 0.01);
+  --grid-color-dynamic: rgba(30, 64, 175, 0.01);
 }
 
 body {
@@ -24,9 +64,9 @@ body {
   font-family: var(--font-sans);
   background-color: var(--color-noche);
   background-image:
-    radial-gradient(ellipse 90% 55% at 50% -12%, rgba(37, 99, 235, 0.14), transparent),
-    linear-gradient(rgba(37, 99, 235, 0.045) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(37, 99, 235, 0.045) 1px, transparent 1px);
+    radial-gradient(ellipse 90% 55% at 50% -12%, var(--gradient-color), transparent),
+    linear-gradient(var(--grid-color) 1px, transparent 1px),
+    linear-gradient(90deg, var(--grid-color) 1px, transparent 1px);
   background-size: auto, 48px 48px, 48px 48px;
   color: var(--color-texto);
   -webkit-font-smoothing: antialiased;
@@ -61,8 +101,8 @@ body {
 /* Grilla que se desplaza lentamente (overlay animado) */
 .grid-fondo {
   background-image:
-    linear-gradient(rgba(37, 99, 235, 0.07) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(37, 99, 235, 0.07) 1px, transparent 1px);
+    linear-gradient(var(--grid-color-dynamic) 1px, transparent 1px),
+    linear-gradient(90deg, var(--grid-color-dynamic) 1px, transparent 1px);
   background-size: 42px 42px;
   animation: grid-desplazamiento 28s linear infinite;
 }
@@ -78,13 +118,8 @@ body {
 
 /* Panel táctico translúcido */
 .panel-cyber {
-  background: linear-gradient(
-    180deg,
-    rgba(17, 24, 39, 0.78),
-    rgba(11, 16, 32, 0.92)
-  );
+  background-color: var(--color-panel);
   border: 1px solid var(--color-tactico);
-  backdrop-filter: blur(4px);
 }
 
 /* Barra de escaneo vertical tenue */
@@ -100,7 +135,7 @@ body {
   background: linear-gradient(
     to bottom,
     transparent 0%,
-    rgba(0, 229, 255, 0.07) 48%,
+    rgba(37, 99, 235, 0.04) 48%,
     transparent 100%
   );
   animation: barrido-vertical 7s linear infinite;
@@ -117,15 +152,10 @@ body {
 
 /* Brillo cian sutil */
 .brillo-cian {
-  box-shadow:
-    0 0 12px rgba(0, 229, 255, 0.22),
-    0 0 3px rgba(0, 229, 255, 0.5);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 }
 .brillo-cian-borde {
-  border-color: rgba(0, 229, 255, 0.45);
-  box-shadow:
-    inset 0 0 14px rgba(0, 229, 255, 0.06),
-    0 0 10px rgba(0, 229, 255, 0.12);
+  border-color: var(--color-tactico);
 }
 
 /* Parpadeo de estado en vivo */
@@ -148,27 +178,6 @@ body {
   max-width: 100%;
   overflow: hidden;
   white-space: nowrap;
-  border-right: 2px solid var(--color-cian);
-  animation:
-    tipeo 2.2s steps(40, end) forwards,
-    parpadeo-caret 0.8s steps(1) infinite;
-}
-@keyframes tipeo {
-  from {
-    width: 0;
-  }
-  to {
-    width: 100%;
-  }
-}
-@keyframes parpadeo-caret {
-  0%,
-  100% {
-    border-color: var(--color-cian);
-  }
-  50% {
-    border-color: transparent;
-  }
 }
 
 /* Aparición escalonada (hero) */
@@ -208,16 +217,18 @@ body {
 
 /* Esquinas biseladas estilo táctico */
 .clip-esquina {
-  clip-path: polygon(
-    14px 0,
-    calc(100% - 14px) 0,
-    100% 14px,
-    100% calc(100% - 14px),
-    calc(100% - 14px) 100%,
-    14px 100%,
-    0 calc(100% - 14px),
-    0 14px
-  );
+  /* removed clip-path polygon for a cleaner, modern institutional aesthetic with rounded corners */
+  border-radius: 6px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {

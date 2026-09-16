@@ -20,7 +20,7 @@ export function LogoSitio({ className }: { className?: string }) {
         className="absolute bottom-0 right-0 h-2 w-2 border-b-2 border-r-2 border-cian"
       />
       <span className="text-center font-mono leading-none">
-        <span className="block text-[11px] font-bold tracking-[0.14em] text-cian [text-shadow:0_0_8px_currentColor]">
+        <span className="block text-[11px] font-bold tracking-[0.14em] text-cian">
           UNDEF
         </span>
         <span className="mt-0.5 block text-[8px] tracking-[0.42em] text-texto-2">
