@@ -17,6 +17,7 @@
     "db:seed": "tsx src/plataforma/scripts/db-seed.ts",
     "motor": "tsx scripts/analizar.ts",
     "generar-fixtures": "tsx scripts/generar-fixture.ts",
+    "test:demo": "tsx scripts/test-demo.ts",
     "test": "vitest run",
     "test:watch": "vitest",
     "typecheck": "tsc -p tsconfig.json --noEmit"
