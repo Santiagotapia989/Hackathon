@@ -1,7 +1,7 @@
 // tests/motor/instrucciones.test.ts
 import { describe, it, expect } from "vitest";
-import { analizarInstrucciones } from "../../src/motor/analizadores/instrucciones.ts";
-import type { ArchivoLeido } from "../../src/motor/archivos.ts";
+import { analizarInstrucciones } from "../../src/motor/analizadores/instrucciones.js";
+import type { ArchivoLeido } from "../../src/motor/archivos.js";
 
 function archivo(ruta: string, contenido: string): ArchivoLeido {
   return { ruta, contenido };

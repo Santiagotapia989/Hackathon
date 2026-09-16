@@ -6,7 +6,7 @@ import {
   truncar,
   enmascarar,
   prepararEvidencia,
-} from "../../src/motor/evidencia.ts";
+} from "../../src/motor/evidencia.js";
 
 describe("marcarInvisibles", () => {
   it("marca caracteres invisibles", () => {

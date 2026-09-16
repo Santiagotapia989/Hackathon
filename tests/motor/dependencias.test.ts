@@ -1,8 +1,8 @@
 // tests/motor/dependencias.test.ts
 import { describe, it, expect, vi, afterEach } from "vitest";
-import { analizarDependencias } from "../../src/motor/analizadores/dependencias.ts";
-import type { ArchivoLeido } from "../../src/motor/archivos.ts";
-import * as cliente from "../../src/motor/registro/cliente.ts";
+import { analizarDependencias } from "../../src/motor/analizadores/dependencias.js";
+import type { ArchivoLeido } from "../../src/motor/archivos.js";
+import * as cliente from "../../src/motor/registro/cliente.js";
 
 function archivo(ruta: string, contenido: string): ArchivoLeido {
   return { ruta, contenido };

@@ -3,21 +3,21 @@
 // Emite eventos a medida que avanza. Respeta ctx.signal.
 // ENFORCE regla de oro: el LLM nunca baja severidad de hallazgos deterministas.
 
-import type { Finding, Etapa, ContextoAnalisis, ResultadoAnalisis, EventoMotor } from "../shared/contrato.ts";
-import { recorrerDirectorio } from "./archivos.ts";
-import { analizarUnicode } from "./analizadores/unicode.ts";
-import { analizarInstrucciones } from "./analizadores/instrucciones.ts";
-import { analizarDependencias } from "./analizadores/dependencias.ts";
-import { analizarSecretos } from "./analizadores/secretos.ts";
-import { triage, resetContador } from "./llm/ollama.ts";
-import { calcularVeredicto } from "./scoring.ts";
+import type { Finding, Etapa, ContextoAnalisis, ResultadoAnalisis, EventoMotor } from "../shared/contrato.js";
+import { recorrerDirectorio } from "./archivos.js";
+import { analizarUnicode } from "./analizadores/unicode.js";
+import { analizarInstrucciones } from "./analizadores/instrucciones.js";
+import { analizarDependencias } from "./analizadores/dependencias.js";
+import { analizarSecretos } from "./analizadores/secretos.js";
+import { triage, resetContador } from "./llm/ollama.js";
+import { calcularVeredicto } from "./scoring.js";
 
 // ─── Helper: ejecutar etapa ─────────────────────────────────────────────────
 
 async function ejecutarEtapa<T>(
   nombre: Etapa["nombre"],
   emitir: (e: EventoMotor) => void,
-  signal: AbortSignal,
+  _signal: AbortSignal,
   fn: () => Promise<T>,
 ): Promise<T> {
   emitir({ tipo: "etapa", etapa: { nombre, estado: "en_curso" } });
@@ -146,7 +146,7 @@ export async function ejecutarPipeline(
       throw new Error("La IA local no responde. Revisá que Ollama esté corriendo.");
     }
     return resultados;
-  }).catch((err) => {
+  }).catch(() => {
     // La etapa ya se emitió como "error" desde ejecutarEtapa; los candidatos quedaron sinEvaluar.
     for (const candidato of candidatos) candidato.sinEvaluar = true;
     return [];

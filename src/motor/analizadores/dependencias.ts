@@ -3,11 +3,11 @@
 // Verifica existencia en registros, typosquatting, paquetes nuevos.
 // Detecta scripts de instalación sospechosos.
 
-import type { Finding } from "../../shared/contrato.ts";
-import type { ArchivoLeido } from "../archivos.ts";
-import { prepararEvidencia, enmascarar } from "../evidencia.ts";
-import { idHallazgo, levenshtein, normalizarNombre } from "../util.ts";
-import { verificarNombre, type ResultadoVerificarNombre } from "../registro/cliente.ts";
+import type { Finding } from "../../shared/contrato.js";
+import type { ArchivoLeido } from "../archivos.js";
+import { prepararEvidencia } from "../evidencia.js";
+import { idHallazgo, levenshtein, normalizarNombre } from "../util.js";
+import { verificarNombre } from "../registro/cliente.js";
 import confundibles from "../datos/confundibles.json" with { type: "json" };
 import topNpm from "../datos/top-npm.json" with { type: "json" };
 import topPypi from "../datos/top-pypi.json" with { type: "json" };

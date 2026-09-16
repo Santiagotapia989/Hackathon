@@ -1,7 +1,7 @@
 // tests/motor/scoring.test.ts
 import { describe, it, expect } from "vitest";
-import { calcularVeredicto } from "../../src/motor/scoring.ts";
-import type { Finding, Etapa } from "../../src/shared/contrato.ts";
+import { calcularVeredicto } from "../../src/motor/scoring.js";
+import type { Finding, Etapa } from "../../src/shared/contrato.js";
 
 function hallazgo(overrides: Partial<Finding> = {}): Finding {
   return {

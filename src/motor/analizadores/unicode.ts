@@ -2,11 +2,11 @@
 // Analizador determinístico: detecta caracteres invisibles, tags Unicode y resultados cruzados con instrucciones.
 
 import * as path from "node:path";
-import type { Finding } from "../../shared/contrato.ts";
-import type { ArchivoLeido } from "../archivos.ts";
-import { lineaDeIndice } from "../archivos.ts";
-import { prepararEvidencia, marca } from "../evidencia.ts";
-import { idHallazgo } from "../util.ts";
+import type { Finding } from "../../shared/contrato.js";
+import type { ArchivoLeido } from "../archivos.js";
+import { lineaDeIndice } from "../archivos.js";
+import { prepararEvidencia, marca } from "../evidencia.js";
+import { idHallazgo } from "../util.js";
 import archivosSensibles from "../reglas/archivos-sensibles.json" with { type: "json" };
 import patronesInstrucciones from "../reglas/instrucciones.json" with { type: "json" };
 
@@ -17,7 +17,6 @@ const PATRONES_SENSIBLES: string[] = archivosSensibles as unknown as string[];
 /** Coincidencia simple de patrones de archivos sensibles (sin picomatch, solo exact y glob básico). */
 function esArchivoSensible(ruta: string): boolean {
   const nombre = path.basename(ruta);
-  const partes = ruta.split(/[/\\]/);
   for (const patron of PATRONES_SENSIBLES) {
     if (patron.endsWith("/**")) {
       const prefijo = patron.slice(0, -3);
@@ -68,8 +67,7 @@ type CmdUnicode = {
 
 // ─── Detección ──────────────────────────────────────────────────────────────
 
-function detectarInvisibles(contenido: string, ruta: string): CmdUnicode[] {
-  const cmds: CmdUnicode[] = [];
+function detectarInvisibles(contenido: string): CmdUnicode[] {
   const vistos = new Map<number, CmdUnicode>(); // cp → cmd activo
   const resultados: CmdUnicode[] = [];
   const limite = Math.min(contenido.length, 500_000); // proteger contra archivos gigantes
@@ -143,7 +141,7 @@ function esCodigo(ruta: string): boolean {
 export function analizarArchivoUnicode(archivo: ArchivoLeido): Finding[] {
   const { ruta, contenido } = archivo;
   const hallazgos: Finding[] = [];
-  const cmds = detectarInvisibles(contenido, ruta);
+  const cmds = detectarInvisibles(contenido);
 
   // Agrupar tags por secuencia
   const tags = cmds.filter((c) => c.tipo === "unicode-tags-oculto");

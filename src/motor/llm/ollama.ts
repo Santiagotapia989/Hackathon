@@ -3,7 +3,7 @@
 // Fallback si Ollama no está disponible: la etapa triage_ia queda en error.
 
 import { z } from "zod";
-import { AnalisisIA } from "../../shared/contrato.ts";
+import { AnalisisIA } from "../../shared/contrato.js";
 
 const OLLAMA_HOST = process.env["ADUANA_OLLAMA_HOST"] ?? "http://localhost:11434";
 const MODELO = process.env["ADUANA_MODELO"] ?? "gemma2:2b";

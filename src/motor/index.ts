@@ -10,11 +10,11 @@ import type {
   Ecosistema,
   ResultadoPaquete,
   EstadoMotor,
-} from "../shared/contrato.ts";
-import { ejecutarPipeline } from "./pipeline.ts";
-import { verificarNombre } from "./registro/cliente.ts";
-import { verificarGitleaks } from "./analizadores/secretos.ts";
-import { consultarEstado as consultarOllama } from "./llm/ollama.ts";
+} from "../shared/contrato.js";
+import { ejecutarPipeline } from "./pipeline.js";
+import { verificarNombre } from "./registro/cliente.js";
+import { verificarGitleaks } from "./analizadores/secretos.js";
+import { consultarEstado as consultarOllama } from "./llm/ollama.js";
 
 // ─── Motor ──────────────────────────────────────────────────────────────────
 
@@ -33,7 +33,7 @@ export const motor: Motor = {
     opts: { offline: boolean; signal?: AbortSignal },
   ): Promise<ResultadoPaquete> {
     const resultado = await verificarNombre(ecosistema, nombre, opts);
-    const hallazgos: import("../shared/contrato.ts").Finding[] = [];
+    const hallazgos: import("../shared/contrato.js").Finding[] = [];
     const motivos: string[] = [];
     let sugerencia: string | undefined;
 

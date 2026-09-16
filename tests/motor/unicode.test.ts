@@ -1,7 +1,7 @@
 // tests/motor/unicode.test.ts
 import { describe, it, expect } from "vitest";
-import { analizarArchivoUnicode } from "../../src/motor/analizadores/unicode.ts";
-import type { ArchivoLeido } from "../../src/motor/archivos.ts";
+import { analizarArchivoUnicode } from "../../src/motor/analizadores/unicode.js";
+import type { ArchivoLeido } from "../../src/motor/archivos.js";
 
 function archivo(ruta: string, contenido: string): ArchivoLeido {
   return { ruta, contenido };

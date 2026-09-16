@@ -1,7 +1,7 @@
 // tests/motor/secretos.test.ts
 import { describe, it, expect } from "vitest";
-import { analizarSecretos, crearGitleaksRunnerMock } from "../../src/motor/analizadores/secretos.ts";
-import { enmascarar, prepararEvidencia } from "../../src/motor/evidencia.ts";
+import { analizarSecretos, crearGitleaksRunnerMock } from "../../src/motor/analizadores/secretos.js";
+import { enmascarar, prepararEvidencia } from "../../src/motor/evidencia.js";
 
 describe("analizador de secretos", () => {
   it("detecta un secreto del reporte y lo enmascara", async () => {

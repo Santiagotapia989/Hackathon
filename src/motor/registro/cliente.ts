@@ -2,9 +2,7 @@
 // Cliente para registros de npm y PyPI. Offline-first: si offline, solo listas locales.
 // Hosts allowlist, timeout 5s, cache en memoria, max 5 simultáneas.
 
-import * as dns from "node:dns/promises";
-import type { Ecosistema } from "../../shared/contrato.ts";
-import { normalizarNombre, levenshtein } from "../util.ts";
+import type { Ecosistema } from "../../shared/contrato.js";
 
 // ─── Config ─────────────────────────────────────────────────────────────────
 

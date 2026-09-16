@@ -2,7 +2,7 @@
 // Función pura: calcularVeredicto(hallazgos, etapas) → { veredicto, resumen }.
 // Reglas en orden estricto de prioridad.
 
-import type { Finding, Etapa, Veredicto, Resumen, Modulo, Severidad } from "../shared/contrato.ts";
+import type { Finding, Etapa, Veredicto, Resumen, Modulo, Severidad } from "../shared/contrato.js";
 
 // ─── Reglas del veredicto ───────────────────────────────────────────────────
 
