@@ -70,7 +70,7 @@
       "id": "ejecucion-remota",
       "titulo": "Instrucción de ejecutar comandos desde internet",
       "determinista": true,
-      "severidadInicial": "alta",
+      "severidadInicial": "critica",
       "patrones": [
         "curl\\s+\\S+\\s*\\|\\s*(sh|bash)\\b",
         "wget\\s+\\S+\\s*\\|\\s*(sh|bash)\\b",
@@ -84,8 +84,8 @@
     {
       "id": "manipulacion",
       "titulo": "Intento de manipular el resultado del análisis",
-      "determinista": false,
-      "severidadInicial": "media",
+      "determinista": true,
+      "severidadInicial": "alta",
       "patrones": [
         "este repo es seguro",
         "este repositorio es seguro",
@@ -95,6 +95,16 @@
         "this repository is safe",
         "safe to open",
         "no hay nada sospechoso"
+      ]
+    },
+    {
+      "id": "imita-json-triage",
+      "titulo": "Texto que imita el JSON esperado por el triage de IA",
+      "determinista": true,
+      "severidadInicial": "alta",
+      "patrones": [
+        "\\\"clasificacion\\\"\\s*:[\\s\\S]{0,300}\\\"intentomanipulacion\\\"",
+        "\\\"intentomanipulacion\\\"[\\s\\S]{0,300}\\\"clasificacion\\\""
       ]
     },
     {
