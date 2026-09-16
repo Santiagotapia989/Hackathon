@@ -1,10 +1,47 @@
-# Hackhaton - Proyecto Ciberdefensa
+# Aduana - Frontend
+
+Proyecto desarrollado en el marco del **Hackathon Nacional de Ciberdefensa**.
 
 Frontend de **Aduana**, una interfaz para inspeccionar repositorios y paquetes antes de que sean consumidos por un agente. Permite crear escaneos, seguir una inspección en curso, revisar el historial y visualizar el informe final.
 
+## Funcionalidades
+
+- Creación de inspecciones a partir de una URL de repositorio o un paquete con prefijo `npm:` / `pypi:`.
+- Detección automática del tipo de objetivo ingresado.
+- Listado de los últimos elementos inspeccionados y acceso al historial completo.
+- Seguimiento de escaneos en curso mediante eventos y actualización periódica.
+- Visualización del informe final con veredicto, severidad, módulo, evidencia, remediación y contexto de CVEs cuando corresponde.
+- Comparación entre texto visual aparente y texto interpretado para hallazgos Unicode/invisibles.
+- Impresión del documento desde la vista del reporte.
+- Modo demostración con mocks para correr la interfaz sin backend.
+
+## Casos de uso
+
+- Control previo de seguridad antes de habilitar código o dependencias para agentes autónomos.
+- Revisión de riesgos de cadena de suministro: instrucciones ocultas, caracteres invisibles, dependencias alucinadas y secretos expuestos.
+- Triage visual de hallazgos por severidad y módulo para priorizar remediaciones.
+- Demostración funcional del producto durante el hackathon sin necesidad de levantar servicios externos.
+- Generación de una vista formal del informe para revisión técnica u operativa.
+
+## Frameworks y librerías
+
+- React 18
+- TypeScript
+- Vite
+- Tailwind CSS 4
+- TanStack Query
+- React Router
+- Zod
+- Oxlint
+- Fontsource: Atkinson Hyperlegible y JetBrains Mono
+
 ## Estructura
 
-- `frontend/`: aplicación web hecha con Vite, React, TypeScript, Tailwind CSS y TanStack Query.
+- `frontend/`: aplicación web principal.
+- `frontend/src/pages/`: pantallas de inicio, historial, escaneo y agente.
+- `frontend/src/components/`: componentes de layout, inspección y reporte.
+- `frontend/src/lib/`: cliente API, mocks, schemas y utilidades de presentación.
+- `frontend/tests/`: pruebas auxiliares del proyecto.
 
 ## Requisitos
 
