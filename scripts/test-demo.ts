@@ -6,13 +6,13 @@
 //   3. repo limpio → liberado
 //   4. check_package("unused-imports") → requiere_confirmacion con
 //      sugerencia "eslint-plugin-unused-imports"
-//      ⚠️ Este punto es un CONTROL, no una prueba de humo normal: hoy
-//      motor.verificarPaquete() nunca chequea confundibles/typosquatting
-//      (bug documentado en tests/motor/verificar-paquete.test.ts), así que
-//      este check DEBE fallar hasta que se aplique el fix en la rama
-//      correspondiente. Si algún día pasa a ✅ sin haber tocado nada, algo
-//      cambió — revisar. No presentar la demo con este punto en ❌ si el
-//      guion depende de mostrar la detección de confundibles en vivo.
+//      Nació como CONTROL: motor.verificarPaquete() no chequeaba
+//      confundibles/typosquatting (bug documentado en
+//      tests/motor/verificar-paquete.test.ts) y este check daba ❌ a
+//      propósito, como gate para no presentar el guion de "detecta el
+//      confundible" en vivo. Ya se aplicó el fix (reutiliza la misma
+//      lógica que analizarDependencias) — si esto vuelve a dar ❌ sin que
+//      nadie haya tocado motor.verificarPaquete(), es una regresión real.
 //   5. las respuestas del MCP no contienen contenido analizado
 //
 // Requiere: servidor levantado (`npm run server`) y Ollama corriendo.
@@ -100,8 +100,9 @@ async function main(): Promise<void> {
   });
 
   // 4. check_package(confundible) → requiere_confirmacion + sugerencia
-  //    CONTROL: debe fallar hasta que se aplique el fix (ver comentario arriba).
-  await chequear('check_package("unused-imports") → requiere_confirmacion con sugerencia (CONTROL: debe fallar hasta el fix)', async () => {
+  //    Ex-control (ver comentario arriba): ya arreglado, ahora es una
+  //    prueba de regresión normal.
+  await chequear('check_package("unused-imports") → requiere_confirmacion con sugerencia', async () => {
     const resp = await fetch(`${BASE_URL}/api/agente/check-package`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -112,7 +113,7 @@ async function main(): Promise<void> {
     if (body.resultado !== "requiere_confirmacion" || body.sugerencia !== "eslint-plugin-unused-imports") {
       return {
         ok: false,
-        detalle: `resultado="${body.resultado}" sugerencia="${body.sugerencia ?? "undefined"}" — esperaba resultado="requiere_confirmacion" sugerencia="eslint-plugin-unused-imports". Bug conocido (ver PRUEBAS_RESULTADO.md, verificarPaquete no chequea confundibles). NO presentar el guion de "confundible" hasta que esto pase a ✅.`,
+        detalle: `resultado="${body.resultado}" sugerencia="${body.sugerencia ?? "undefined"}" — esperaba resultado="requiere_confirmacion" sugerencia="eslint-plugin-unused-imports". Esto ya estaba arreglado — es una REGRESIÓN, revisar motor.verificarPaquete(). No presentar el guion de "confundible" hasta que esto vuelva a ✅.`,
       };
     }
     return { ok: true, detalle: `resultado="${body.resultado}" sugerencia="${body.sugerencia}"` };
