@@ -45,13 +45,6 @@ export function HomePage() {
   const tipo = useMemo(() => detectarTipoObjetivo(objetivo), [objetivo]);
   const etiqueta = etiquetaTipo(tipo);
 
-  const { data: health } = useQuery({
-    queryKey: ["health"],
-    queryFn: api.obtenerHealth,
-    refetchInterval: 30000,
-    retry: 1,
-  });
-
   const { data: scans, isLoading, isError } = useQuery({
     queryKey: ["scans"],
     queryFn: api.obtenerScans,
@@ -189,54 +182,6 @@ export function HomePage() {
                 </p>
               ) : null}
             </form>
-
-            {health ? (
-              <dl
-                className="aparecer mt-10 grid w-full max-w-2xl grid-cols-1 divide-y divide-tactico border border-tactico bg-panel/60 rounded lg:grid-cols-3 lg:divide-x lg:divide-y-0"
-                style={{ animationDelay: "0.5s" }}
-              >
-                {[
-                  {
-                    label: "IA local",
-                    ok: health.ollama.activo,
-                    texto: health.ollama.activo
-                      ? `Activa · ${health.ollama.modelo ?? "modelo local"}`
-                      : "Sin conexión, análisis sin explicaciones",
-                  },
-                  {
-                    label: "Gitleaks",
-                    ok: health.gitleaks,
-                    texto: health.gitleaks
-                      ? "Disponible"
-                      : "No disponible, faltan secretos",
-                  },
-                  {
-                    label: "Modo",
-                    ok: true,
-                    texto: health.offline ? "100% en tu máquina" : "Requiere red",
-                  },
-                ].map((item) => (
-                  <div key={item.label} className="px-4 py-3">
-                    <dt className="font-mono text-[11px] font-bold uppercase tracking-[0.2em] text-texto-2">
-                      {item.label}
-                    </dt>
-                    <dd
-                      className={`mt-1 flex items-center gap-2 text-sm font-medium ${
-                        item.ok ? "text-sello-liberado" : "text-sello-revisar"
-                      }`}
-                    >
-                      <span
-                        aria-hidden="true"
-                        className={`h-2 w-2 rounded-full ${
-                          item.ok ? "bg-sello-liberado" : "bg-sello-revisar"
-                        }`}
-                      />
-                      {item.texto}
-                    </dd>
-                  </div>
-                ))}
-              </dl>
-            ) : null}
           </section>
 
           <section

@@ -3,7 +3,6 @@ import { Link } from "react-router-dom";
 import type {
   Finding,
   Modulo,
-  PersonalInforme,
   Scan,
   Severidad,
   Veredicto,
@@ -356,48 +355,6 @@ export function Reporte({ scan }: { scan: Scan }) {
     }
   };
 
-  const personalList: PersonalInforme[] = informe?.personal?.length
-    ? informe.personal
-    : [
-        {
-          grado: "Cnel. Ing.",
-          nombre: "Santiago Bazán",
-          cargo: "Director General de Ciberdefensa C4ISR",
-          firma: "REGISTRADA / TOKEN DEF-892",
-        },
-        {
-          grado: "My. Lic.",
-          nombre: "Tomás Rodríguez",
-          cargo: "Jefe de Auditoría de Código y Sistemas Críticos",
-          firma: "REGISTRADA / TOKEN DEF-411",
-        },
-        {
-          grado: "Cap. Ing.",
-          nombre: "Simón V.",
-          cargo: "Analista de Vulnerabilidades y Protocolos Tácticos",
-          firma: "REGISTRADA / TOKEN DEF-105",
-        },
-        {
-          grado: "Ten.",
-          nombre: "Emanuel M.",
-          cargo: "Oficial de Triage e Inteligencia Artificial Soberana",
-          firma: "REGISTRADA / TOKEN DEF-034",
-        },
-      ];
-
-  const indiceItems: string[] = informe?.indice?.length
-    ? informe.indice
-    : [
-        "1. Objetivo y Fundamentos Operacionales",
-        "2. Alcance Técnico y Perímetro de Auditoría",
-        "3. Problemática Anterior y Evaluación de Riesgos",
-        "4. Introducción y Marco Normativo de Ciberdefensa",
-        "5. Índice General del Documento",
-        "6. Desarrollo: Análisis Técnico, CVEs Detectados y Hallazgos",
-        "7. Conclusión y Dictamen de Habilitación",
-        "8. Personal Interviniente y Registro de Firmas de Responsabilidad",
-      ];
-
   return (
     <section
       aria-labelledby="titulo-documento-militar"
@@ -441,19 +398,6 @@ export function Reporte({ scan }: { scan: Scan }) {
 
       {/* CUERPO PRINCIPAL DEL INFORME MILITAR */}
       <article className="border border-tactico bg-panel p-6 sm:p-10 shadow-sm rounded-md text-texto">
-        {/* Membrete formal institucional */}
-        <header className="border-b-2 border-tactico pb-6 text-center">
-          <p className="font-mono text-xs font-bold tracking-[0.25em] text-texto-2 uppercase">
-            República Argentina · Ministerio de Defensa
-          </p>
-          <p className="mt-1 font-mono text-sm font-black tracking-[0.2em] text-texto uppercase">
-            Estado Mayor Conjunto de las Fuerzas Armadas
-          </p>
-          <p className="font-mono text-[11px] tracking-[0.18em] text-cian uppercase">
-            Dirección General de C4ISR y Ciberdefensa · Sistema Soberano "Aduana"
-          </p>
-        </header>
-
         {/* Cabecera del documento */}
         <div className="mt-6">
           <CabeceraDocumento scan={scan} />
@@ -529,29 +473,6 @@ export function Reporte({ scan }: { scan: Scan }) {
                 {informe?.introduccion ??
                   "En cumplimiento de la Directiva Estratégica de Ciberdefensa y Soberanía Tecnológica, la plataforma Aduana ejecutó una auditoría integral, autónoma y desconectada (100% offline). El procedimiento combina análisis estático determinista (análisis léxico, reglas de secretos Gitleaks, Trojan Source Unicode) con triage semántico asistido por modelos de lenguaje soberanos (Ollama Llama-3.2:3b)."}
               </p>
-            </div>
-          </section>
-
-          {/* 5. ÍNDICE */}
-          <section className="py-6" aria-labelledby="seccion-indice">
-            <h2
-              id="seccion-indice"
-              className="font-mono text-sm font-bold uppercase tracking-[0.2em] text-cian"
-            >
-              5. Índice
-            </h2>
-            <div className="mt-3 border border-tactico bg-noche/30 p-4 rounded">
-              <ol className="grid gap-2 sm:grid-cols-2">
-                {indiceItems.map((item) => (
-                  <li
-                    key={item}
-                    className="font-mono text-xs font-medium text-texto flex items-center gap-2"
-                  >
-                    <span className="text-cian">▸</span>
-                    <span>{item}</span>
-                  </li>
-                ))}
-              </ol>
             </div>
           </section>
 
@@ -699,41 +620,7 @@ export function Reporte({ scan }: { scan: Scan }) {
             </div>
           </section>
 
-          {/* 8. PERSONAL */}
-          <section className="py-6" aria-labelledby="seccion-personal">
-            <h2
-              id="seccion-personal"
-              className="font-mono text-sm font-bold uppercase tracking-[0.2em] text-cian"
-            >
-              8. Personal
-            </h2>
-            <p className="mt-1 font-mono text-xs text-texto-2">
-              Autoridades de intervención técnica, control y responsabilidad operativa:
-            </p>
-
-            <div className="mt-4 grid gap-3 sm:grid-cols-2">
-              {personalList.map((persona) => (
-                <div
-                  key={persona.nombre}
-                  className="border border-tactico bg-panel/70 p-3 rounded"
-                >
-                  <p className="font-mono text-xs font-bold text-texto">
-                    {persona.grado ? `${persona.grado} ` : ""}
-                    {persona.nombre}
-                  </p>
-                  <p className="font-mono text-[11px] text-texto-2">
-                    {persona.cargo}
-                  </p>
-                  {persona.firma ? (
-                    <p className="mt-2 border-t border-tactico/60 pt-1 font-mono text-[10px] text-cian">
-                      Firma: {persona.firma}
-                    </p>
-                  ) : null}
-                </div>
-              ))}
-            </div>
-          </section>
-        </div>
+          </div>
 
         {/* Pie formal del documento */}
         <footer className="mt-10 border-t border-tactico pt-4 text-center font-mono text-[10px] text-texto-2 uppercase tracking-[0.2em]">
