@@ -1,6 +1,5 @@
 import { NavLink } from "react-router-dom";
 import { useEffect, useState } from "react";
-import { LogoSitio } from "./LogoSitio";
 import { EscudoAduana } from "./EscudoAduana";
 
 const enlaceClase = ({ isActive }: { isActive: boolean }) =>
@@ -53,7 +52,7 @@ export function Header() {
       <header className="border-b border-tactico bg-panel/50 backdrop-blur">
         <div className="mx-auto flex h-16 w-full max-w-6xl items-center justify-between px-4">
           <NavLink to="/" className="flex items-center gap-3">
-            <LogoSitio />
+            <img src="/logo.png" alt="Logo FIE" className="h-12 w-auto" />
             <span className="h-8 w-px bg-tactico" aria-hidden="true" />
             <span className="flex items-center gap-2.5">
               <EscudoAduana className="h-7 w-7 text-cian" />
