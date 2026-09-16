@@ -15,7 +15,7 @@ export const ORIGENES_PERMITIDOS = [
   "http://localhost:5173",
 ];
 
-export const RUTA_DB = path.join(RAIZ, "data", "aduana.db");
+export const RUTA_DB = process.env.ADUANA_DB_PATH ?? path.join(RAIZ, "data", "aduana.db");
 export const RUTA_CUARENTENA = "/tmp/aduana";
 
 export const LIMITES = {

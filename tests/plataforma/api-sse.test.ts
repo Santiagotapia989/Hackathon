@@ -1,16 +1,14 @@
 // tests/plataforma/api-sse.test.ts
 // SSE real contra el servidor levantado como subproceso (motor stub).
 //
-// NOTA DE INFRA: RUTA_DB (config.ts) no es configurable por env var, así
-// que todos los archivos de test de plataforma que levantan un servidor
-// comparten la MISMA data/aduana.db física. Bajo el modo por default de
-// `npm test` (vitest corre los archivos en paralelo), varios procesos
-// servidor escriben esa base al mismo tiempo y eso puede causar
-// contención/flakiness real (confirmado: este archivo es intermitente
-// bajo `npm test` normal, pero 100% estable con
-// `npx vitest run --no-file-parallelism`). Es el mismo hallazgo raíz de
-// "no hay DB de test aislada" reportado en PRUEBAS_RESULTADO.md — acá
-// además causa tests flaky, no solo pérdida del seed de demo.
+// NOTA DE INFRA (histórica, ya arreglada): RUTA_DB era hardcodeada en
+// config.ts, así que todos los archivos de test de plataforma compartían
+// la MISMA data/aduana.db física, causando flakiness real en este archivo
+// bajo el modo paralelo por default de Vitest. Ahora RUTA_DB es
+// configurable por ADUANA_DB_PATH y cada archivo de test tiene su propia
+// DB temporal (ver tests/setup-db.ts) — se mantiene fileParallelism:false
+// en vitest.config.ts por simplicidad, no porque siga haciendo falta para
+// evitar esta contención puntual.
 import { describe, it, expect, beforeAll, afterAll } from "vitest";
 import { levantarServidorTest, type ServidorTest } from "./helpers/servidor-test.js";
 

@@ -6,13 +6,15 @@ export default defineConfig({
     environment: "node",
     testTimeout: 30000,
     hookTimeout: 30000,
-    // Varios tests de plataforma levantan un servidor real (subproceso) que
-    // escribe en data/aduana.db — RUTA_DB no es configurable por env var, así
-    // que todos comparten la misma base física. Sin esto, correr los
-    // archivos de test en paralelo (el default de Vitest) causa contención
-    // real entre esos procesos (confirmado: tests/plataforma/api-sse.test.ts
-    // es intermitente en paralelo, estable en serie).
+    // Cada archivo de test ahora tiene su propia DB temporal (ver
+    // tests/setup-db.ts — ADUANA_DB_PATH, RUTA_DB configurable en
+    // config.ts), así que ya no comparten data/aduana.db entre sí. Se
+    // mantiene fileParallelism:false igual por simplicidad/estabilidad
+    // (menos procesos Node concurrentes en esta máquina, junto a Ollama);
+    // globalSetup queda como red de seguridad extra por si algún test
+    // llegara a tocar la DB real por error.
     fileParallelism: false,
     globalSetup: ["./tests/global-setup.ts"],
+    setupFiles: ["./tests/setup-db.ts"],
   },
 });

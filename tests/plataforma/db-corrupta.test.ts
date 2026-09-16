@@ -4,12 +4,11 @@
 // servidor debe seguir respondiendo a otros pedidos después.
 import { describe, it, expect, beforeAll, afterAll } from "vitest";
 import Database from "better-sqlite3";
-import * as path from "node:path";
+import { RUTA_DB } from "../../src/plataforma/config.js";
 import { levantarServidorTest, type ServidorTest } from "./helpers/servidor-test.js";
 
 let servidor: ServidorTest;
 const PUERTO = 39006;
-const RUTA_DB = path.resolve(import.meta.dirname!, "..", "..", "data", "aduana.db");
 
 beforeAll(async () => {
   servidor = await levantarServidorTest({ puerto: PUERTO });
