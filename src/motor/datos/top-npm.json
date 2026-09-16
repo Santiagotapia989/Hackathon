@@ -1,0 +1,22 @@
+[
+  "react", "react-dom", "next", "vue", "vue-router", "angular", "svelte", "sveltekit", "solid-js",
+  "express", "fastify", "koa", "nest", "hapi", "axios", "got", "undici", "node-fetch", "superagent",
+  "lodash", "underscore", "ramda", "rxjs", "immutable", "immer", "dayjs", "date-fns", "moment",
+  "typescript", "ts-node", "@babel/core", "@babel/preset-env", "esbuild", "swc", "vite", "webpack",
+  "rollup", "parcel", "turbo", "jest", "vitest", "mocha", "cypress", "playwright", "puppeteer",
+  "@types/node", "@types/react", "@types/express", "eslint", "prettier", "stylelint", "husky",
+  "lint-staged", "commitlint", "@commitlint/cli", "debug", "winston", "pino", "morgan", "chalk",
+  "commander", "meow", "yargs", "minimist", "dotenv", "cross-env", "shelljs", "execa", "concurrently",
+  "nodemon", "tsx", "tslib", "core-js", "babel-loader", "ts-loader", "css-loader", "postcss",
+  "autoprefixer", "tailwindcss", "sass", "less", "stylus", "uuid", "nanoid", "shortid",
+  "zod", "joi", "yup", "class-validator", "ajv", "jsonwebtoken", "jose", "passport",
+  "passport-jwt", "bcrypt", "bcryptjs", "argon2", "crypto-js", "helmet", "cors", "express-rate-limit",
+  "multer", "cookie-parser", "body-parser", "qs", "path-to-regexp", "mongoose", "mongodb", "mongoose-unique-validator",
+  "pg", "mysql", "mysql2", "sqlite3", "better-sqlite3", "sequelize", "typeorm", "prisma",
+  "knex", "redis", "ioredis", "bull", "amqplib", "kafkajs", "socket.io", "ws",
+  "graphql", "apollo-server", "@graphql-tools/schema", "@apollo/client", "react-query", "@tanstack/react-query",
+  "zustand", "redux", "react-redux", "mobx", "recoil", "jotai", "react-router", "react-router-dom",
+  "react-hook-form", "formik", "antd", "ant-design", "material-ui", "@mui/material", "chakra-ui",
+  "@chakra-ui/react", "next-auth", "lucide-react", "react-icons", "framer-motion", "styled-components",
+  "emotion", "@emotion/react", "clsx", "classnames", "tailwind-merge", "sharp", "resize-observer-polyfill"
+]

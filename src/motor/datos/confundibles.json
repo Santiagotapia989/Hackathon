@@ -1,0 +1,22 @@
+{
+  "unused-imports": {
+    "sugerencia": "eslint-plugin-unused-imports",
+    "descripcion": "Los asistentes suelen inventar este nombre en lugar de eslint-plugin-unused-imports."
+  },
+  "eslint-config-prettier-plugin": {
+    "sugerencia": "eslint-config-prettier",
+    "descripcion": "Nombre confundible con la config oficial eslint-config-prettier."
+  },
+  "react-components": {
+    "sugerencia": "react",
+    "descripcion": "Nombre genérico que no corresponde a ningún paquete real conocido."
+  },
+  "typescript-utils": {
+    "sugerencia": "typescript-estree",
+    "descripcion": "Nombre genérico plausible pero sin paquete real conocido en npm."
+  },
+  "js-str-utils": {
+    "sugerencia": null,
+    "descripcion": "Nombre plausible que los asistentes inventan en lugar de librerías reales."
+  }
+}

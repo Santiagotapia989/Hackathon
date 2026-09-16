@@ -10,3 +10,6 @@ data/
 .DS_Store
 *.log
 coverage/
+bin/gitleaks*
+fixtures/
+.tmp/

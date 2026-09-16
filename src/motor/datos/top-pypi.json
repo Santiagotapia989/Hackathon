@@ -1,0 +1,19 @@
+[
+  "requests", "flask", "django", "fastapi", "starlette", "uvicorn", "gunicorn", "bottle",
+  "numpy", "pandas", "scipy", "matplotlib", "seaborn", "plotly", "scikit-learn", "sklearn",
+  "tensorflow", "torch", "keras", "pytorch-lightning", "transformers", "datasets",
+  "pytest", "unittest", "nose", "coverage", "tox", "black", "ruff", "flake8", "mypy", "pylint",
+  "pydantic", "marshmallow", "celery", "redis", "sqlalchemy", "alembic", "peewee",
+  "boto3", "google-cloud-storage", "azure-storage-blob", "minio",
+  "httpx", "aiohttp", "urllib3", "httpie", "paramiko", "fabric",
+  "rich", "click", "typer", "fire", "pandas", "pyyaml", "toml", "tomli",
+  "pillow", "opencv-python", "imageio", "pyvips",
+  "pymupdf", "reportlab", "weasyprint", "lxml", "beautifulsoup4", "bs4", "scrapy", "selenium",
+  "pytest-cov", "pytest-mock", "pytest-asyncio", "pytest-xdist", "coverage",
+  "mypy", "pyright", "bandit", "safety", "pip-audit",
+  "twine", "build", "setuptools", "wheel", "pip-tools", "poetry",
+  "gunicorn", "waitress", "uvicorn[standard]", "hypercorn",
+  "asyncpg", "psycopg2", "psycopg2-binary", "pymysql", "pymongo", "pyodbc", "oracledb",
+  "structlog", "loguru", "tenacity", "pydantic-settings",
+  "jinja2", "mako", "chameleon"
+]
