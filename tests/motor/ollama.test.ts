@@ -69,17 +69,6 @@ describe("llm/ollama", () => {
   // candidato problemático gasta 8 de las 15 llamadas de IA de TODO el
   // escaneo — puede dejar sin presupuesto a otros hallazgos legítimos que
   // sí necesitaban triage. Ver PRUEBAS_RESULTADO.md.
-  it("JSON con forma de objeto pero mal formado — mide el reintento real (documenta el bug: se repite ~8 veces, no 1)", async () => {
-    const fetchMock = vi.fn(async () => new Response(
-      JSON.stringify({ message: { content: "{clasificacion: benigno, sin comillas}" } }),
-      { status: 200 },
-    ));
-    vi.stubGlobal("fetch", fetchMock);
-    const r = await triage("a.md", "regla", 1, "contenido");
-    expect(r).toBeNull();
-    expect(fetchMock.mock.calls.length).toBeGreaterThan(2); // debería ser 2 (1 reintento); hoy es 8
-  });
-
   it.fails("el reintento en JSON malformado debería consumir como máximo 2 llamadas (1 original + 1 reintento)", async () => {
     const fetchMock = vi.fn(async () => new Response(
       JSON.stringify({ message: { content: "{clasificacion: benigno, sin comillas}" } }),
