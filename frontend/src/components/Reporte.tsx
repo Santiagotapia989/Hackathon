@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useMemo } from "react";
 import { Link } from "react-router-dom";
 import type {
   Finding,
@@ -320,9 +320,6 @@ function HallazgoItem({ hallazgo }: { hallazgo: Finding }) {
 }
 
 export function Reporte({ scan }: { scan: Scan }) {
-  const [copiado, setCopiado] = useState(false);
-  const [errorCopia, setErrorCopia] = useState<string | null>(null);
-
   const informe = scan.informeEjecutivo;
   const resumen = scan.resumen;
 
@@ -342,18 +339,6 @@ export function Reporte({ scan }: { scan: Scan }) {
         .filter((g) => g.items.length > 0),
     [scan.hallazgos]
   );
-
-  const copiarReporte = async () => {
-    setErrorCopia(null);
-    try {
-      await navigator.clipboard.writeText(JSON.stringify(scan, null, 2));
-      setCopiado(true);
-      setTimeout(() => setCopiado(false), 2000);
-    } catch {
-      setErrorCopia("No se pudo copiar al portapapeles.");
-      setTimeout(() => setErrorCopia(null), 3000);
-    }
-  };
 
   return (
     <section
@@ -377,24 +362,8 @@ export function Reporte({ scan }: { scan: Scan }) {
           >
             Imprimir documento
           </button>
-          <button
-            type="button"
-            onClick={copiarReporte}
-            className="border border-cian/50 bg-cian/10 px-3 py-1.5 font-mono text-xs font-bold uppercase tracking-wider text-cian hover:bg-cian hover:text-white transition-colors rounded"
-          >
-            {copiado ? "Copiado ✓" : "Copiar JSON"}
-          </button>
         </div>
       </div>
-
-      {errorCopia ? (
-        <p
-          role="alert"
-          className="mb-4 border border-emergencia bg-emergencia/10 px-3 py-2 font-mono text-xs text-emergencia"
-        >
-          {errorCopia}
-        </p>
-      ) : null}
 
       {/* CUERPO PRINCIPAL DEL INFORME MILITAR */}
       <article className="border border-tactico bg-panel p-6 sm:p-10 shadow-sm rounded-md text-texto">
