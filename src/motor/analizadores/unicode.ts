@@ -62,8 +62,35 @@ type CmdUnicode = {
   cp: number;
   linea: number;
   tipo: string;
-  bloque: number[]; // para tags: codepoints consecutivos; para otros: [cp]
+  bloque: number[]; // para tags: codepoints consecutivos; para selectores: el run completo; para otros: [cp]
 };
+
+// ─── Contexto Unicode ───────────────────────────────────────────────────────
+
+const RE_IDEOGRAFO_CJK = /\p{Ideographic}/u;
+
+function esSelectorVariacion(cp: number): boolean {
+  return (cp >= 0xFE00 && cp <= 0xFE0F) || (cp >= 0xE0100 && cp <= 0xE01EF);
+}
+
+/** FE0E (texto) y FE0F (emoji) son selectores de presentación: válidos tras \p{Emoji} y en secuencias keycap. */
+function esSelectorPresentacion(cp: number): boolean {
+  return cp === 0xFE0E || cp === 0xFE0F;
+}
+
+/** Code point completo que está justo antes del índice dado (maneja pares surrogados). */
+function codePointAntes(contenido: string, indice: number): number | undefined {
+  if (indice <= 0) return undefined;
+  const cp = contenido.codePointAt(indice - 1)!;
+  if (cp >= 0xDC00 && cp <= 0xDFFF && indice - 2 >= 0) {
+    return contenido.codePointAt(indice - 2);
+  }
+  return cp;
+}
+
+function esIdeografoCJK(cp: number | undefined): boolean {
+  return cp !== undefined && RE_IDEOGRAFO_CJK.test(String.fromCodePoint(cp));
+}
 
 // ─── Detección ──────────────────────────────────────────────────────────────
 
@@ -107,9 +134,29 @@ function detectarInvisibles(contenido: string): CmdUnicode[] {
       continue;
     }
 
-    // Variation selectors: U+FE00–U+FE0F, U+E0100–U+E01EF
-    if ((cp >= 0xFE00 && cp <= 0xFE0F) || (cp >= 0xE0100 && cp <= 0xE01EF)) {
-      resultados.push({ cp, linea: lineaDeIndice(contenido, i), tipo: "unicode-selector-variacion", bloque: [cp] });
+    // Variation selectors: U+FE00–U+FE0F, U+E0100–U+E01EF — acumular el run
+    // completo antes de decidir.
+    if (esSelectorVariacion(cp)) {
+      const inicio = i - (cp > 0xFFFF ? 2 : 1);
+      const linea = lineaDeIndice(contenido, inicio);
+      const bloque: number[] = [cp];
+      while (i < limite) {
+        const cpSig = contenido.codePointAt(i)!;
+        if (!esSelectorVariacion(cpSig)) break;
+        bloque.push(cpSig);
+        i += cpSig > 0xFFFF ? 2 : 1;
+      }
+
+      // Se reporta solo: (a) runs de 2+ selectores consecutivos, o
+      // (b) un FE00–FE0D / E0100–E01EF aislado que no siga a un ideograma CJK.
+      // Un FE0E/FE0F aislado es un selector de presentación legítimo
+      // (válido tras \p{Emoji} y en secuencias keycap) y nunca se reporta.
+      const reportar =
+        bloque.length >= 2 ||
+        (!esSelectorPresentacion(bloque[0]!) && !esIdeografoCJK(codePointAntes(contenido, inicio)));
+      if (reportar) {
+        resultados.push({ cp: bloque[0]!, linea, tipo: "unicode-selector-variacion", bloque });
+      }
       continue;
     }
   }
@@ -229,19 +276,20 @@ export function analizarArchivoUnicode(archivo: ArchivoLeido): Finding[] {
   const vsPorArchivo = otros.filter((c) => c.tipo === "unicode-selector-variacion");
   if (vsPorArchivo.length > 0) {
     const primera = vsPorArchivo[0]!;
+    const cps = vsPorArchivo.flatMap((c) => c.bloque);
     hallazgos.push({
       id: idHallazgo("unicode-selector-variacion", ruta),
       modulo: "unicode",
       regla: "unicode-selector-variacion",
-      titulo: `${vsPorArchivo.length} selectores de variación fuera de contexto de emoji`,
+      titulo: `${cps.length} selectores de variación fuera de contexto de emoji`,
       severidad: "media",
       determinista: true,
       archivo: ruta,
       linea: primera.linea,
       evidencia: prepararEvidencia(
-        vsPorArchivo.map((c) => marca(c.cp)).join(" ")
+        cps.map((cp) => marca(cp)).join(" ")
       ),
-      explicacion: `Se encontraron ${vsPorArchivo.length} selectores de variación Unicode fuera de un emoji visible. Pueden contener datos ocultos.`,
+      explicacion: `Se encontraron ${cps.length} selectores de variación Unicode fuera de un emoji visible. Pueden contener datos ocultos.`,
     });
   }
 

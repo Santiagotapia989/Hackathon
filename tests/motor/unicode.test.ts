@@ -46,12 +46,40 @@ describe("analizador unicode", () => {
     expect(h?.severidad).toBe("media");
   });
 
-  it("detecta selectores de variación", () => {
-    const a = archivo("src/foo.ts", "let codigo = 1\uFE0F;");
+  it("detecta runs de 2+ selectores de variación consecutivos", () => {
+    const a = archivo("src/foo.ts", "let codigo = 1\uFE0F\uFE0F;");
     const hallazgos = analizarArchivoUnicode(a);
     const h = hallazgos.find((h) => h.regla === "unicode-selector-variacion");
     expect(h).toBeDefined();
     expect(h?.determinista).toBe(true);
+  });
+
+  it("detecta un selector FE00–FE0D aislado si no sigue a un ideograma CJK", () => {
+    const a = archivo("src/foo.ts", "let codigo = a\uFE05;");
+    const hallazgos = analizarArchivoUnicode(a);
+    const h = hallazgos.find((h) => h.regla === "unicode-selector-variacion");
+    expect(h).toBeDefined();
+  });
+
+  it("un selector FE00–FE0D tras ideograma CJK es legítimo y no se reporta", () => {
+    const a = archivo("locales/zh.yml", "texto: 葛\uFE05 normal");
+    const hallazgos = analizarArchivoUnicode(a);
+    const h = hallazgos.find((h) => h.regla === "unicode-selector-variacion");
+    expect(h).toBeUndefined();
+  });
+
+  it("un selector FE0E/FE0F aislado es de presentación y no se reporta", () => {
+    const a = archivo("src/foo.ts", "let codigo = a\uFE0F;");
+    const hallazgos = analizarArchivoUnicode(a);
+    const h = hallazgos.find((h) => h.regla === "unicode-selector-variacion");
+    expect(h).toBeUndefined();
+  });
+
+  it("una secuencia keycap (dígito + FE0F + U+20E3) no se reporta", () => {
+    const a = archivo("README.md", "Presioná 1\uFE0F\u20E3 para continuar.");
+    const hallazgos = analizarArchivoUnicode(a);
+    const h = hallazgos.find((h) => h.regla === "unicode-selector-variacion");
+    expect(h).toBeUndefined();
   });
 
   it("bidi en texto (no-código) da severidad media, no alta", () => {
@@ -62,14 +90,10 @@ describe("analizador unicode", () => {
     expect(bidi?.severidad).toBe("media");
   });
 
-  // BUG: un selector de variación DENTRO de un emoji real (ej. corazón + VS16,
-  // uso normalísimo en cualquier README) se reporta igual que uno fuera de
-  // contexto. La especificación pide explícitamente que el que está dentro
-  // de un emoji NO se reporte; el código no distingue los dos casos, siempre
-  // reporta. Este test documenta el comportamiento CORRECTO esperado con
-  // it.fails: hoy falla porque el emoji genera un hallazgo "media" (falso
-  // positivo). Ver PRUEBAS_RESULTADO.md.
-  it.fails("selector de variación dentro de un emoji real no debería reportarse", () => {
+  // Ex-it.fails (B4 en PRUEBAS_RESULTADO.md): un selector de variación
+  // DENTRO de un emoji real (corazón + VS16) ya no se reporta — FE0F aislado
+  // es un selector de presentación legítimo.
+  it("selector de variación dentro de un emoji real no se reporta", () => {
     const corazonConVS16 = "❤️"; // ❤️
     const a = archivo("README.md", `Estado: liberado. Hecho con ${corazonConVS16} para el hackathon.`);
     const hallazgos = analizarArchivoUnicode(a);
