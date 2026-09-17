@@ -19,6 +19,7 @@
     "motor": "tsx scripts/analizar.ts",
     "escanear-repo": "tsx scripts/escanear-repo-remoto.ts",
     "generar-fixtures": "tsx scripts/generar-fixture.ts",
+    "probar-repos": "tsx scripts/probar-repos.ts",
     "test:demo": "tsx scripts/test-demo.ts",
     "test": "vitest run",
     "test:watch": "vitest",
