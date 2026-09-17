@@ -22,7 +22,7 @@ export function VeredictoEtiqueta({
   const color = colores[veredicto];
   return (
     <span
-      className="inline-flex items-center gap-2 font-mono font-bold uppercase tracking-[0.18em]"
+      className="inline-flex items-center gap-2 font-mono font-bold uppercase tracking-widest"
       style={{ color }}
     >
       <span
@@ -33,7 +33,7 @@ export function VeredictoEtiqueta({
             : "h-2.5 w-2.5 rounded-full border-2 border-current"
         }
       />
-      <span className={size === "grande" ? "text-xl" : "text-sm"}>
+      <span className={size === "grande" ? "text-xl" : "text-xs"}>
         {etiquetas[veredicto]}
       </span>
     </span>

@@ -53,7 +53,7 @@ export function ScanPage() {
       {isLoading ? (
         <section className="mx-auto w-full max-w-6xl px-4 pt-8">
           <div className="panel-cyber clip-esquina p-6">
-            <p className="parpadeo font-mono text-sm uppercase tracking-[0.2em] text-cian">
+            <p className="parpadeo font-mono text-xs uppercase tracking-widest text-cian">
               Recuperando informe…
             </p>
           </div>
@@ -61,10 +61,10 @@ export function ScanPage() {
       ) : isError || !scan ? (
         <section className="mx-auto w-full max-w-6xl px-4 pt-8">
           <div className="panel-cyber border border-sello-retenido/60 p-6">
-            <p className="font-mono text-sm font-bold uppercase tracking-[0.2em] text-sello-retenido">
+            <p className="font-mono text-xs font-bold uppercase tracking-widest text-sello-retenido">
               No se pudo recuperar el escaneo
             </p>
-            <p className="mt-2 text-sm text-texto-2">
+            <p className="mt-2 text-base leading-relaxed text-texto-2">
               El objetivo{" "}
               <span className="font-mono text-cian">{id}</span> no existe o el
               servicio no responde. Verificá que el servidor esté en
@@ -82,10 +82,10 @@ export function ScanPage() {
       ) : scan.estado === "error" ? (
         <section className="mx-auto w-full max-w-6xl px-4 pt-8">
           <div className="panel-cyber border border-sello-retenido/60 p-6">
-            <p className="font-mono text-sm font-bold uppercase tracking-[0.2em] text-sello-retenido">
+            <p className="font-mono text-xs font-bold uppercase tracking-widest text-sello-retenido">
               Inspección fallida
             </p>
-            <p className="mt-2 text-sm text-texto-2">
+            <p className="mt-2 text-base leading-relaxed text-texto-2">
               El análisis de{" "}
               <span className="font-mono text-cian">{scan.objetivo}</span> no
               pudo completarse. Revisá que el objetivo sea accesible y volvé a

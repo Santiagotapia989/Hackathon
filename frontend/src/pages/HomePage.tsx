@@ -89,7 +89,7 @@ export function HomePage() {
           >
             <h1
               id="titulo-control"
-              className="aparecer max-w-4xl text-center text-[34px] font-bold leading-tight text-texto sm:text-[44px]"
+              className="aparecer max-w-4xl text-center text-3xl font-extrabold tracking-tight text-texto md:text-4xl"
               style={{ animationDelay: "0.1s" }}
             >
               Inspeccioná lo que entra{" "}
@@ -98,7 +98,7 @@ export function HomePage() {
               </span>
             </h1>
             <p
-              className="aparecer mt-4 max-w-2xl text-center text-base leading-relaxed text-texto-2 sm:text-xl"
+              className="aparecer mt-4 max-w-2xl text-center text-base leading-relaxed text-texto-2"
               style={{ animationDelay: "0.2s" }}
             >
               Aduana analiza repositorios y paquetes en busca de instrucciones
@@ -113,7 +113,7 @@ export function HomePage() {
               {MODULOS.map((item) => (
                 <span
                   key={item}
-                  className="border border-tactico bg-panel/60 px-3 py-1 font-mono text-[12px] text-texto-2"
+                  className="border border-tactico bg-panel/60 px-3 py-1 font-mono text-xs uppercase tracking-widest text-texto-2"
                 >
                   <span className="mr-1.5 text-cian">▸</span>
                   {item}
@@ -129,10 +129,10 @@ export function HomePage() {
             >
               <div className="panel-cyber brillo-cian-borde">
                 <div className="flex items-center justify-between border-b border-tactico px-4 py-2.5">
-                  <span className="font-mono text-[11px] font-bold uppercase tracking-[0.2em] text-cian">
+                  <span className="text-sm font-bold uppercase tracking-wider text-cian">
                     Documento a inspeccionar
                   </span>
-                  <span className="font-mono text-[11px] text-texto-2">
+                  <span className="font-mono text-xs uppercase tracking-widest text-texto-2">
                     S-16 / ENTRADA
                   </span>
                 </div>
@@ -151,14 +151,14 @@ export function HomePage() {
                   <button
                     type="submit"
                     disabled={crearScan.isPending}
-                    className="shrink-0 rounded bg-ele px-6 py-3 font-mono text-sm font-bold uppercase tracking-[0.14em] text-white transition-colors hover:bg-ele/90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ele disabled:opacity-60 shadow-sm"
+                    className="shrink-0 rounded bg-ele px-6 py-3 font-mono text-sm font-bold uppercase tracking-widest text-white transition-colors hover:bg-ele/90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ele disabled:opacity-60 shadow-sm"
                   >
                     {crearScan.isPending ? "Inspeccionando…" : "Inspeccionar"}
                   </button>
                 </div>
                 <p
                   id="pista-tipo"
-                  className="px-4 pb-3 font-mono text-[13px] text-texto-2"
+                  className="px-4 pb-3 font-mono text-xs text-texto-2"
                   aria-live="polite"
                 >
                   {objetivo.trim() === "" ? (
@@ -191,13 +191,13 @@ export function HomePage() {
             <div className="mb-3 flex items-baseline justify-between">
               <h2
                 id="titulo-historial"
-                className="font-mono text-[12px] font-bold uppercase tracking-[0.24em] text-texto-2"
+                className="text-sm font-bold uppercase tracking-wider text-cian"
               >
                 Últimos inspeccionados
               </h2>
               <Link
                 to="/historial"
-                className="font-mono text-[12px] text-cian underline underline-offset-4 hover:text-sello-liberado"
+                className="font-mono text-xs text-cian underline underline-offset-4 hover:text-sello-liberado"
               >
                 Ver historial completo
               </Link>
@@ -206,7 +206,7 @@ export function HomePage() {
             {isLoading ? (
               <EsqueletoFilas />
             ) : isError ? (
-              <p className="border border-tactico bg-panel px-4 py-4 text-sm text-texto-2">
+              <p className="border border-tactico bg-panel px-4 py-4 text-base leading-relaxed text-texto-2">
                 No se pudo cargar el historial. Revisá que el servidor esté en{" "}
                 <span className="font-mono text-cian">localhost:3000</span>.
               </p>
@@ -222,12 +222,12 @@ export function HomePage() {
                         <span className="truncate font-mono text-sm text-texto">
                           {scan.objetivo}
                         </span>
-                        <span className="text-[12px] text-texto-2">
+                        <span className="font-mono text-xs uppercase tracking-widest text-texto-2">
                           {scan.tipo === "repo" ? "Repo" : "Paquete"} ·{" "}
-                          <span className="font-mono">{scan.id}</span>
+                          {scan.id}
                         </span>
                       </span>
-                      <span className="font-mono text-[12px] text-texto-2 lg:text-right">
+                      <span className="font-mono text-xs uppercase tracking-widest text-texto-2 lg:text-right">
                         {scan.veredicto
                           ? totalHallazgos(scan) !== null
                             ? `${totalHallazgos(scan)} hallazgos`
@@ -236,14 +236,14 @@ export function HomePage() {
                             ? "En inspección…"
                             : "—"}
                       </span>
-                      <span className="font-mono text-[12px] text-texto-2 lg:text-right">
+                      <span className="font-mono text-xs uppercase tracking-widest text-texto-2 lg:text-right">
                         {formatoFecha.format(new Date(scan.creadoEn))}
                       </span>
                       <span className="justify-self-start lg:justify-self-end lg:w-28">
                         {scan.veredicto ? (
                           <VeredictoEtiqueta veredicto={scan.veredicto} />
                         ) : (
-                          <span className="font-mono text-sm font-bold uppercase tracking-wider text-texto-2">
+                          <span className="font-mono text-xs font-bold uppercase tracking-widest text-texto-2">
                             {scan.estado === "en_curso" ? "En curso" : "Otros"}
                           </span>
                         )}
@@ -254,10 +254,10 @@ export function HomePage() {
               </ul>
             ) : (
               <div className="border border-dashed border-tactico bg-panel/40 px-4 py-10 text-center">
-                <p className="text-base text-texto">
+                <p className="text-base leading-relaxed text-texto">
                   Todavía no se inspeccionó nada.
                 </p>
-                <p className="mt-1 text-sm text-texto-2">
+                <p className="mt-1 text-base leading-relaxed text-texto-2">
                   Ingresá una URL de repo o un paquete arriba y comenzá el
                   control.
                 </p>

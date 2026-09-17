@@ -40,7 +40,7 @@ function EtiquetaSeveridad({ severidad }: { severidad: Severidad }) {
   const color = colorSeveridad[severidad];
   return (
     <span
-      className="inline-block border px-2 py-0.5 font-mono text-[11px] font-bold uppercase tracking-[0.14em] rounded-sm"
+      className="inline-block border px-2 py-0.5 font-mono text-xs font-bold uppercase tracking-widest rounded-sm"
       style={{
         color,
         borderColor: `${color}55`,
@@ -59,13 +59,13 @@ function SelloVeredicto({ scan }: { scan: Scan }) {
   return (
     <div className="flex flex-col gap-4 border border-tactico bg-panel/80 p-5 sm:flex-row sm:items-center sm:justify-between">
       <div className="min-w-0">
-        <p className="font-mono text-[10px] uppercase tracking-[0.24em] text-texto-2">
+        <p className="font-mono text-xs uppercase tracking-widest text-texto-2">
           DICTAMEN TÉCNICO DE ADUANA
         </p>
-        <h1 className="mt-1 truncate font-mono text-xl font-bold text-texto">
+        <h1 className="mt-1 truncate font-mono text-3xl font-extrabold tracking-tight text-texto md:text-4xl">
           {scan.objetivo}
         </h1>
-        <div className="mt-2 flex flex-wrap gap-x-5 gap-y-1 font-mono text-[12px] text-texto-2">
+        <div className="mt-2 flex flex-wrap gap-x-5 gap-y-1 font-mono text-xs uppercase tracking-widest text-texto-2">
           <span>
             EXPEDIENTE / ID: <span className="font-bold text-texto">{scan.id}</span>
           </span>
@@ -105,12 +105,12 @@ function SelloVeredicto({ scan }: { scan: Scan }) {
         />
         <div className="flex flex-col">
           <span
-            className="font-mono text-2xl font-black uppercase tracking-[0.12em]"
+            className="font-mono text-2xl font-black uppercase tracking-widest"
             style={{ color }}
           >
             {verboVeredicto[veredicto]}
           </span>
-          <span className="font-mono text-[10px] uppercase tracking-[0.2em] text-texto-2">
+          <span className="font-mono text-xs uppercase tracking-widest text-texto-2">
             Veredicto Vinculante
           </span>
         </div>
@@ -159,17 +159,17 @@ function CabeceraDocumento({ scan }: { scan: Scan }) {
   return (
     <div className="border border-tactico bg-panel/60">
       <div className="border-b border-tactico bg-tactico/20 px-4 py-2">
-        <span className="font-mono text-[11px] font-bold uppercase tracking-[0.2em] text-texto">
+        <span className="text-sm font-bold uppercase tracking-wider text-cian">
           CABECERA FORMAL DEL DOCUMENTO MILITAR
         </span>
       </div>
       <dl className="grid grid-cols-1 divide-y divide-tactico sm:grid-cols-2 sm:divide-x sm:divide-y-0 lg:grid-cols-3">
         {datos.map((item) => (
           <div key={item.etiqueta} className="p-3">
-            <dt className="font-mono text-[10px] font-bold uppercase tracking-[0.2em] text-texto-2">
+            <dt className="font-mono text-xs uppercase tracking-widest text-texto-2">
               {item.etiqueta}
             </dt>
-            <dd className="mt-1 font-mono text-[13px] font-semibold text-texto">
+            <dd className="mt-1 font-mono text-xs font-semibold text-texto">
               {item.valor}
             </dd>
           </div>
@@ -185,10 +185,10 @@ function RayosX({ hallazgo }: { hallazgo: Finding }) {
   return (
     <div className="mt-3 grid gap-3 md:grid-cols-2">
       <div className="border border-tactico bg-noche/60 p-3 rounded">
-        <p className="mb-1 font-mono text-[10px] font-bold uppercase tracking-[0.2em] text-texto-2">
+        <p className="mb-1 font-mono text-xs font-bold uppercase tracking-widest text-texto-2">
           Texto visual aparente (Lo que ve el usuario)
         </p>
-        <pre className="whitespace-pre-wrap break-all font-mono text-[12px] leading-relaxed text-texto-2">
+        <pre className="whitespace-pre-wrap break-all font-mono text-xs leading-relaxed text-texto-2">
           {marcarInvisibles(hallazgo.evidencia)}
         </pre>
       </div>
@@ -197,13 +197,13 @@ function RayosX({ hallazgo }: { hallazgo: Finding }) {
         style={{ borderColor: `${color}66` }}
       >
         <p
-          className="mb-1 font-mono text-[10px] font-bold uppercase tracking-[0.2em]"
+          className="mb-1 font-mono text-xs font-bold uppercase tracking-widest"
           style={{ color }}
         >
           Texto interpretado por el compilador / IA
         </p>
         <pre
-          className="whitespace-pre-wrap break-all font-mono text-[12px] leading-relaxed text-texto"
+          className="whitespace-pre-wrap break-all font-mono text-xs leading-relaxed text-texto"
         >
           {marcarInvisibles(hallazgo.evidenciaDecodificada)}
         </pre>
@@ -219,15 +219,15 @@ function HallazgoItem({ hallazgo }: { hallazgo: Finding }) {
         <div className="min-w-0">
           <div className="flex flex-wrap items-center gap-2">
             <EtiquetaSeveridad severidad={hallazgo.severidad} />
-            <span className="border border-tactico bg-noche/40 px-2 py-0.5 font-mono text-[10px] font-bold uppercase tracking-[0.14em] text-texto-2 rounded-sm">
+            <span className="border border-tactico bg-noche/40 px-2 py-0.5 font-mono text-xs font-bold uppercase tracking-widest text-texto-2 rounded-sm">
               {etiquetaModulo[hallazgo.modulo]}
             </span>
             {hallazgo.determinista ? (
-              <span className="border border-cian/40 bg-cian/10 px-2 py-0.5 font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-cian rounded-sm">
+              <span className="border border-cian/40 bg-cian/10 px-2 py-0.5 font-mono text-xs font-semibold uppercase tracking-widest text-cian rounded-sm">
                 Regla determinista
               </span>
             ) : (
-              <span className="border border-ele/40 bg-ele/10 px-2 py-0.5 font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-ele rounded-sm">
+              <span className="border border-ele/40 bg-ele/10 px-2 py-0.5 font-mono text-xs font-semibold uppercase tracking-widest text-ele rounded-sm">
                 Triage con IA local
                 {hallazgo.analisisIA
                   ? ` · ${Math.round(hallazgo.analisisIA.confianza * 100)}% certeza`
@@ -241,7 +241,7 @@ function HallazgoItem({ hallazgo }: { hallazgo: Finding }) {
         </div>
       </div>
 
-      <p className="mt-2 font-mono text-[12px] text-texto-2">
+      <p className="mt-2 font-mono text-xs text-texto-2">
         <span className="font-semibold text-texto-2">{hallazgo.regla}</span>
         {" · "}
         <span className="text-texto font-medium">{hallazgo.archivo}</span>
@@ -251,9 +251,9 @@ function HallazgoItem({ hallazgo }: { hallazgo: Finding }) {
 
       {/* Bloque destacado si el hallazgo contiene un CVE */}
       {hallazgo.cve ? (
-        <div className="mt-3 border-l-4 border-cian bg-cian/10 p-3 text-xs leading-relaxed text-texto rounded-r">
+        <div className="mt-3 border-l-4 border-cian bg-cian/10 p-3 text-base leading-relaxed text-texto rounded-r">
           <div className="flex items-center gap-2 font-mono font-bold text-cian">
-            <span className="rounded bg-cian/20 px-2 py-0.5 text-[11px] uppercase tracking-wider text-cian">
+            <span className="rounded bg-cian/20 px-2 py-0.5 font-mono text-xs uppercase tracking-widest text-cian">
               Identificador: {hallazgo.cve}
             </span>
             {hallazgo.componenteAfectado ? (
@@ -266,7 +266,7 @@ function HallazgoItem({ hallazgo }: { hallazgo: Finding }) {
             ) : null}
           </div>
           {hallazgo.cveContexto ? (
-            <p className="mt-2 text-texto-2 text-[12px] leading-relaxed">
+            <p className="mt-2 text-texto-2 text-sm leading-relaxed">
               <strong className="text-texto">Contexto de la vulnerabilidad:</strong>{" "}
               {hallazgo.cveContexto}
             </p>
@@ -275,16 +275,16 @@ function HallazgoItem({ hallazgo }: { hallazgo: Finding }) {
       ) : null}
 
       {hallazgo.analisisIA?.intentoManipulacion ? (
-        <p className="mt-3 border border-emergencia/60 bg-emergencia/10 px-3 py-2 font-mono text-[12px] font-bold uppercase tracking-[0.12em] text-emergencia rounded">
+        <p className="mt-3 border border-emergencia/60 bg-emergencia/10 px-3 py-2 font-mono text-xs font-bold uppercase tracking-widest text-emergencia rounded">
           ► Alerta de Triage: Este archivo contiene un vector hostil destinado a manipular o engañar al modelo.
         </p>
       ) : null}
 
       <div className="mt-3">
-        <p className="font-mono text-[10px] font-bold uppercase tracking-[0.2em] text-texto-2">
+        <p className="font-mono text-xs font-bold uppercase tracking-widest text-texto-2">
           Evidencia de código (Texto plano sin ejecución)
         </p>
-        <pre className="mt-1 overflow-auto whitespace-pre-wrap break-all border border-tactico bg-noche p-3 font-mono text-[12px] leading-relaxed text-texto rounded">
+        <pre className="mt-1 overflow-auto whitespace-pre-wrap break-all border border-tactico bg-noche p-3 font-mono text-xs leading-relaxed text-texto rounded">
           {marcarInvisibles(hallazgo.evidencia)}
         </pre>
       </div>
@@ -292,21 +292,21 @@ function HallazgoItem({ hallazgo }: { hallazgo: Finding }) {
       <RayosX hallazgo={hallazgo} />
 
       {hallazgo.explicacion ? (
-        <p className="mt-3 text-sm leading-relaxed text-texto-2">
+        <p className="mt-3 text-base leading-relaxed text-texto-2">
           {hallazgo.explicacion}
         </p>
       ) : null}
 
       {hallazgo.remediacion?.length ? (
         <div className="mt-3 border-t border-tactico/60 pt-2">
-          <p className="font-mono text-[10px] font-bold uppercase tracking-[0.2em] text-texto-2">
+          <p className="font-mono text-xs font-bold uppercase tracking-widest text-texto-2">
             Instrucciones obligatorias de remediación
           </p>
           <ol className="mt-1 grid gap-1">
             {hallazgo.remediacion.map((paso, i) => (
               <li
                 key={paso}
-                className="flex items-start gap-2 font-mono text-[12px] text-texto"
+                className="flex items-start gap-2 font-mono text-xs text-texto"
               >
                 <span className="font-bold text-cian">{i + 1}.</span>
                 <span>{paso}</span>
@@ -383,11 +383,11 @@ export function Reporte({ scan }: { scan: Scan }) {
           <section className="py-6" aria-labelledby="seccion-objetivo">
             <h2
               id="seccion-objetivo"
-              className="font-mono text-sm font-bold uppercase tracking-[0.2em] text-cian"
+              className="text-sm font-bold uppercase tracking-wider text-cian"
             >
               1. Objetivo
             </h2>
-            <div className="mt-3 text-sm leading-relaxed text-texto space-y-2">
+            <div className="mt-3 text-base leading-relaxed text-texto-2 space-y-2">
               <p>
                 {informe?.objetivo ??
                   informe?.objetivoRepo ??
@@ -400,11 +400,11 @@ export function Reporte({ scan }: { scan: Scan }) {
           <section className="py-6" aria-labelledby="seccion-alcance">
             <h2
               id="seccion-alcance"
-              className="font-mono text-sm font-bold uppercase tracking-[0.2em] text-cian"
+              className="text-sm font-bold uppercase tracking-wider text-cian"
             >
               2. Alcance
             </h2>
-            <div className="mt-3 text-sm leading-relaxed text-texto space-y-2">
+            <div className="mt-3 text-base leading-relaxed text-texto-2 space-y-2">
               <p>
                 {informe?.alcance ??
                   `La presente auditoría técnica comprende la totalidad del repositorio y dependencias de "${scan.objetivo}", incluyendo código fuente, archivos de configuración de despliegue táctico, manifiestos de paquetes, scripts de inicialización de nodos y documentación operacional. El análisis abarca la detección de instrucciones ocultas para agentes de software, secuencias Unicode invisibles o bidireccionales, dependencias alucinadas o no trazables, y claves o secretos expuestos.`}
@@ -416,11 +416,11 @@ export function Reporte({ scan }: { scan: Scan }) {
           <section className="py-6" aria-labelledby="seccion-problematica">
             <h2
               id="seccion-problematica"
-              className="font-mono text-sm font-bold uppercase tracking-[0.2em] text-cian"
+              className="text-sm font-bold uppercase tracking-wider text-cian"
             >
               3. Problemática anterior
             </h2>
-            <div className="mt-3 text-sm leading-relaxed text-texto space-y-2">
+            <div className="mt-3 text-base leading-relaxed text-texto-2 space-y-2">
               <p>
                 {informe?.problematicaAnterior ??
                   informe?.desafioDetectado ??
@@ -433,11 +433,11 @@ export function Reporte({ scan }: { scan: Scan }) {
           <section className="py-6" aria-labelledby="seccion-introduccion">
             <h2
               id="seccion-introduccion"
-              className="font-mono text-sm font-bold uppercase tracking-[0.2em] text-cian"
+              className="text-sm font-bold uppercase tracking-wider text-cian"
             >
               4. Introducción
             </h2>
-            <div className="mt-3 text-sm leading-relaxed text-texto space-y-2">
+            <div className="mt-3 text-base leading-relaxed text-texto-2 space-y-2">
               <p>
                 {informe?.introduccion ??
                   "En cumplimiento de la Directiva Estratégica de Ciberdefensa y Soberanía Tecnológica, la plataforma Aduana ejecutó una auditoría integral, autónoma y desconectada (100% offline). El procedimiento combina análisis estático determinista (análisis léxico, reglas de secretos Gitleaks, Trojan Source Unicode) con triage semántico asistido por modelos de lenguaje soberanos (Ollama Llama-3.2:3b)."}
@@ -449,12 +449,12 @@ export function Reporte({ scan }: { scan: Scan }) {
           <section className="py-6" aria-labelledby="seccion-desarrollo">
             <h2
               id="seccion-desarrollo"
-              className="font-mono text-sm font-bold uppercase tracking-[0.2em] text-cian"
+              className="text-sm font-bold uppercase tracking-wider text-cian"
             >
               6. Desarrollo
             </h2>
 
-            <div className="mt-3 text-sm leading-relaxed text-texto space-y-2">
+            <div className="mt-3 text-base leading-relaxed text-texto-2 space-y-2">
               <p>
                 {informe?.desarrollo ??
                   "Durante la fase de inspección multidimensional se procesaron 4 módulos de control táctico: Ingesta, Instrucciones ocultas, Unicode encubierto, Dependencias y Secretos expuestos. Se detectaron vulnerabilidades de consideración que comprometen la cadena de suministro de software militar."}
@@ -464,7 +464,7 @@ export function Reporte({ scan }: { scan: Scan }) {
             {/* Subsección: Métricas de impacto operacional proyectadas */}
             {informe?.metricasImpacto?.length ? (
               <div className="mt-4 border border-tactico bg-panel/60 p-4 rounded">
-                <p className="font-mono text-[11px] font-bold uppercase tracking-[0.2em] text-texto-2">
+                <p className="text-sm font-bold uppercase tracking-wider text-cian">
                   Métricas de Impacto Proyectadas
                 </p>
                 <div className="mt-2 flex flex-wrap gap-2">
@@ -488,7 +488,7 @@ export function Reporte({ scan }: { scan: Scan }) {
             {/* Subsección: Resumen Cuantitativo Operacional */}
             {resumen ? (
               <div className="mt-5">
-                <p className="font-mono text-[11px] font-bold uppercase tracking-[0.2em] text-texto-2">
+                <p className="text-sm font-bold uppercase tracking-wider text-cian">
                   Balance de Hallazgos por Severidad
                 </p>
                 <div className="mt-2 grid grid-cols-2 gap-2 sm:grid-cols-4">
@@ -497,7 +497,7 @@ export function Reporte({ scan }: { scan: Scan }) {
                       key={sev}
                       className="border border-tactico bg-panel p-3 text-center rounded"
                     >
-                      <span className="font-mono text-[10px] uppercase tracking-wider text-texto-2">
+                      <span className="font-mono text-xs uppercase tracking-widest text-texto-2">
                         {etiquetaSeveridad[sev]}
                       </span>
                       <p
@@ -513,7 +513,7 @@ export function Reporte({ scan }: { scan: Scan }) {
                   {ordenModulos.map((mod) => (
                     <span
                       key={mod}
-                      className="border border-tactico bg-panel px-2.5 py-1 font-mono text-[11px] text-texto-2 rounded"
+                      className="border border-tactico bg-panel px-2.5 py-1 font-mono text-xs uppercase tracking-widest text-texto-2 rounded"
                     >
                       {etiquetaModulo[mod]}:{" "}
                       <strong className="text-texto">
@@ -527,26 +527,26 @@ export function Reporte({ scan }: { scan: Scan }) {
 
             {/* Recuadro pedagógico e institucional sobre CVE */}
             <div className="mt-6 border-l-4 border-cian bg-cian/5 p-4 rounded-r border border-tactico/60">
-              <h3 className="font-mono text-xs font-bold uppercase tracking-[0.16em] text-cian">
+              <h3 className="text-sm font-bold uppercase tracking-wider text-cian">
                 Referencia Normativa: Diccionario CVE (Common Vulnerabilities and Exposures)
               </h3>
-              <p className="mt-1 text-xs leading-relaxed text-texto-2">
+              <p className="mt-1 text-base leading-relaxed text-texto-2">
                 Un <strong>CVE</strong> es un diccionario o lista pública que cataloga fallos de seguridad y vulnerabilidades conocidas en programas de software y equipos de hardware. Cada fallo recibe un identificador único, por ejemplo, <span className="font-mono text-cian font-semibold">CVE-2026-XXXXX</span>. En el presente informe, los hallazgos de dependencias e instrucciones hostiles referencian los identificadores CVE correspondientes para garantizar interoperabilidad técnica y trazabilidad forense.
               </p>
             </div>
 
             {/* Lista detallada de Hallazgos de Auditoría */}
             <div className="mt-6">
-              <h3 className="font-mono text-xs font-bold uppercase tracking-[0.2em] text-texto-2">
+              <h3 className="text-sm font-bold uppercase tracking-wider text-cian">
                 Detalle Técnico de Hallazgos por Módulo
               </h3>
 
               {agrupados.length === 0 ? (
                 <div className="mt-3 border border-tactico bg-panel p-6 text-center rounded">
-                  <p className="font-mono text-sm text-sello-liberado font-bold">
+                  <p className="font-mono text-xs font-bold uppercase tracking-widest text-sello-liberado">
                     ✓ Sin observaciones críticas
                   </p>
-                  <p className="mt-1 text-xs text-texto-2">
+                  <p className="mt-1 text-base leading-relaxed text-texto-2">
                     No se evidenciaron instrucciones maliciosas, caracteres invisibles, vulnerabilidades CVE ni secretos expuestos.
                   </p>
                 </div>
@@ -554,7 +554,7 @@ export function Reporte({ scan }: { scan: Scan }) {
                 <div className="mt-3 grid gap-6">
                   {agrupados.map((grupo) => (
                     <div key={grupo.modulo}>
-                      <h4 className="border-b border-tactico pb-1.5 font-mono text-xs font-bold uppercase tracking-[0.2em] text-cian">
+                      <h4 className="border-b border-tactico pb-1.5 text-sm font-bold uppercase tracking-wider text-cian">
                         Módulo: {etiquetaModulo[grupo.modulo]} ({grupo.items.length})
                       </h4>
                       <div className="mt-3 grid gap-3">
@@ -573,11 +573,11 @@ export function Reporte({ scan }: { scan: Scan }) {
           <section className="py-6" aria-labelledby="seccion-conclusion">
             <h2
               id="seccion-conclusion"
-              className="font-mono text-sm font-bold uppercase tracking-[0.2em] text-cian"
+              className="text-sm font-bold uppercase tracking-wider text-cian"
             >
               7. Conclusión
             </h2>
-            <div className="mt-3 text-sm leading-relaxed text-texto space-y-2">
+            <div className="mt-3 text-base leading-relaxed text-texto-2 space-y-2">
               <p>
                 {informe?.conclusion ??
                   (scan.veredicto === "retenido"
@@ -592,7 +592,7 @@ export function Reporte({ scan }: { scan: Scan }) {
           </div>
 
         {/* Pie formal del documento */}
-        <footer className="mt-10 border-t border-tactico pt-4 text-center font-mono text-[10px] text-texto-2 uppercase tracking-[0.2em]">
+        <footer className="mt-10 border-t border-tactico pt-4 text-center font-mono text-xs uppercase tracking-widest text-texto-2">
           Documento emitido y validado criptográficamente por la plataforma soberana Aduana · Estado Mayor Conjunto
         </footer>
       </article>

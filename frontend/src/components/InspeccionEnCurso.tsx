@@ -62,18 +62,18 @@ export function InspeccionEnCurso({
         <div className="flex flex-wrap items-baseline justify-between gap-2">
           <h1
             id="inspeccion-titulo"
-            className="font-mono text-sm font-bold uppercase tracking-[0.24em] text-cian"
+            className="text-sm font-bold uppercase tracking-wider text-cian"
           >
             Inspección en curso
           </h1>
-          <span className="font-mono text-[11px] text-texto-2">
+          <span className="font-mono text-xs uppercase tracking-widest text-texto-2">
             OPS: {id}
           </span>
         </div>
         <p className="mt-2 truncate font-mono text-lg font-bold text-texto">
           {objetivo}
         </p>
-        <p className="mt-1 flex items-center gap-2 font-mono text-[12px] text-texto-2">
+        <p className="mt-1 flex items-center gap-2 font-mono text-xs text-texto-2">
           <span className="parpadeo h-1.5 w-1.5 rounded-full bg-cian" />
           Ejecutando controles del pipeline · los hallazgos aparecen en vivo
         </p>
@@ -89,7 +89,7 @@ export function InspeccionEnCurso({
                     : "border-transparent"
                 }`}
               >
-                <span className="w-6 shrink-0 text-center font-mono text-[11px] text-texto-2">
+                <span className="w-6 shrink-0 text-center font-mono text-xs text-texto-2">
                   {String(i + 1).padStart(2, "0")}
                 </span>
                 <MarcadorEtapa etapa={etapa} />
@@ -104,12 +104,12 @@ export function InspeccionEnCurso({
                     {etiquetaEtapa[etapa.nombre]}
                   </span>
                   {etapa.duracionMs !== undefined ? (
-                    <span className="ml-2 font-mono text-[11px] text-texto-2">
+                    <span className="ml-2 font-mono text-xs text-texto-2">
                       {etapa.duracionMs}ms
                     </span>
                   ) : null}
                 </span>
-                <span className="font-mono text-[10px] font-bold uppercase tracking-[0.18em]">
+                <span className="font-mono text-xs font-bold uppercase tracking-widest">
                   {etapa.estado === "en_curso" ? (
                     <span className="parpadeo text-cian">
                       En curso
@@ -127,11 +127,11 @@ export function InspeccionEnCurso({
           </ol>
 
           <div>
-            <h2 className="border-b border-tactico pb-2 font-mono text-[11px] font-bold uppercase tracking-[0.22em] text-texto-2">
+            <h2 className="border-b border-tactico pb-2 text-sm font-bold uppercase tracking-wider text-cian">
               Evidencia en vivo · {hallazgos.length}
             </h2>
             {hallazgos.length === 0 ? (
-              <p className="mt-3 font-mono text-[12px] text-texto-2">
+              <p className="mt-3 font-mono text-xs uppercase tracking-widest text-texto-2">
                 Capturando evidencia…
               </p>
             ) : (
@@ -151,14 +151,14 @@ export function InspeccionEnCurso({
                             backgroundColor: color,
                           }}
                         />
-                        <span className="font-mono text-[11px] font-bold uppercase tracking-[0.14em]" style={{ color }}>
+                        <span className="font-mono text-xs font-bold uppercase tracking-widest" style={{ color }}>
                           {h.severidad}
                         </span>
-                        <span className="text-[13px] font-bold text-texto">
+                        <span className="text-sm font-bold text-texto">
                           {h.titulo}
                         </span>
                       </p>
-                      <p className="mt-1 pl-4 font-mono text-[11px] text-texto-2">
+                      <p className="mt-1 pl-4 font-mono text-xs text-texto-2">
                         {h.archivo}
                         {h.linea !== undefined ? `:${h.linea}` : ""}
                       </p>

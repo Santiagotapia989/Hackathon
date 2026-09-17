@@ -4,7 +4,7 @@ import { EscudoAduana } from "./EscudoAduana";
 
 const enlaceClase = ({ isActive }: { isActive: boolean }) =>
   [
-    "border-b-2 px-3 py-2 font-mono text-[13px] uppercase tracking-[0.14em] transition-colors",
+    "border-b-2 px-3 py-2 font-mono text-xs uppercase tracking-widest transition-colors",
     isActive
       ? "border-cian text-cian font-bold"
       : "border-transparent text-texto-2 hover:border-tactico hover:text-texto",
@@ -36,10 +36,10 @@ export function Header() {
     <div className="bg-noche">
       <div className="border-b border-tactico">
         <div className="w-full flex justify-between items-center px-6">
-          <p className="font-mono text-[10px] uppercase tracking-[0.22em] text-texto-2">
+          <p className="font-mono text-xs uppercase tracking-widest text-texto-2">
             SISTEMA ADUANERO DE CONTROL PREVIO DE SOFTWARE · UNDEF / FIE
           </p>
-          <p className="flex items-center gap-2 font-mono text-[10px] uppercase tracking-[0.22em] text-cian">
+          <p className="flex items-center gap-2 font-mono text-xs uppercase tracking-widest text-cian">
             <span
               aria-hidden="true"
               className="parpadeo h-1.5 w-1.5 rounded-full bg-cian"
@@ -60,7 +60,7 @@ export function Header() {
                 <span className="text-lg font-bold tracking-wide text-texto">
                   Aduana
                 </span>
-                <span className="font-mono text-[10px] uppercase tracking-[0.22em] text-texto-2">
+                <span className="font-mono text-xs uppercase tracking-widest text-texto-2">
                   Control previo de acceso
                 </span>
               </span>

@@ -15,6 +15,10 @@
   --color-sello-revisar: var(--sello-revisar);
   --color-sello-retenido: var(--sello-retenido);
 
+  /* Biblia tipográfica:
+     - font-sans: familia principal sans-serif para títulos y textos institucionales.
+     - font-mono: reservada para metadatos, códigos de expediente, estados
+       (RETENIDO/LIBERADO) y fechas técnicas. */
   --font-sans: "Atkinson Hyperlegible", system-ui, sans-serif;
   --font-mono: "JetBrains Mono", ui-monospace, monospace;
 }
