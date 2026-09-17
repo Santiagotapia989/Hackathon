@@ -121,7 +121,7 @@ export function ScanPage() {
       ) : (
         /* Estado TERMINADO: Renderiza primero el Timeline (colapsable por defecto) y justo debajo el Informe completo con auto-scroll */
         <div className="space-y-6 pb-16">
-          <div className="mx-auto w-full max-w-6xl px-4 pt-4">
+          <div className="mx-auto w-full max-w-6xl px-4 pt-4 print:hidden">
             <div className="flex items-center justify-between border-b border-tactico/60 pb-3 font-mono text-xs">
               <span className="text-texto-2 uppercase tracking-widest font-bold flex items-center gap-2">
                 <span className="h-2 w-2 rounded-full bg-emerald-400" />
@@ -143,7 +143,7 @@ export function ScanPage() {
             </div>
           </div>
 
-          <div className="border-t border-tactico/60 pt-2">
+          <div className="border-t border-tactico/60 pt-2 print:border-0 print:pt-0">
             <Reporte scan={scan} />
           </div>
         </div>

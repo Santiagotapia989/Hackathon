@@ -225,6 +225,55 @@ body {
   border-radius: 6px;
 }
 
+/* Reglas de impresión del informe:
+   - Fuerza la paleta clara para que el documento salga legible en papel
+     aunque la interfaz esté en modo oscuro.
+   - Desactiva fondos decorativos, animaciones y barridos. */
+@page {
+  size: A4;
+  margin: 18mm;
+}
+
+@media print {
+  :root {
+    --noche: #ffffff;
+    --panel: #ffffff;
+    --tactico: #cbd5e1;
+    --texto: #0f172a;
+    --texto-2: #475569;
+    --cian: #1d4ed8;
+    --ele: #2563eb;
+    --ambar: #b45309;
+    --emergencia: #b91c1c;
+
+    --sello-liberado: #15803d;
+    --sello-revisar: #b45309;
+    --sello-retenido: #b91c1c;
+
+    --gradient-color: transparent;
+    --grid-color: transparent;
+    --grid-color-dynamic: transparent;
+  }
+
+  body {
+    background: #ffffff !important;
+    background-image: none !important;
+    color: var(--color-texto);
+  }
+
+  .grid-fondo,
+  .barra-escaneo::after {
+    display: none !important;
+  }
+
+  *,
+  *::before,
+  *::after {
+    animation: none !important;
+    transition: none !important;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
