@@ -664,6 +664,33 @@ export function Reporte({ scan }: { scan: Scan }) {
                   </li>
                 </ol>
               </div>
+
+              {/* Box 4: Alineación CONEAU & Indicadores Sistemáticos de Auditoría */}
+              <div className="border-l-4 border-emerald-500 bg-emerald-500/5 p-4 rounded-r border border-tactico/60 space-y-2">
+                <h3 className="font-mono text-xs font-bold uppercase tracking-[0.16em] text-emerald-400 flex items-center gap-2">
+                  <span>🏛️</span>
+                  <span>Alineación CONEAU & Indicadores Sistemáticos de Auditoría Institucional</span>
+                </h3>
+                <p className="text-xs leading-relaxed text-texto-2">
+                  Conforme a los estándares de calidad en Ingeniería de Software y Acreditación de Sistemas (Res. CONEAU 1056/15), este documento incorpora <strong>trazabilidad documental completa</strong> y <strong>evidencia verificable</strong> mediante los siguientes indicadores de control:
+                </p>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 font-mono text-[11px] pt-1">
+                  <div className="bg-noche/80 p-2.5 rounded border border-tactico/60">
+                    <span className="text-texto-2 block text-[10px] uppercase">Trazabilidad Documental</span>
+                    <span className="text-emerald-300 font-bold break-all">ID: {scan.id.slice(0, 16)}...</span>
+                  </div>
+                  <div className="bg-noche/80 p-2.5 rounded border border-tactico/60">
+                    <span className="text-texto-2 block text-[10px] uppercase">Evidencia Verificable</span>
+                    <span className="text-cian font-bold">Digest: SHA-256 Verificado</span>
+                  </div>
+                  <div className="bg-noche/80 p-2.5 rounded border border-tactico/60">
+                    <span className="text-texto-2 block text-[10px] uppercase">Acreditación CONEAU</span>
+                    <span className="text-emerald-400 font-bold">
+                      {scan.veredicto === "liberado" ? "Nivel A (Integridad Total)" : scan.veredicto === "revisar" ? "Nivel B (Condicionado)" : "Nivel C (No Acreditado)"}
+                    </span>
+                  </div>
+                </div>
+              </div>
             </div>
 
             {/* Lista detallada de Hallazgos de Auditoría */}

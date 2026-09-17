@@ -9,10 +9,13 @@
 
 **Aduana** es un control de seguridad local diseñado para operar en entornos aislados (*Air-Gapped*) de las Fuerzas Armadas e infraestructuras críticas. Su función principal es actuar como un **punto de inspección previo obligado** antes de que un agente de IA autónomo (Cursor, Claude Code, Copilot, asistentes MCP) descargue, clone o incorpore código fuente o paquetes de terceros.
 
-### 🛡️ Principios de Soberanía Tecnológica
-* **Ejecución 100% Local**: Todo el análisis corre en infraestructura soberana. El servidor escucha estrictamente en `127.0.0.1`.
-* **Aislamiento en Cuarentena**: Los repositorios y paquetes se descargan en directorios temporales aislados (`/tmp/aduana/<id>`), se inspeccionan sin ejecutar nada de su contenido y se eliminan inmediatamente al finalizar.
-* **Fail-Safe & IA Soberana**: El triage asistido por IA utiliza modelos locales (**Ollama - Gemma2**). Si la IA no está disponible o falla, el motor opera en modo determinista autónomo sin degradar la seguridad.
+### 🛡️ Principios de Soberanía Tecnológica & Flujo Controlado (Workflow de 5 Pasos)
+
+1. **Recepción del Objetivo (Ingesta Controlada)**: El sistema recibe la URL del repositorio o nombre del paquete y genera un identificador inmutable de expediente (`UUID`).
+2. **Aislamiento en Cuarentena**: El código se clona o descarta dentro de un ambiente temporal aislado (`/tmp/aduana/<id>`), ejecutando `git -c credential.helper=` para no acceder ni exfiltrar credenciales privadas del host.
+3. **Revisión Local & Trazabilidad Auditable**: Ejecución de controles estáticos multimódulo (Unicode BIDI, Secretos Gitleaks, SAST, Inyecciones de Prompt) y triage semántico con IA local soberana (Ollama). Toda la evidencia se persiste de forma inmutable en SQLite con alineación **CONEAU (Res. 1056/15)** e identificadores **SHA-256**.
+4. **Generación y Visualización del Informe**: Generación del `InformeEjecutivo` estructurado en JSON, cálculo del **Índice de Confianza** (0-100%) y transmisión en vivo vía Server-Sent Events (SSE) al panel web.
+5. **Limpieza Segura del Ambiente Aislado**: Ejecución garantizada en bloque `finally` (`fs.rm(dir, { recursive: true, force: true })`) eliminando cualquier archivo o rastro del ambiente aislado al finalizar el análisis, sin importar si tuvo éxito o fallo.
 
 ---
 
