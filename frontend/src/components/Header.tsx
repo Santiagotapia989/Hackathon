@@ -100,10 +100,10 @@ export function Header({ timeline }: HeaderProps) {
               <EscudoAduana className="h-8 w-8 text-cian" />
               <span className="flex flex-col leading-tight">
                 <span className="text-2xl font-bold tracking-wide text-texto">
-                  SIVAR
+                  SIAR
                 </span>
                 <span className="font-mono text-xs uppercase tracking-widest text-texto-2">
-                  Sistema de Inspección y Vigilancia de Archivos y Repositorios
+                  Sistema de Inspección de Archivos y Repositorios
                 </span>
               </span>
             </span>
