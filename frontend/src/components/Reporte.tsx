@@ -13,6 +13,8 @@ import {
   etiquetaSeveridad,
   ordenModulos,
   ordenSeveridad,
+  calcularConfianza,
+  obtenerFrameworkNormativo,
 } from "../lib/severidad";
 import { formatearDuracion, marcarInvisibles } from "../lib/texto";
 
@@ -55,17 +57,18 @@ function EtiquetaSeveridad({ severidad }: { severidad: Severidad }) {
 function SelloVeredicto({ scan }: { scan: Scan }) {
   const veredicto: Veredicto = scan.veredicto ?? "revisar";
   const color = colorVeredicto[veredicto];
+  const confianza = calcularConfianza(scan);
 
   return (
-    <div className="flex flex-col gap-4 border border-tactico bg-panel/80 p-5 sm:flex-row sm:items-center sm:justify-between">
-      <div className="min-w-0">
+    <div className="space-y-4">
+      <div className="border border-tactico bg-panel/80 p-5 rounded-lg">
         <p className="font-mono text-[10px] uppercase tracking-[0.24em] text-texto-2">
-          DICTAMEN TÉCNICO DE ADUANA
+          DICTAMEN TÉCNICO & IDENTIFICACIÓN DE AUDITORÍA
         </p>
         <h1 className="mt-1 truncate font-mono text-xl font-bold text-texto">
           {scan.objetivo}
         </h1>
-        <div className="mt-2 flex flex-wrap gap-x-5 gap-y-1 font-mono text-[12px] text-texto-2">
+        <div className="flex flex-wrap gap-x-5 gap-y-1 font-mono text-[12px] text-texto-2 pt-2">
           <span>
             EXPEDIENTE / ID: <span className="font-bold text-texto">{scan.id}</span>
           </span>
@@ -90,29 +93,61 @@ function SelloVeredicto({ scan }: { scan: Scan }) {
         </div>
       </div>
 
-      <div
-        className="flex items-center gap-3 border-2 px-5 py-3 rounded"
-        style={{
-          borderColor: color,
-          backgroundColor: `${color}0D`,
-        }}
-        role="status"
-      >
-        <span
-          aria-hidden="true"
-          className="h-3 w-3 shrink-0 rounded-full"
-          style={{ backgroundColor: color }}
-        />
-        <div className="flex flex-col">
-          <span
-            className="font-mono text-2xl font-black uppercase tracking-[0.12em]"
-            style={{ color }}
+      {/* Tarjetas Principales de Alto Nivel: Índice de Confianza y Veredicto Vinculante */}
+      <div className="grid gap-4 sm:grid-cols-2">
+        {/* Tarjeta 1: Hero Índice de Confianza */}
+        <div className="flex items-center justify-between border-2 border-cian/60 bg-cian/10 p-5 rounded-lg shadow-lg">
+          <div className="space-y-1">
+            <span className="font-mono text-[10px] font-bold uppercase tracking-[0.2em] text-cian">
+              MÉTRICA GLOBAL DE SEGURIDAD
+            </span>
+            <div className="flex items-baseline gap-2">
+              <span className="font-mono text-3xl sm:text-4xl font-black text-cian">
+                {confianza.porcentaje}%
+              </span>
+              <span className="font-mono text-xs font-semibold text-texto-2">/ 100%</span>
+            </div>
+            <p className="font-mono text-[11px] font-medium text-texto font-sans">
+              {confianza.etiqueta}
+            </p>
+          </div>
+          <div className="h-14 w-14 rounded-full border-2 border-cian/80 bg-noche/80 flex items-center justify-center shrink-0">
+            <span className="font-mono text-xs font-extrabold text-cian">
+              {confianza.porcentaje >= 80 ? "ALTO" : confianza.porcentaje >= 40 ? "MEDIO" : "CRÍTICO"}
+            </span>
+          </div>
+        </div>
+
+        {/* Tarjeta 2: Hero Veredicto Vinculante */}
+        <div
+          className="flex items-center justify-between border-2 p-5 rounded-lg shadow-lg"
+          style={{
+            borderColor: color,
+            backgroundColor: `${color}0D`,
+          }}
+          role="status"
+        >
+          <div className="space-y-1">
+            <span className="font-mono text-[10px] font-bold uppercase tracking-[0.2em] text-texto-2">
+              VEREDICTO FINAL DE AUDITORÍA
+            </span>
+            <h2
+              className="font-mono text-3xl sm:text-4xl font-black uppercase tracking-[0.12em]"
+              style={{ color }}
+            >
+              {verboVeredicto[veredicto]}
+            </h2>
+            <p className="font-mono text-[11px] font-medium text-texto-2">
+              Dictamen Operativo Binding
+            </p>
+          </div>
+          <div
+            aria-hidden="true"
+            className="h-14 w-14 rounded-full flex items-center justify-center shrink-0 border-2"
+            style={{ borderColor: color, backgroundColor: `${color}20` }}
           >
-            {verboVeredicto[veredicto]}
-          </span>
-          <span className="font-mono text-[10px] uppercase tracking-[0.2em] text-texto-2">
-            Veredicto Vinculante
-          </span>
+            <span className="h-4 w-4 rounded-full animate-pulse" style={{ backgroundColor: color }} />
+          </div>
         </div>
       </div>
     </div>
@@ -213,15 +248,29 @@ function RayosX({ hallazgo }: { hallazgo: Finding }) {
 }
 
 function HallazgoItem({ hallazgo }: { hallazgo: Finding }) {
+  const frameworks = obtenerFrameworkNormativo(hallazgo.regla, hallazgo.modulo, hallazgo.cve);
+
   return (
-    <article className="border border-tactico bg-panel/70 p-4 sm:p-5 rounded">
+    <article className="border border-tactico bg-panel/70 p-4 sm:p-5 rounded-lg space-y-3">
       <div className="flex flex-wrap items-start justify-between gap-3">
-        <div className="min-w-0">
+        <div className="min-w-0 space-y-1.5">
           <div className="flex flex-wrap items-center gap-2">
             <EtiquetaSeveridad severidad={hallazgo.severidad} />
             <span className="border border-tactico bg-noche/40 px-2 py-0.5 font-mono text-[10px] font-bold uppercase tracking-[0.14em] text-texto-2 rounded-sm">
               {etiquetaModulo[hallazgo.modulo]}
             </span>
+
+            {/* Badges de Línea / Párrafo Específico */}
+            {hallazgo.linea !== undefined ? (
+              <span className="border border-cian/50 bg-cian/15 px-2 py-0.5 font-mono text-[10px] font-bold text-cian rounded-sm">
+                📍 Ubicación: Línea #{hallazgo.linea}
+              </span>
+            ) : (
+              <span className="border border-tactico bg-noche/40 px-2 py-0.5 font-mono text-[10px] text-texto-2 rounded-sm">
+                📍 Archivo Completo
+              </span>
+            )}
+
             {hallazgo.determinista ? (
               <span className="border border-cian/40 bg-cian/10 px-2 py-0.5 font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-cian rounded-sm">
                 Regla determinista
@@ -235,23 +284,48 @@ function HallazgoItem({ hallazgo }: { hallazgo: Finding }) {
               </span>
             )}
           </div>
-          <h4 className="mt-2 text-base font-bold leading-snug text-texto">
+
+          <h4 className="text-base font-bold leading-snug text-texto">
             {hallazgo.titulo}
           </h4>
         </div>
       </div>
 
-      <p className="mt-2 font-mono text-[12px] text-texto-2">
-        <span className="font-semibold text-texto-2">{hallazgo.regla}</span>
+      <p className="font-mono text-[12px] text-texto-2 bg-noche/60 px-3 py-1.5 rounded border border-tactico/40">
+        <span className="font-semibold text-cian">{hallazgo.regla}</span>
         {" · "}
         <span className="text-texto font-medium">{hallazgo.archivo}</span>
-        {hallazgo.linea !== undefined ? `:${hallazgo.linea}` : ""}
+        {hallazgo.linea !== undefined ? <strong className="text-cian"> (Línea {hallazgo.linea})</strong> : ""}
         {hallazgo.commit ? ` · commit ${hallazgo.commit}` : ""}
       </p>
 
+      {/* Taxonomía y Frameworks Afectados (OWASP, MITRE, NIST, ISO) */}
+      <div className="flex flex-wrap gap-1.5 pt-1">
+        {frameworks.owasp && (
+          <span className="border border-amber-500/40 bg-amber-500/10 px-2 py-0.5 font-mono text-[10px] font-semibold text-amber-300 rounded">
+            🛡️ {frameworks.owasp}
+          </span>
+        )}
+        {frameworks.mitre && (
+          <span className="border border-purple-500/40 bg-purple-500/10 px-2 py-0.5 font-mono text-[10px] font-semibold text-purple-300 rounded">
+            ⚔️ {frameworks.mitre}
+          </span>
+        )}
+        {frameworks.nist && (
+          <span className="border border-blue-500/40 bg-blue-500/10 px-2 py-0.5 font-mono text-[10px] font-semibold text-blue-300 rounded">
+            📋 {frameworks.nist}
+          </span>
+        )}
+        {frameworks.iso && (
+          <span className="border border-emerald-500/40 bg-emerald-500/10 px-2 py-0.5 font-mono text-[10px] font-semibold text-emerald-300 rounded">
+            📜 {frameworks.iso}
+          </span>
+        )}
+      </div>
+
       {/* Bloque destacado si el hallazgo contiene un CVE */}
       {hallazgo.cve ? (
-        <div className="mt-3 border-l-4 border-cian bg-cian/10 p-3 text-xs leading-relaxed text-texto rounded-r">
+        <div className="border-l-4 border-cian bg-cian/10 p-3 text-xs leading-relaxed text-texto rounded-r">
           <div className="flex items-center gap-2 font-mono font-bold text-cian">
             <span className="rounded bg-cian/20 px-2 py-0.5 text-[11px] uppercase tracking-wider text-cian">
               Identificador: {hallazgo.cve}
@@ -275,16 +349,23 @@ function HallazgoItem({ hallazgo }: { hallazgo: Finding }) {
       ) : null}
 
       {hallazgo.analisisIA?.intentoManipulacion ? (
-        <p className="mt-3 border border-emergencia/60 bg-emergencia/10 px-3 py-2 font-mono text-[12px] font-bold uppercase tracking-[0.12em] text-emergencia rounded">
+        <p className="border border-emergencia/60 bg-emergencia/10 px-3 py-2 font-mono text-[12px] font-bold uppercase tracking-[0.12em] text-emergencia rounded">
           ► Alerta de Triage: Este archivo contiene un vector hostil destinado a manipular o engañar al modelo.
         </p>
       ) : null}
 
-      <div className="mt-3">
-        <p className="font-mono text-[10px] font-bold uppercase tracking-[0.2em] text-texto-2">
-          Evidencia de código (Texto plano sin ejecución)
-        </p>
-        <pre className="mt-1 overflow-auto whitespace-pre-wrap break-all border border-tactico bg-noche p-3 font-mono text-[12px] leading-relaxed text-texto rounded">
+      <div>
+        <div className="flex justify-between items-center mb-1">
+          <p className="font-mono text-[10px] font-bold uppercase tracking-[0.2em] text-texto-2">
+            Evidencia de código (Texto plano sin ejecución)
+          </p>
+          {hallazgo.linea !== undefined && (
+            <span className="font-mono text-[10px] text-cian font-bold">
+              Ubicación exacta: Línea {hallazgo.linea}
+            </span>
+          )}
+        </div>
+        <pre className="overflow-auto whitespace-pre-wrap break-all border border-tactico bg-noche p-3 font-mono text-[12px] leading-relaxed text-texto rounded">
           {marcarInvisibles(hallazgo.evidencia)}
         </pre>
       </div>
@@ -292,13 +373,13 @@ function HallazgoItem({ hallazgo }: { hallazgo: Finding }) {
       <RayosX hallazgo={hallazgo} />
 
       {hallazgo.explicacion ? (
-        <p className="mt-3 text-sm leading-relaxed text-texto-2">
+        <p className="text-sm leading-relaxed text-texto-2">
           {hallazgo.explicacion}
         </p>
       ) : null}
 
       {hallazgo.remediacion?.length ? (
-        <div className="mt-3 border-t border-tactico/60 pt-2">
+        <div className="border-t border-tactico/60 pt-2">
           <p className="font-mono text-[10px] font-bold uppercase tracking-[0.2em] text-texto-2">
             Instrucciones obligatorias de remediación
           </p>
@@ -342,8 +423,9 @@ export function Reporte({ scan }: { scan: Scan }) {
 
   return (
     <section
+      id="inicio-reporte"
       aria-labelledby="titulo-documento-militar"
-      className="mx-auto w-full max-w-5xl px-4 pb-20 pt-6"
+      className="mx-auto w-full max-w-5xl px-4 pb-20 pt-6 scroll-mt-6"
     >
       {/* Barra superior de acciones del documento */}
       <div className="mb-4 flex flex-wrap items-center justify-between gap-3 border-b border-tactico pb-4">
@@ -525,14 +607,63 @@ export function Reporte({ scan }: { scan: Scan }) {
               </div>
             ) : null}
 
-            {/* Recuadro pedagógico e institucional sobre CVE */}
-            <div className="mt-6 border-l-4 border-cian bg-cian/5 p-4 rounded-r border border-tactico/60">
-              <h3 className="font-mono text-xs font-bold uppercase tracking-[0.16em] text-cian">
-                Referencia Normativa: Diccionario CVE (Common Vulnerabilities and Exposures)
-              </h3>
-              <p className="mt-1 text-xs leading-relaxed text-texto-2">
-                Un <strong>CVE</strong> es un diccionario o lista pública que cataloga fallos de seguridad y vulnerabilidades conocidas en programas de software y equipos de hardware. Cada fallo recibe un identificador único, por ejemplo, <span className="font-mono text-cian font-semibold">CVE-2026-XXXXX</span>. En el presente informe, los hallazgos de dependencias e instrucciones hostiles referencian los identificadores CVE correspondientes para garantizar interoperabilidad técnica y trazabilidad forense.
-              </p>
+            {/* Recuadro pedagógico e institucional sobre CVE y Ponderación del Índice de Confianza */}
+            <div className="mt-6 space-y-4">
+              {/* Box 1: Referencia CVE y Marcos Normativos */}
+              <div className="border-l-4 border-cian bg-cian/5 p-4 rounded-r border border-tactico/60">
+                <h3 className="font-mono text-xs font-bold uppercase tracking-[0.16em] text-cian">
+                  Referencia Normativa: Diccionario CVE & Marcos Internacionales (OWASP / MITRE ATLAS / NIST / ISO)
+                </h3>
+                <p className="mt-1 text-xs leading-relaxed text-texto-2">
+                  Un <strong>CVE</strong> cataloga fallos de seguridad conocidos (<span className="font-mono text-cian font-semibold">CVE-2026-XXXXX</span>). Cada hallazgo se indexa formalmente contra los taxonomías <strong>OWASP Top 10 para LLM</strong>, <strong>MITRE ATLAS (Adversarial Threat Landscape for AI)</strong>, <strong>NIST Cybersecurity Framework</strong> e <strong>ISO/IEC 27001</strong> para garantizar interoperabilidad técnica y cumplimiento operacional.
+                </p>
+              </div>
+
+              {/* Box 2: Explicación Transparente del Cálculo del Índice de Confianza */}
+              <div className="border-l-4 border-amber-500 bg-amber-500/5 p-4 rounded-r border border-tactico/60">
+                <h3 className="font-mono text-xs font-bold uppercase tracking-[0.16em] text-amber-400">
+                  Ponderación Causal y Cálculo Algorítmico del Índice de Confianza
+                </h3>
+                <p className="mt-1 text-xs leading-relaxed text-texto-2">
+                  El <strong>Índice de Confianza Técnico ({calcularConfianza(scan).porcentaje}%)</strong> se calcula de forma objetiva a partir de una puntuación base de <strong>100%</strong> sustrayendo penalizaciones ponderadas por cada afectación detectada:
+                </p>
+                <div className="mt-2 grid grid-cols-2 sm:grid-cols-4 gap-2 font-mono text-[11px]">
+                  <div className="bg-noche/80 p-2 rounded border border-rose-500/30 text-rose-300">
+                    <span className="font-bold">Afectación Crítica:</span> -45%
+                  </div>
+                  <div className="bg-noche/80 p-2 rounded border border-orange-500/30 text-orange-300">
+                    <span className="font-bold">Afectación Alta:</span> -25%
+                  </div>
+                  <div className="bg-noche/80 p-2 rounded border border-amber-500/30 text-amber-300">
+                    <span className="font-bold">Afectación Media:</span> -10%
+                  </div>
+                  <div className="bg-noche/80 p-2 rounded border border-slate-500/30 text-slate-300">
+                    <span className="font-bold">Afectación Baja:</span> -5%
+                  </div>
+                </div>
+                <p className="mt-2 text-[11px] text-texto-2/80">
+                  Adicionalmente, se aplican techos absolutos según el dictamen vinculante: Veredicto <strong>RETENIDO</strong> limita la confianza a un máximo de <strong>32.5%</strong>, y Veredicto <strong>REVISAR</strong> limita a <strong>74.0%</strong>, garantizando que un sistema comprometido nunca simule un nivel alto de seguridad.
+                </p>
+              </div>
+
+              {/* Box 3: Garantía de Revisión de Amenazas con IA Local */}
+              <div className="border-l-4 border-purple-500 bg-purple-500/5 p-4 rounded-r border border-tactico/60">
+                <h3 className="font-mono text-xs font-bold uppercase tracking-[0.16em] text-purple-300 flex items-center gap-2">
+                  <span>🤖</span>
+                  <span>Garantía de Verificación por IA Local (Triage Soberano)</span>
+                </h3>
+                <p className="mt-1 text-xs leading-relaxed text-texto-2">
+                  ¿Cómo se garantiza la precisión en la evaluación de amenazas? Aduana implementa un <strong>Pipeline de Doble Verificación</strong>:
+                </p>
+                <ol className="mt-2 text-xs space-y-1 font-mono text-texto-2">
+                  <li className="flex items-start gap-2">
+                    <span className="text-purple-400 font-bold">1. Fase Determinista:</span> Detección léxica estricta de secuencias Unicode BIDI (Trojan Source), firmas Gitleaks y vulnerabilidades auditadas sin falsos positivos.
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="text-purple-400 font-bold">2. Triage LLM Soberano:</span> Un modelo local soberano (Ollama Llama-3.2) analiza el contexto semántico de cada amenaza, evalúa posibles intentos de manipulaciones de prompt (Jailbreaks) y certifica el grado de certeza sin enviar ni un solo byte fuera de la infraestructura.
+                  </li>
+                </ol>
+              </div>
             </div>
 
             {/* Lista detallada de Hallazgos de Auditoría */}

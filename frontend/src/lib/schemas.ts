@@ -122,6 +122,7 @@ export const ScanSchema = z.object({
   hallazgos: z.array(FindingSchema),
   creadoEn: z.string(),
   duracionMs: z.number().optional(),
+  error: z.string().optional(),
   informeEjecutivo: InformeEjecutivoSchema.optional(),
 });
 export type Scan = z.infer<typeof ScanSchema>;

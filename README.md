@@ -43,10 +43,10 @@ El agente consulta a Aduana por MCP (`check_package`, `check_repo`) antes de ins
 
 | Componente | Estado |
 |---|---|
-| **Motor de análisis** (`src/motor/`) | ✅ Completo — 4 analizadores + triage IA + scoring |
+| **Motor de análisis** (`src/motor/`) | ✅ Completo — 4 analizadores + SAST + triage IA + scoring + InformeEjecutivo |
 | **Plataforma** (`src/plataforma/`) — API, ingesta, cola, SSE, DB, CLI, MCP | ✅ Completo |
-| **Integración Motor + Plataforma** | ✅ Mergeada, typecheck/build/tests en verde (66/66) |
-| **Frontend** (`frontend/`) | ✅ Integrado — build y lint en verde |
+| **Integración Motor + Plataforma** | ✅ Mergeada, typecheck/build/tests en verde (136/136) |
+| **Frontend** (`frontend/`) | ✅ Rediseño UI/UX — build y lint en verde |
 
 ## Arquitectura
 
@@ -180,8 +180,9 @@ npm run db:reset && npm run db:seed
 | Método | Ruta | Qué hace |
 |---|---|---|
 | `POST` | `/api/scans` | Crea un escaneo (`{ objetivo: "npm:<n>" \| "pypi:<n>" \| "https://github.com/<owner>/<repo>" }`), responde `201 { id }` |
-| `GET` | `/api/scans/:id/events` | Stream SSE del escaneo: `etapa` → `hallazgo` → `veredicto` |
-| `GET` | `/api/scans/:id` | Escaneo completo |
+| `GET` | `/api/scans/:id/events` | Stream SSE del escaneo: `etapa` → `hallazgo` → `veredicto` (incluye `informeEjecutivo`) |
+| `GET` | `/api/scans/:id` | Escaneo completo con objeto `Scan` e `informeEjecutivo` |
+| `GET` | `/api/scans/:id/reporte-defensa` | Reporte estructurado de cumplimiento normativo (NIST, ISO 27001/31000, MITRE ATLAS) |
 | `GET` | `/api/health` | Estado de Ollama, gitleaks y modo offline |
 | `POST` | `/api/agente/check-package` | Usado por el MCP para chequear un paquete antes de instalarlo |
 | `POST` | `/api/agente/check-repo` | Usado por el MCP para escanear un repo antes de abrirlo |
@@ -193,7 +194,7 @@ Backend:
 ```bash
 npm run typecheck   # TypeScript estricto, 0 errores
 npm run build       # Compilación completa a dist/
-npm test            # Vitest — 66 tests (motor + plataforma)
+npm test            # Vitest — 136 tests pasados (motor + plataforma + integración)
 ```
 
 Frontend:

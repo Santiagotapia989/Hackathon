@@ -3,7 +3,7 @@
 // Fallback si Ollama no está disponible: la etapa triage_ia queda en error.
 
 import { z } from "zod";
-import { AnalisisIA } from "../../shared/contrato.js";
+import { AnalisisIA, InformeEjecutivo, Scan } from "../../shared/contrato.js";
 
 const OLLAMA_HOST = process.env["ADUANA_OLLAMA_HOST"] ?? "http://localhost:11434";
 const MODELO = process.env["ADUANA_MODELO"] ?? "gemma2:2b";
@@ -165,4 +165,119 @@ export async function triage(
     // "parseo-invalido": la próxima vuelta del for es el único reintento.
   }
   return null;
+}
+
+// ─── Informe Ejecutivo ──────────────────────────────────────────────────────
+
+export function generarInformeEjecutivoFallback(scan: Scan): InformeEjecutivo {
+  const fechaActual = new Date().toISOString().split("T")[0]!;
+  const totalHallazgos = scan.hallazgos.length;
+  const criticas = scan.resumen?.porSeveridad.critica ?? 0;
+  const altas = scan.resumen?.porSeveridad.alta ?? 0;
+  const medias = scan.resumen?.porSeveridad.media ?? 0;
+  const bajas = scan.resumen?.porSeveridad.baja ?? 0;
+
+  return {
+    cabecera: {
+      caratula: "INFORME EJECUTIVO DE AUDITORÍA Y TÁCTICA DE CIBERDEFENSA",
+      codigoDocumento: `ADUANA-DEF-${scan.id.slice(0, 8).toUpperCase()}`,
+      fecha: fechaActual,
+      revision: "1.0.0",
+      paginas: "1/1",
+      caracter: "RESERVADO - SOBERANÍA TECNOLÓGICA",
+    },
+    objetivo: `Evaluación e inspección técnica de ciberseguridad sobre el componente: ${scan.objetivo}`,
+    alcance: `Análisis estático multimódulo (Instrucciones, Unicode, Dependencias, Secretos) en entorno soberano aislado.`,
+    problematicaAnterior: `Riesgos potenciales de inyección de código, contaminación de la cadena de suministro y exposición inadvertida de credenciales.`,
+    introduccion: `Se ejecutó el procedimiento automatizado de control de seguridad Aduana para ${scan.tipo === "repo" ? "el repositorio" : "el paquete"} ${scan.objetivo}.`,
+    indice: [
+      "1. Cabecera e Identificación",
+      "2. Objetivo y Alcance Técnico",
+      "3. Diagnóstico de Hallazgos y Severidad",
+      "4. Veredicto Final y Dictamen de Liberación",
+    ],
+    desarrollo: `El proceso de escaneo finalizó con veredicto '${scan.veredicto ?? "retenido"}'. Se detectaron ${totalHallazgos} hallazgo(s) distribuidos en: Críticos: ${criticas}, Altos: ${altas}, Medios: ${medias}, Bajos: ${bajas}.`,
+    conclusion: scan.veredicto === "liberado"
+      ? "El componente evaluado cumple con los criterios mínimos de seguridad requeridos. Liberado para entorno controlado."
+      : "Se han identificado vulnerabilidades o anomalías de seguridad que requieren remediación obligatoria previo a su uso.",
+    personal: [
+      {
+        nombre: "Motor Antigravity / Aduana",
+        cargo: "Auditor Automatizado de Ciberdefensa",
+        grado: "Sistema Soberano AI",
+        firma: "ADUANA-SIG-VALIDATED",
+      },
+    ],
+    desafioDetectado: totalHallazgos > 0
+      ? `Se detectaron ${totalHallazgos} anomalía(s) de seguridad que afectan el veredicto.`
+      : "No se identificaron vectores de ataque ni secretos expuestos.",
+    objetivoRepo: `Verificación de soberanía e inocuidad de software en la infraestructura crítica.`,
+    metricasImpacto: [
+      `Total hallazgos: ${totalHallazgos}`,
+      `Veredicto final: ${scan.veredicto ?? "sin veredicto"}`,
+      `Tiempo de ejecución: ${scan.duracionMs ?? 0} ms`,
+    ],
+    faseEjecucion: "Fase de Evaluación e Inspección de Seguridad Aislada",
+  };
+}
+
+export async function generarInformeEjecutivo(
+  scan: Scan,
+  signal?: AbortSignal,
+): Promise<InformeEjecutivo> {
+  const estado = await consultarEstado();
+  if (!estado.activo) {
+    return generarInformeEjecutivoFallback(scan);
+  }
+
+  const prompt = `Generá un informe ejecutivo estructurado en formato JSON para el siguiente escaneo de seguridad:
+- ID: ${scan.id}
+- Tipo: ${scan.tipo}
+- Objetivo: ${scan.objetivo}
+- Veredicto: ${scan.veredicto ?? "retenido"}
+- Hallazgos Totales: ${scan.hallazgos.length}
+- Severidades: Críticas: ${scan.resumen?.porSeveridad.critica ?? 0}, Altas: ${scan.resumen?.porSeveridad.alta ?? 0}, Medias: ${scan.resumen?.porSeveridad.media ?? 0}, Bajas: ${scan.resumen?.porSeveridad.baja ?? 0}
+- Módulos: Instrucciones: ${scan.resumen?.porModulo.instrucciones ?? 0}, Unicode: ${scan.resumen?.porModulo.unicode ?? 0}, Dependencias: ${scan.resumen?.porModulo.dependencias ?? 0}, Secretos: ${scan.resumen?.porModulo.secretos ?? 0}
+
+Devolvé ÚNICAMENTE un objeto JSON con la propiedad principal "informeEjecutivo" respetando exactamente la estructura pedida.`;
+
+  try {
+    const resp = await fetch(`${OLLAMA_HOST}/api/chat`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        model: MODELO,
+        messages: [
+          {
+            role: "system",
+            content:
+              "Sos un Arquitecto de Ciberseguridad e Investigador de Amenazas especializado en entornos de Defensa y Soberanía Tecnológica. Tu objetivo es auditar y proponer mejoras y un informe ejecutivo preciso en formato JSON.",
+          },
+          { role: "user", content: prompt },
+        ],
+        stream: false,
+        options: { temperature: TEMPERATURE, num_ctx: NUM_CTX },
+      }),
+      signal: signal ?? AbortSignal.timeout(TIMEOUT_MS),
+    });
+
+    if (!resp.ok) return generarInformeEjecutivoFallback(scan);
+
+    const data = (await resp.json()) as any;
+    const contenidoRespuesta = data?.message?.content ?? "";
+    const jsonMatch = contenidoRespuesta.match(/\{[\s\S]*\}/);
+    if (!jsonMatch) return generarInformeEjecutivoFallback(scan);
+
+    const parsed = JSON.parse(jsonMatch[0]);
+    const objInforme = parsed?.informeEjecutivo ?? parsed;
+    const validacion = InformeEjecutivo.safeParse(objInforme);
+
+    if (validacion.success) {
+      return validacion.data;
+    }
+  } catch {
+    // Fallback silencioso ante cualquier excepción
+  }
+
+  return generarInformeEjecutivoFallback(scan);
 }

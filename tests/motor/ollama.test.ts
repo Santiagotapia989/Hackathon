@@ -2,7 +2,8 @@
 // Cliente de IA local (triage): límite de llamadas, timeout, reintento en
 // JSON inválido, y si el prompt escapa el delimitador de contenido no confiable.
 import { describe, it, expect, vi, afterEach, beforeEach } from "vitest";
-import { triage, resetContador, consultarEstado } from "../../src/motor/llm/ollama.js";
+import { triage, resetContador, consultarEstado, generarInformeEjecutivo, generarInformeEjecutivoFallback } from "../../src/motor/llm/ollama.js";
+import { Scan } from "../../src/shared/contrato.js";
 
 function respuestaOllama(contenidoJson: object): Response {
   return new Response(
@@ -171,5 +172,53 @@ describe("llm/ollama", () => {
     const estado = await consultarEstado();
     expect(estado.activo).toBe(true);
     expect(estado.modelo).toBe("gemma2:2b");
+  });
+
+  it("generarInformeEjecutivoFallback genera una estructura completa y válida", () => {
+    const mockScan: Scan = {
+      id: "scan-test-12345678",
+      tipo: "repo",
+      objetivo: "https://github.com/ejemplo/repo-militar",
+      estado: "terminado",
+      etapas: [],
+      veredicto: "retenido",
+      resumen: {
+        porSeveridad: { critica: 1, alta: 2, media: 0, baja: 0 },
+        porModulo: { instrucciones: 1, unicode: 0, dependencias: 2, secretos: 0 },
+      },
+      hallazgos: [],
+      creadoEn: new Date().toISOString(),
+      duracionMs: 1500,
+    };
+
+    const informe = generarInformeEjecutivoFallback(mockScan);
+    expect(informe.cabecera?.caratula).toContain("CIBERDEFENSA");
+    expect(informe.cabecera?.codigoDocumento).toContain("ADUANA-DEF-SCAN-TES");
+    expect(informe.objetivo).toContain("repo-militar");
+    expect(informe.personal?.[0]?.nombre).toContain("Aduana");
+    expect(informe.metricasImpacto).toBeDefined();
+  });
+
+  it("generarInformeEjecutivo usa fallback si Ollama está caído", async () => {
+    vi.stubGlobal("fetch", vi.fn(async () => { throw new Error("ECONNREFUSED"); }));
+    const mockScan: Scan = {
+      id: "scan-test-87654321",
+      tipo: "paquete",
+      objetivo: "npm:express",
+      estado: "terminado",
+      etapas: [],
+      veredicto: "liberado",
+      resumen: {
+        porSeveridad: { critica: 0, alta: 0, media: 0, baja: 0 },
+        porModulo: { instrucciones: 0, unicode: 0, dependencias: 0, secretos: 0 },
+      },
+      hallazgos: [],
+      creadoEn: new Date().toISOString(),
+      duracionMs: 200,
+    };
+
+    const informe = await generarInformeEjecutivo(mockScan);
+    expect(informe.cabecera?.caratula).toBeDefined();
+    expect(informe.conclusion).toContain("cumple con los criterios mínimos");
   });
 });

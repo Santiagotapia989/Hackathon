@@ -20,18 +20,11 @@ const formatoFecha = new Intl.DateTimeFormat("es-AR", {
   minute: "2-digit",
 });
 
-const MODULOS = [
-  "Instrucciones ocultas",
-  "Caracteres invisibles",
-  "Dependencias alucinadas",
-  "Secretos expuestos",
-];
-
 function EsqueletoFilas() {
   return (
-    <div className="divide-y divide-tactico border border-tactico bg-panel">
-      {[0, 1, 2].map((i) => (
-        <div key={i} className="h-12 animate-pulse bg-tactico/20" />
+    <div className="divide-y divide-tactico/60 border border-tactico/60 bg-panel/70 rounded-xl overflow-hidden">
+      {[0, 1, 2, 3].map((i) => (
+        <div key={i} className="h-14 animate-pulse bg-tactico/20" />
       ))}
     </div>
   );
@@ -74,196 +67,195 @@ export function HomePage() {
   };
 
   return (
-    <div className="min-h-svh bg-noche">
+    <div className="min-h-svh bg-noche text-texto flex flex-col font-sans">
       <Header />
-      <main className="relative">
+
+      <main className="relative flex-1">
         <div
           aria-hidden="true"
-          className="grid-fondo pointer-events-none absolute inset-0"
+          className="grid-fondo pointer-events-none absolute inset-0 opacity-40"
         />
 
-        <div className="relative mx-auto w-full max-w-6xl px-4">
-          <section
-            aria-labelledby="titulo-control"
-            className="flex flex-col items-center pb-12 pt-14 sm:pt-20"
-          >
-            <h1
-              id="titulo-control"
-              className="aparecer max-w-4xl text-center text-[34px] font-bold leading-tight text-texto sm:text-[44px]"
-              style={{ animationDelay: "0.1s" }}
-            >
-              Inspeccioná lo que entra{" "}
-              <span className="text-cian font-extrabold">
-                antes de que toque tu agente.
-              </span>
-            </h1>
-            <p
-              className="aparecer mt-4 max-w-2xl text-center text-base leading-relaxed text-texto-2 sm:text-xl"
-              style={{ animationDelay: "0.2s" }}
-            >
-              Aduana analiza repositorios y paquetes en busca de instrucciones
-              ocultas, caracteres invisibles, dependencias alucinadas y
-              secretos expuestos. Todo corre en tu máquina.
-            </p>
+        <div className="relative mx-auto w-full max-w-5xl px-4 py-12 space-y-12">
 
-            <div
-              className="aparecer mt-6 flex flex-wrap items-center justify-center gap-2"
-              style={{ animationDelay: "0.3s" }}
-            >
-              {MODULOS.map((item) => (
-                <span
-                  key={item}
-                  className="border border-tactico bg-panel/60 px-3 py-1 font-mono text-[12px] text-texto-2"
-                >
-                  <span className="mr-1.5 text-cian">▸</span>
-                  {item}
-                </span>
-              ))}
+          {/* ── ENCABEZADO Y BUSCADOR DE INSPECCIÓN ── */}
+          <section className="space-y-8 text-center">
+            <div className="space-y-3 max-w-3xl mx-auto">
+              <h1 className="text-3xl font-extrabold tracking-tight sm:text-4xl text-texto">
+                Inspeccioná lo que entra{" "}
+                <span className="text-cian">antes de que toque tu agente.</span>
+              </h1>
+              <p className="text-texto-2 text-sm sm:text-base leading-relaxed">
+                Aduana analiza repositorios y paquetes en busca de instrucciones ocultas, caracteres invisibles, dependencias alucinadas y secretos expuestos. Todo corre localmente en tu infraestructura soberana.
+              </p>
             </div>
 
-            <form
-              onSubmit={inspeccionar}
-              className="aparecer mt-10 w-full max-w-2xl"
-              aria-label="Nuevo escaneo"
-              style={{ animationDelay: "0.4s" }}
-            >
-              <div className="panel-cyber brillo-cian-borde">
-                <div className="flex items-center justify-between border-b border-tactico px-4 py-2.5">
-                  <span className="font-mono text-[11px] font-bold uppercase tracking-[0.2em] text-cian">
-                    Documento a inspeccionar
-                  </span>
+            {/* Formulario de Ingestion Destacado */}
+            <form onSubmit={inspeccionar} className="max-w-3xl mx-auto">
+              <div className="rounded-xl border border-tactico/80 bg-panel/90 p-3 sm:p-4 shadow-2xl backdrop-blur space-y-3 text-left">
+                <div className="flex items-center justify-between px-1">
+                  <label
+                    htmlFor="input-objetivo"
+                    className="font-mono text-[11px] font-bold uppercase tracking-widest text-cian flex items-center gap-2"
+                  >
+                    <span className="h-2 w-2 rounded-full bg-cian animate-pulse" />
+                    DOCUMENTO O COMPONENTE A INSPECCIONAR
+                  </label>
                   <span className="font-mono text-[11px] text-texto-2">
-                    S-16 / ENTRADA
+                    AIR-GAPPED CONTROL
                   </span>
                 </div>
-                <div className="flex flex-col gap-2 p-3 sm:flex-row sm:gap-3 sm:p-4">
+
+                <div className="flex flex-col sm:flex-row gap-3">
                   <input
-                    id="objetivo"
+                    id="input-objetivo"
                     type="text"
                     value={objetivo}
                     onChange={(e) => setObjetivo(e.target.value)}
-                    placeholder="https://git.mil.ar/usuario/repo  o  npm:paquete"
+                    placeholder="https://github.com/usuario/repo  o  npm:paquete  o  pypi:paquete"
                     autoComplete="off"
                     spellCheck={false}
-                    aria-describedby="pista-tipo"
-                    className="w-full flex-1 border border-tactico bg-noche/70 px-3 py-3 font-mono text-base text-texto placeholder:text-texto-2/50 focus:border-cian/60 focus:outline-none focus:ring-2 focus:ring-cian/20"
+                    className="flex-1 w-full rounded-lg border border-tactico/70 bg-noche/90 px-4 py-3.5 font-mono text-sm sm:text-base text-texto placeholder:text-texto-2/40 focus:border-cian focus:ring-2 focus:ring-cian/20 outline-none transition-all"
                   />
                   <button
                     type="submit"
                     disabled={crearScan.isPending}
-                    className="shrink-0 rounded bg-ele px-6 py-3 font-mono text-sm font-bold uppercase tracking-[0.14em] text-white transition-colors hover:bg-ele/90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ele disabled:opacity-60 shadow-sm"
+                    className="shrink-0 rounded-lg bg-blue-600 hover:bg-blue-500 active:bg-blue-700 text-white font-mono text-sm font-bold uppercase tracking-wider px-8 py-3.5 shadow-lg shadow-blue-600/30 transition-all flex items-center justify-center gap-2 disabled:opacity-50"
                   >
-                    {crearScan.isPending ? "Inspeccionando…" : "Inspeccionar"}
+                    {crearScan.isPending ? (
+                      <>
+                        <span className="h-4 w-4 rounded-full border-2 border-white/30 border-t-white animate-spin" />
+                        <span>INSPECCIONANDO...</span>
+                      </>
+                    ) : (
+                      <>
+                        <span>INSPECCIONAR</span>
+                        <span>⚡</span>
+                      </>
+                    )}
                   </button>
                 </div>
-                <p
-                  id="pista-tipo"
-                  className="px-4 pb-3 font-mono text-[13px] text-texto-2"
-                  aria-live="polite"
-                >
-                  {objetivo.trim() === "" ? (
-                    "Detecto el tipo automáticamente: repo o paquete."
-                  ) : etiqueta ? (
-                    <>
-                      Tipo detectado:{" "}
-                      <span className="font-bold text-cian">{etiqueta}</span>
-                    </>
-                  ) : (
-                    "Un repo es una URL; un paquete usa el prefijo npm: o pypi:."
-                  )}
-                </p>
+
+                <div className="flex flex-wrap items-center justify-between gap-2 px-1 font-mono text-[12px] text-texto-2">
+                  <span>
+                    {objetivo.trim() === "" ? (
+                      "Formatos aceptados: URL de repo GitHub/GitLab o prefijos npm: / pypi:."
+                    ) : etiqueta ? (
+                      <span>
+                        Tipo detectado: <strong className="text-cian">{etiqueta}</strong>
+                      </span>
+                    ) : (
+                      "Usá una URL válida o el prefijo npm: o pypi:."
+                    )}
+                  </span>
+                </div>
               </div>
-              {error ? (
-                <p
-                  role="alert"
-                  className="mt-3 border border-sello-retenido/60 bg-sello-retenido/10 px-3 py-2 font-mono text-sm text-sello-retenido rounded"
-                >
-                  {error}
-                </p>
-              ) : null}
+
+              {error && (
+                <div role="alert" className="mt-3 rounded-lg border border-rose-500/40 bg-rose-500/10 px-4 py-2.5 font-mono text-sm text-rose-400 text-left">
+                  ⚠️ {error}
+                </div>
+              )}
             </form>
           </section>
 
-          <section
-            aria-labelledby="titulo-historial"
-            className="border-t border-tactico pb-16 pt-8"
-          >
-            <div className="mb-3 flex items-baseline justify-between">
-              <h2
-                id="titulo-historial"
-                className="font-mono text-[12px] font-bold uppercase tracking-[0.24em] text-texto-2"
-              >
-                Últimos inspeccionados
-              </h2>
+          {/* ── SECCIÓN DE TABLA DE DATOS 'ÚLTIMOS INSPECCIONADOS' A ANCHO COMPLETO ── */}
+          <section className="space-y-4 pt-4">
+            <div className="flex items-center justify-between border-b border-tactico/60 pb-3">
+              <div className="flex items-center gap-2">
+                <h2 className="font-mono text-xs font-bold uppercase tracking-widest text-texto-2">
+                  ÚLTIMOS INSPECCIONADOS
+                </h2>
+                <span className="font-mono text-[10px] bg-tactico/40 text-cian px-2 py-0.5 rounded-full border border-tactico/60">
+                  REGISTRO OFICIAL
+                </span>
+              </div>
               <Link
                 to="/historial"
-                className="font-mono text-[12px] text-cian underline underline-offset-4 hover:text-sello-liberado"
+                className="font-mono text-xs text-cian hover:underline underline-offset-4 flex items-center gap-1"
               >
-                Ver historial completo
+                <span>Ver historial completo</span>
+                <span>→</span>
               </Link>
             </div>
 
             {isLoading ? (
               <EsqueletoFilas />
             ) : isError ? (
-              <p className="border border-tactico bg-panel px-4 py-4 text-sm text-texto-2">
-                No se pudo cargar el historial. Revisá que el servidor esté en{" "}
-                <span className="font-mono text-cian">localhost:3000</span>.
-              </p>
+              <div className="rounded-xl border border-tactico/60 bg-panel/70 p-6 text-center font-mono text-sm text-texto-2">
+                ⚠️ No se pudo conectar con el servidor en <span className="text-cian">127.0.0.1:3000</span>.
+              </div>
             ) : scans && scans.length > 0 ? (
-              <ul className="divide-y divide-tactico border border-tactico bg-panel">
-                {scans.slice(0, 5).map((scan) => (
-                  <li key={scan.id}>
-                    <Link
-                      to={`/escaneos/${scan.id}`}
-                      className="grid grid-cols-1 items-center gap-1 px-4 py-3 transition-colors hover:bg-tactico/40 lg:grid-cols-[1fr_auto_auto_auto] lg:gap-4"
-                    >
-                      <span className="flex min-w-0 flex-col">
-                        <span className="truncate font-mono text-sm text-texto">
-                          {scan.objetivo}
-                        </span>
-                        <span className="text-[12px] text-texto-2">
-                          {scan.tipo === "repo" ? "Repo" : "Paquete"} ·{" "}
-                          <span className="font-mono">{scan.id}</span>
-                        </span>
-                      </span>
-                      <span className="font-mono text-[12px] text-texto-2 lg:text-right">
-                        {scan.veredicto
-                          ? totalHallazgos(scan) !== null
-                            ? `${totalHallazgos(scan)} hallazgos`
-                            : ""
-                          : scan.estado === "en_curso"
-                            ? "En inspección…"
-                            : "—"}
-                      </span>
-                      <span className="font-mono text-[12px] text-texto-2 lg:text-right">
-                        {formatoFecha.format(new Date(scan.creadoEn))}
-                      </span>
-                      <span className="justify-self-start lg:justify-self-end lg:w-28">
-                        {scan.veredicto ? (
-                          <VeredictoEtiqueta veredicto={scan.veredicto} />
-                        ) : (
-                          <span className="font-mono text-sm font-bold uppercase tracking-wider text-texto-2">
-                            {scan.estado === "en_curso" ? "En curso" : "Otros"}
-                          </span>
-                        )}
-                      </span>
-                    </Link>
-                  </li>
-                ))}
-              </ul>
+              <div className="rounded-xl border border-tactico/60 bg-panel/70 overflow-hidden shadow-2xl">
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left font-mono text-xs">
+                    <thead className="bg-noche/60 border-b border-tactico/50 text-texto-2 uppercase text-[10px] tracking-wider">
+                      <tr>
+                        <th scope="col" className="px-5 py-3.5 font-semibold">Target / Objetivo</th>
+                        <th scope="col" className="px-5 py-3.5 font-semibold">Fecha</th>
+                        <th scope="col" className="px-5 py-3.5 font-semibold">Status</th>
+                        <th scope="col" className="px-5 py-3.5 font-semibold text-right">Findings</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-tactico/40">
+                      {scans.slice(0, 8).map((scan) => {
+                        const hallazgos = totalHallazgos(scan);
+                        return (
+                          <tr
+                            key={scan.id}
+                            onClick={() => navigate(`/escaneos/${scan.id}`)}
+                            className="group cursor-pointer hover:bg-tactico/30 transition-colors"
+                          >
+                            <td className="px-5 py-4">
+                              <div className="flex flex-col">
+                                <span className="font-bold text-texto group-hover:text-cian transition-colors truncate max-w-md">
+                                  {scan.objetivo}
+                                </span>
+                                <span className="text-[10px] text-texto-2/70">
+                                  {scan.tipo === "repo" ? "Repository" : "Package"} · ID: {scan.id.slice(0, 8)}
+                                </span>
+                              </div>
+                            </td>
+
+                            <td className="px-5 py-4 text-texto-2 whitespace-nowrap">
+                              {formatoFecha.format(new Date(scan.creadoEn))}
+                            </td>
+
+                            <td className="px-5 py-4 whitespace-nowrap">
+                              {scan.veredicto ? (
+                                <VeredictoEtiqueta veredicto={scan.veredicto} />
+                              ) : (
+                                <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-tactico/40 text-texto-2 border border-tactico/60 text-[11px] font-bold uppercase">
+                                  <span className="h-1.5 w-1.5 rounded-full bg-cyan-400 animate-ping" />
+                                  {scan.estado === "en_curso" ? "Scanning..." : scan.estado}
+                                </span>
+                              )}
+                            </td>
+
+                            <td className="px-5 py-4 text-right font-bold whitespace-nowrap">
+                              {scan.veredicto ? (
+                                <span className={hallazgos && hallazgos > 0 ? "text-rose-400" : "text-emerald-400"}>
+                                  {hallazgos !== null ? `${hallazgos} issues` : "0 issues"}
+                                </span>
+                              ) : (
+                                <span className="text-texto-2/50">—</span>
+                              )}
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
             ) : (
-              <div className="border border-dashed border-tactico bg-panel/40 px-4 py-10 text-center">
-                <p className="text-base text-texto">
-                  Todavía no se inspeccionó nada.
-                </p>
-                <p className="mt-1 text-sm text-texto-2">
-                  Ingresá una URL de repo o un paquete arriba y comenzá el
-                  control.
-                </p>
+              <div className="rounded-xl border border-dashed border-tactico/60 bg-panel/40 p-12 text-center font-mono text-sm text-texto-2 space-y-2">
+                <p className="text-texto font-bold">No hay inspecciones registradas.</p>
+                <p className="text-xs">Ingresá una URL de repositorio o paquete arriba para comenzar el control.</p>
               </div>
             )}
           </section>
+
         </div>
       </main>
     </div>

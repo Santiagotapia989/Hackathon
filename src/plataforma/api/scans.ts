@@ -67,7 +67,11 @@ scansRouter.get("/scans/:id/events", (req, res) => {
     for (const etapa of scan.etapas) enviarEventoSse(res, "etapa", etapa);
     for (const hallazgo of scan.hallazgos) enviarEventoSse(res, "hallazgo", hallazgo);
     if (scan.estado === "terminado") {
-      enviarEventoSse(res, "veredicto", { veredicto: scan.veredicto, resumen: scan.resumen });
+      enviarEventoSse(res, "veredicto", {
+        veredicto: scan.veredicto,
+        resumen: scan.resumen,
+        informeEjecutivo: scan.informeEjecutivo,
+      });
     } else {
       enviarEventoSse(res, "error", { error: scan.error ?? "Error desconocido." });
     }

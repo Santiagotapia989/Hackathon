@@ -2,6 +2,7 @@
 
 import { execFile } from "node:child_process";
 import { promisify } from "node:util";
+import fsSync from "node:fs";
 import fs from "node:fs/promises";
 import path from "node:path";
 import { LIMITES } from "../config.js";
@@ -20,8 +21,7 @@ export async function clonarRepo(
   destino: string,
   signal?: AbortSignal,
 ): Promise<ResultadoClon> {
-  if (process.env.NODE_ENV === "test" && !url.startsWith("https://")) {
-    // Solo en tests: permite apuntar a un fixture local sin pasar por red/git.
+  if (fsSync.existsSync(url) || (process.env.NODE_ENV === "test" && !url.startsWith("https://"))) {
     await fs.cp(url, destino, { recursive: true });
   } else {
     await ejecutarGitClone(url, destino, signal);
@@ -64,6 +64,7 @@ async function ejecutarGitClone(url: string, destino: string, signal?: AbortSign
       timeout: LIMITES.timeoutCloneMs,
       env: { ...process.env, GIT_TERMINAL_PROMPT: "0" },
       signal,
+      shell: process.platform === "win32",
     });
   } catch (err) {
     const mensaje = err instanceof Error ? err.message : String(err);
