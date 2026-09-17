@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { api } from "../lib/api";
 import type {
@@ -190,13 +190,26 @@ function BalanceHallazgos({ scan }: { scan: Scan }) {
 // pasa a la IA para que continúe pese al dictamen. Con veredicto RETENIDO
 // exige una segunda confirmación explícita antes de emitirlo (la API también
 // lo exige, no es solo cosmético). Solo visible en pantalla, nunca en print.
-function AprobacionToken({ scan }: { scan: Scan }) {
+function AprobacionToken({
+  scan,
+  onExpandido,
+}: {
+  scan: Scan;
+  onExpandido?: (expandido: boolean) => void;
+}) {
   const esRetenido = scan.veredicto === "retenido";
   const [token, setToken] = useState<string | null>(null);
   const [pidiendoConfirmacion, setPidiendoConfirmacion] = useState(false);
   const [cargando, setCargando] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [copiado, setCopiado] = useState(false);
+
+  // Avisa a la tarjeta cuando la zona del token está expandida (confirmación
+  // o token visible) para que el sello suba a la esquina superior derecha.
+  const expandido = Boolean(token) || pidiendoConfirmacion;
+  useEffect(() => {
+    onExpandido?.(expandido);
+  }, [expandido, onExpandido]);
 
   async function generar() {
     setCargando(true);
@@ -301,6 +314,25 @@ function SelloVeredicto({ scan }: { scan: Scan }) {
   const confianza = calcularConfianza(scan);
   const sinHallazgos = scan.hallazgos.length === 0;
 
+  // Cuando la zona del token se expande, el sello de la tarjeta de veredicto
+  // sube a la esquina superior derecha (translateY medido, la tarjeta usa
+  // p-5 = 20px de padding e items-center).
+  const tarjetaVeredictoRef = useRef<HTMLDivElement>(null);
+  const selloRef = useRef<HTMLDivElement>(null);
+  const [selloArriba, setSelloArriba] = useState(false);
+
+  useEffect(() => {
+    const sello = selloRef.current;
+    const tarjeta = tarjetaVeredictoRef.current;
+    if (!sello || !tarjeta) return;
+    if (!selloArriba) {
+      sello.style.transform = "";
+      return;
+    }
+    const delta = (tarjeta.clientHeight - 40 - sello.offsetHeight) / 2;
+    sello.style.transform = `translateY(${-Math.max(delta, 0)}px)`;
+  }, [selloArriba]);
+
   return (
     <div className="space-y-4">
       <div className="border border-tactico bg-panel/80 p-5 rounded-lg">
@@ -340,6 +372,7 @@ function SelloVeredicto({ scan }: { scan: Scan }) {
       <div className="grid gap-4 grid-cols-2">
         {/* Tarjeta 1: Hero Veredicto Vinculante */}
         <div
+          ref={tarjetaVeredictoRef}
           className="flex items-center justify-between border-2 p-5 rounded-lg shadow-lg"
           style={{
             borderColor: color,
@@ -360,11 +393,14 @@ function SelloVeredicto({ scan }: { scan: Scan }) {
             <p className="font-mono text-[11px] font-medium text-texto-2">
               {subtituloVeredicto(veredicto, confianza, sinHallazgos)}
             </p>
-            {veredicto !== "liberado" && <AprobacionToken scan={scan} />}
+            {veredicto !== "liberado" && (
+              <AprobacionToken scan={scan} onExpandido={setSelloArriba} />
+            )}
           </div>
           <div
+            ref={selloRef}
             aria-hidden="true"
-            className="h-14 w-14 rounded-full flex items-center justify-center shrink-0 border-2"
+            className="h-14 w-14 rounded-full flex items-center justify-center shrink-0 border-2 transition-transform duration-500"
             style={{ borderColor: color, backgroundColor: `${color}20` }}
           >
             <span
@@ -392,14 +428,27 @@ function SelloVeredicto({ scan }: { scan: Scan }) {
               {confianza.etiqueta}
             </p>
           </div>
-          <div className="h-14 w-14 rounded-full border-2 border-cian/80 bg-noche/80 flex items-center justify-center shrink-0">
-            <span className="font-mono text-xs font-extrabold text-cian">
-              {confianza.porcentaje >= 80
-                ? "ALTO"
-                : confianza.porcentaje >= 40
-                  ? "MEDIO"
-                  : "CRÍTICO"}
-            </span>
+          <div className="flex flex-col items-center gap-3 shrink-0">
+            <div className="h-14 w-14 rounded-full border-2 border-cian/80 bg-noche/80 flex items-center justify-center shrink-0">
+              <span className="font-mono text-xs font-extrabold text-cian">
+                {confianza.porcentaje >= 80
+                  ? "ALTO"
+                  : confianza.porcentaje >= 40
+                    ? "MEDIO"
+                    : "CRÍTICO"}
+              </span>
+            </div>
+            <div className="h-14 w-14 rounded-full border-2 border-cian/80 bg-white flex items-center justify-center shrink-0 relative overflow-hidden">
+              <span className="font-mono text-xs font-extrabold text-cian">
+                ISO
+              </span>
+              <img
+                src="/iso.png"
+                alt="Logo ISO"
+                className="absolute inset-0 h-full w-full object-cover"
+                onError={(e) => e.currentTarget.remove()}
+              />
+            </div>
           </div>
         </div>
       </div>
