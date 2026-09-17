@@ -241,6 +241,132 @@ const CRITERIOS_TECNICOS = `CRITERIOS TÉCNICOS DE EVALUACIÓN (ya cargados en t
    - Módulo "dependencias": CWE-829 (Inclusion of Functionality from Untrusted Control Sphere), CWE-1104 (Use of Unmaintained Third Party Components), CWE-494 (Download of Code Without Integrity Check).
    - Módulo "secretos": CWE-798 (Use of Hard-coded Credentials), CWE-312 (Cleartext Storage of Sensitive Information), CWE-259 (Use of Hard-coded Password).`;
 
+// Esquema JSON para el parámetro "format" de Ollama: obliga al modelo a
+// respetar tipos y estructura (evita que un array llegue con objetos y
+// safeParse rechace toda la respuesta).
+const FORMATO_INFORME = {
+  type: "object",
+  properties: {
+    informeEjecutivo: {
+      type: "object",
+      properties: {
+        cabecera: {
+          type: "object",
+          properties: {
+            caratula: { type: "string" },
+            codigoDocumento: { type: "string" },
+            fecha: { type: "string" },
+            revision: { type: "string" },
+            paginas: { type: "string" },
+            caracter: { type: "string" },
+          },
+          required: ["caratula", "codigoDocumento", "fecha", "revision", "paginas", "caracter"],
+        },
+        objetivo: { type: "string" },
+        alcance: { type: "string" },
+        problematicaAnterior: { type: "string" },
+        introduccion: { type: "string" },
+        indice: { type: "array", items: { type: "string" } },
+        desarrollo: { type: "string" },
+        conclusion: { type: "string" },
+        personal: {
+          type: "array",
+          items: {
+            type: "object",
+            properties: {
+              nombre: { type: "string" },
+              cargo: { type: "string" },
+              grado: { type: "string" },
+              firma: { type: "string" },
+            },
+            required: ["nombre", "cargo"],
+          },
+        },
+        desafioDetectado: { type: "string" },
+        objetivoRepo: { type: "string" },
+        metricasImpacto: { type: "array", items: { type: "string" } },
+        faseEjecucion: { type: "string" },
+      },
+      required: ["objetivo", "alcance", "problematicaAnterior", "introduccion", "desarrollo", "conclusion"],
+    },
+  },
+  required: ["informeEjecutivo"],
+} as const;
+
+// Coercea campos con tipos incorrectos (modelos chicos a veces meten un
+// objeto donde va un string). Lo que no se puede salvar se descarta: todos
+// los campos del informe son opcionales, así que un campo ausente es mejor
+// que perder el informe entero.
+function sanearInforme(raw: unknown): unknown {
+  if (typeof raw !== "object" || raw === null) return raw;
+  const o = raw as Record<string, unknown>;
+
+  const aString = (v: unknown): string | undefined =>
+    typeof v === "string"
+      ? v
+      : v == null
+        ? undefined
+        : typeof v === "object"
+          ? JSON.stringify(v)
+          : String(v);
+
+  const aListaStrings = (v: unknown): string[] | undefined => {
+    if (typeof v === "string") return [v];
+    if (!Array.isArray(v)) return undefined;
+    return v
+      .map(aString)
+      .filter((s): s is string => typeof s === "string");
+  };
+
+  const out: Record<string, unknown> = {};
+
+  for (const campo of [
+    "objetivo",
+    "alcance",
+    "problematicaAnterior",
+    "introduccion",
+    "desarrollo",
+    "conclusion",
+    "desafioDetectado",
+    "objetivoRepo",
+    "faseEjecucion",
+  ]) {
+    const v = aString(o[campo]);
+    if (v !== undefined) out[campo] = v;
+  }
+
+  for (const campo of ["indice", "metricasImpacto"]) {
+    const v = aListaStrings(o[campo]);
+    if (v !== undefined) out[campo] = v;
+  }
+
+  if (typeof o.cabecera === "object" && o.cabecera !== null) {
+    const c = o.cabecera as Record<string, unknown>;
+    const cab: Record<string, unknown> = {};
+    for (const campo of ["caratula", "codigoDocumento", "fecha", "revision", "paginas", "caracter"]) {
+      const v = aString(c[campo]);
+      if (v !== undefined) cab[campo] = v;
+    }
+    out.cabecera = cab;
+  }
+
+  if (Array.isArray(o.personal)) {
+    out.personal = o.personal
+      .filter((p) => typeof p === "object" && p !== null)
+      .map((p) => {
+        const r = p as Record<string, unknown>;
+        const item: Record<string, unknown> = {};
+        for (const campo of ["nombre", "cargo", "grado", "firma"]) {
+          const v = aString(r[campo]);
+          if (v !== undefined) item[campo] = v;
+        }
+        return item;
+      });
+  }
+
+  return out;
+}
+
 export async function generarInformeEjecutivo(
   scan: Scan,
   signal?: AbortSignal,
@@ -296,42 +422,48 @@ Devolvé ÚNICAMENTE un objeto JSON con la propiedad principal "informeEjecutivo
   }
 }`;
 
-  try {
-    const resp = await fetch(`${OLLAMA_HOST}/api/chat`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        model: MODELO,
-        messages: [
-          {
-            role: "system",
-            content:
-              "Sos un Arquitecto de Ciberseguridad e Investigador de Amenazas especializado en entornos de Defensa y Soberanía Tecnológica. Tu objetivo es auditar y proponer mejoras y un informe ejecutivo preciso en formato JSON. Redactás secciones extensas y desarrolladas, e integrás explícitamente los criterios técnicos OpenSSF, CVSS y CWE que tenés cargados en tu contexto.",
-          },
-          { role: "user", content: prompt },
-        ],
-        stream: false,
-        options: { temperature: TEMPERATURE, num_ctx: NUM_CTX, num_predict: 4096 },
-      }),
-      signal: signal ?? AbortSignal.timeout(TIMEOUT_INFORME_MS),
-    });
+  // Un reintento: si la respuesta no trae JSON válido contra el schema,
+  // se prueba una vez más. Errores de red/HTTP no se reintentan en caliente.
+  for (let intento = 0; intento < 2; intento++) {
+    try {
+      const resp = await fetch(`${OLLAMA_HOST}/api/chat`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          model: MODELO,
+          messages: [
+            {
+              role: "system",
+              content:
+                "Sos un Arquitecto de Ciberseguridad e Investigador de Amenazas especializado en entornos de Defensa y Soberanía Tecnológica. Tu objetivo es auditar y proponer mejoras y un informe ejecutivo preciso en formato JSON. Redactás secciones extensas y desarrolladas, e integrás explícitamente los criterios técnicos OpenSSF, CVSS y CWE que tenés cargados en tu contexto.",
+            },
+            { role: "user", content: prompt },
+          ],
+          stream: false,
+          format: FORMATO_INFORME,
+          options: { temperature: TEMPERATURE, num_ctx: NUM_CTX, num_predict: 4096 },
+        }),
+        signal: signal ?? AbortSignal.timeout(TIMEOUT_INFORME_MS),
+      });
 
-    if (!resp.ok) return generarInformeEjecutivoFallback(scan);
+      if (!resp.ok) return generarInformeEjecutivoFallback(scan);
 
-    const data = (await resp.json()) as any;
-    const contenidoRespuesta = data?.message?.content ?? "";
-    const jsonMatch = contenidoRespuesta.match(/\{[\s\S]*\}/);
-    if (!jsonMatch) return generarInformeEjecutivoFallback(scan);
+      const data = (await resp.json()) as any;
+      const contenidoRespuesta = data?.message?.content ?? "";
+      const jsonMatch = contenidoRespuesta.match(/\{[\s\S]*\}/);
+      if (!jsonMatch) continue;
 
-    const parsed = JSON.parse(jsonMatch[0]);
-    const objInforme = parsed?.informeEjecutivo ?? parsed;
-    const validacion = InformeEjecutivo.safeParse(objInforme);
+      const parsed = JSON.parse(jsonMatch[0]);
+      const objInforme = parsed?.informeEjecutivo ?? parsed;
+      const validacion = InformeEjecutivo.safeParse(sanearInforme(objInforme));
 
-    if (validacion.success) {
-      return validacion.data;
+      if (validacion.success) {
+        return validacion.data;
+      }
+      console.warn("[ollama] informe ejecutivo: respuesta no validó contra el schema, reintentando.");
+    } catch {
+      // Fallback silencioso ante cualquier excepción
     }
-  } catch {
-    // Fallback silencioso ante cualquier excepción
   }
 
   return generarInformeEjecutivoFallback(scan);
