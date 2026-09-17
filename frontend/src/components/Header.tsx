@@ -99,11 +99,11 @@ export function Header({ timeline }: HeaderProps) {
             <span className="flex items-center gap-2.5">
               <EscudoAduana className="h-8 w-8 text-cian" />
               <span className="flex flex-col leading-tight">
-                <span className="text-xl font-bold tracking-wide text-texto">
-                  Aduana
+                <span className="text-2xl font-bold tracking-wide text-texto">
+                  SIVAR
                 </span>
                 <span className="font-mono text-xs uppercase tracking-widest text-texto-2">
-                  Control previo de acceso
+                  Sistema de Inspección y Vigilancia de Archivos y Repositorios
                 </span>
               </span>
             </span>
@@ -149,7 +149,7 @@ export function Header({ timeline }: HeaderProps) {
                 >
                   <div className="border-b border-tactico/60 px-4 py-3">
                     <p className="font-sans text-sm font-bold text-texto">
-                      Usuario Aduana
+                      Usuario SIVAR
                     </p>
                     <p className="font-mono text-[11px] text-texto-2">
                       operador@fie.undef
