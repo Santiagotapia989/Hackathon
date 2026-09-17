@@ -229,9 +229,12 @@ body {
    - Fuerza la paleta clara para que el documento salga legible en papel
      aunque la interfaz esté en modo oscuro.
    - Desactiva fondos decorativos, animaciones y barridos. */
+/* margin: 0 → el navegador no dibuja sus cabeceras/pies automáticos
+   (fecha, URL localhost, números de página). Los márgenes reales se dan
+   por dentro con padding print en el documento. */
 @page {
   size: A4;
-  margin: 18mm;
+  margin: 0;
 }
 
 @media print {

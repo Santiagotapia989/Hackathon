@@ -87,7 +87,11 @@ export function Header({ timeline }: HeaderProps) {
 
   return (
     <div className="bg-noche print:hidden">
-      <header className="border-b border-tactico bg-panel/50 backdrop-blur">
+      {/* relative z-50: backdrop-blur crea un stacking context propio, así que
+          el z-50 del dropdown queda atrapado dentro del header y el contenido
+          de la página (que viene después en el DOM) se pinta por encima del
+          menú — en la home el panel del formulario lo tapa por completo. */}
+      <header className="relative z-50 border-b border-tactico bg-panel/50 backdrop-blur">
         <div className="w-full flex justify-between items-center px-6 py-5">
           <NavLink to="/" className="flex items-center gap-4">
             <img src="/logo.png" alt="Logo FIE" className="h-16 w-16 rounded-full object-cover bg-white" />

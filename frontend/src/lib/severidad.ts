@@ -27,7 +27,7 @@ export const etiquetaModulo: Record<Modulo, string> = {
   instrucciones: "Instrucciones",
   unicode: "Unicode oculto",
   dependencias: "Dependencias",
-  secretos: "Secretos",
+  secretos: "Credenciales",
 };
 
 export interface FrameworkNormativo {
