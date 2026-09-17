@@ -321,24 +321,24 @@ function CaratulaImpresion({ scan }: { scan: Scan }) {
 
   return (
     <div className="hidden print:flex min-h-[26cm] flex-col items-center justify-between break-after-page py-10 text-center">
-      <div className="space-y-1">
-        <p className="font-mono text-[11px] font-bold uppercase tracking-[0.35em] text-texto-2">
-          Universidad de la Defensa Nacional · FIE
-        </p>
+      <div className="space-y-4">
         <p className="font-mono text-[10px] uppercase tracking-[0.3em] text-texto-2">
           Sistema Aduanero de Control Previo de Software
         </p>
+        <h1 className="mx-auto max-w-3xl font-mono text-2xl font-black uppercase leading-snug tracking-[0.12em] text-texto">
+          {cab.caratula}
+        </h1>
       </div>
 
-      <div className="flex flex-col items-center gap-8">
+      <div className="-mt-6 flex flex-col items-center gap-6">
         <img
           src="/logo.png"
           alt="Logo FIE"
           className="h-44 w-44 rounded-full object-cover"
         />
-        <h1 className="mx-auto max-w-3xl font-mono text-2xl font-black uppercase leading-snug tracking-[0.12em] text-texto">
-          {cab.caratula}
-        </h1>
+        <p className="font-mono text-[11px] font-bold uppercase tracking-[0.35em] text-texto-2">
+          Universidad de la Defensa Nacional · FIE
+        </p>
       </div>
 
       {/* Pie de carátula: objetivo + datos de control + carácter, juntos abajo */}
