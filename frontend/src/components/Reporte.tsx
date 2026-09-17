@@ -121,32 +121,9 @@ function SelloVeredicto({ scan }: { scan: Scan }) {
         </div>
       </div>
 
-      {/* Tarjetas Principales de Alto Nivel: Índice de Confianza y Veredicto Vinculante */}
-      <div className="grid gap-4 sm:grid-cols-2">
-        {/* Tarjeta 1: Hero Índice de Confianza */}
-        <div className="flex items-center justify-between border-2 border-cian/60 bg-cian/10 p-5 rounded-lg shadow-lg">
-          <div className="space-y-1">
-            <span className="font-mono text-[10px] font-bold uppercase tracking-[0.2em] text-cian">
-              MÉTRICA GLOBAL DE SEGURIDAD
-            </span>
-            <div className="flex items-baseline gap-2">
-              <span className="font-mono text-3xl sm:text-4xl font-black text-cian">
-                {confianza.porcentaje}%
-              </span>
-              <span className="font-mono text-xs font-semibold text-texto-2">/ 100%</span>
-            </div>
-            <p className="font-mono text-[11px] font-medium text-texto font-sans">
-              {confianza.etiqueta}
-            </p>
-          </div>
-          <div className="h-14 w-14 rounded-full border-2 border-cian/80 bg-noche/80 flex items-center justify-center shrink-0">
-            <span className="font-mono text-xs font-extrabold text-cian">
-              {confianza.porcentaje >= 80 ? "ALTO" : confianza.porcentaje >= 40 ? "MEDIO" : "CRÍTICO"}
-            </span>
-          </div>
-        </div>
-
-        {/* Tarjeta 2: Hero Veredicto Vinculante */}
+      {/* Tarjetas Principales de Alto Nivel: Veredicto Vinculante e Índice de Confianza */}
+      <div className="grid gap-4 grid-cols-2">
+        {/* Tarjeta 1: Hero Veredicto Vinculante */}
         <div
           className="flex items-center justify-between border-2 p-5 rounded-lg shadow-lg"
           style={{
@@ -177,46 +154,125 @@ function SelloVeredicto({ scan }: { scan: Scan }) {
             <span className="h-4 w-4 rounded-full animate-pulse" style={{ backgroundColor: color }} />
           </div>
         </div>
+
+        {/* Tarjeta 2: Hero Índice de Confianza */}
+        <div className="flex items-center justify-between border-2 border-cian/60 bg-cian/10 p-5 rounded-lg shadow-lg">
+          <div className="space-y-1">
+            <span className="font-mono text-[10px] font-bold uppercase tracking-[0.2em] text-cian">
+              MÉTRICA GLOBAL DE SEGURIDAD
+            </span>
+            <div className="flex items-baseline gap-2">
+              <span className="font-mono text-3xl sm:text-4xl font-black text-cian">
+                {confianza.porcentaje}%
+              </span>
+              <span className="font-mono text-xs font-semibold text-texto-2">/ 100%</span>
+            </div>
+            <p className="font-mono text-[11px] font-medium text-texto font-sans">
+              {confianza.etiqueta}
+            </p>
+          </div>
+          <div className="h-14 w-14 rounded-full border-2 border-cian/80 bg-noche/80 flex items-center justify-center shrink-0">
+            <span className="font-mono text-xs font-extrabold text-cian">
+              {confianza.porcentaje >= 80 ? "ALTO" : confianza.porcentaje >= 40 ? "MEDIO" : "CRÍTICO"}
+            </span>
+          </div>
+        </div>
       </div>
     </div>
   );
 }
 
+function datosCabecera(scan: Scan) {
+  const cabecera = scan.informeEjecutivo?.cabecera;
+  return {
+    caratula:
+      cabecera?.caratula ??
+      "INFORME TÉCNICO DE AUDITORÍA Y CONTROL PREVIO DE SEGURIDAD OPERACIONAL",
+    codigoDocumento:
+      cabecera?.codigoDocumento ?? `EMCO-DGC4-${scan.id.toUpperCase()}-SEC`,
+    fecha: cabecera?.fecha ?? formatoFecha.format(new Date(scan.creadoEn)),
+    revision: cabecera?.revision ?? "Rev. 1.2 (Definitiva)",
+    paginas: cabecera?.paginas ?? "1 de 6",
+    caracter:
+      cabecera?.caracter ??
+      "CONFIDENCIAL / DISTRIBUCIÓN RESTRINGIDA - SEGURIDAD NACIONAL",
+  };
+}
+
+function CaratulaImpresion({ scan }: { scan: Scan }) {
+  const cab = datosCabecera(scan);
+
+  return (
+    <div className="hidden print:flex min-h-[24cm] flex-col items-center justify-between break-after-page py-10 text-center">
+      <div className="space-y-1">
+        <p className="font-mono text-[11px] font-bold uppercase tracking-[0.35em] text-texto-2">
+          Universidad de la Defensa Nacional · FIE
+        </p>
+        <p className="font-mono text-[10px] uppercase tracking-[0.3em] text-texto-2">
+          Sistema Aduanero de Control Previo de Software
+        </p>
+      </div>
+
+      <div className="flex flex-col items-center gap-8">
+        <img
+          src="/logo.png"
+          alt="Logo FIE"
+          className="h-44 w-44 rounded-full object-cover"
+        />
+        <div className="space-y-4">
+          <h1 className="mx-auto max-w-3xl font-mono text-2xl font-black uppercase leading-snug tracking-[0.12em] text-texto">
+            {cab.caratula}
+          </h1>
+          <p className="mx-auto max-w-2xl font-mono text-sm font-semibold text-texto-2">
+            {scan.objetivo}
+          </p>
+        </div>
+      </div>
+
+      <dl className="grid w-full max-w-3xl grid-cols-3 divide-x divide-tactico border border-tactico">
+        <div className="p-4">
+          <dt className="font-mono text-[10px] font-bold uppercase tracking-[0.2em] text-texto-2">
+            Fecha
+          </dt>
+          <dd className="mt-1 font-mono text-[13px] font-semibold text-texto">
+            {cab.fecha}
+          </dd>
+        </div>
+        <div className="p-4">
+          <dt className="font-mono text-[10px] font-bold uppercase tracking-[0.2em] text-texto-2">
+            Código de documento
+          </dt>
+          <dd className="mt-1 font-mono text-[13px] font-semibold text-texto">
+            {cab.codigoDocumento}
+          </dd>
+        </div>
+        <div className="p-4">
+          <dt className="font-mono text-[10px] font-bold uppercase tracking-[0.2em] text-texto-2">
+            Número de revisión
+          </dt>
+          <dd className="mt-1 font-mono text-[13px] font-semibold text-texto">
+            {cab.revision}
+          </dd>
+        </div>
+      </dl>
+
+      <p className="w-full max-w-3xl border-2 border-tactico px-6 py-3 font-mono text-xs font-bold uppercase tracking-[0.25em] text-texto">
+        {cab.caracter}
+      </p>
+    </div>
+  );
+}
+
 function CabeceraDocumento({ scan }: { scan: Scan }) {
-  const informe = scan.informeEjecutivo;
-  const cabecera = informe?.cabecera;
+  const cab = datosCabecera(scan);
 
   const datos = [
-    {
-      etiqueta: "Carátula",
-      valor:
-        cabecera?.caratula ??
-        "INFORME TÉCNICO DE AUDITORÍA Y CONTROL PREVIO DE SEGURIDAD OPERACIONAL",
-    },
-    {
-      etiqueta: "Código de documento",
-      valor: cabecera?.codigoDocumento ?? `EMCO-DGC4-${scan.id.toUpperCase()}-SEC`,
-    },
-    {
-      etiqueta: "Fecha",
-      valor:
-        cabecera?.fecha ??
-        formatoFecha.format(new Date(scan.creadoEn)),
-    },
-    {
-      etiqueta: "Número de revisión",
-      valor: cabecera?.revision ?? "Rev. 1.2 (Definitiva)",
-    },
-    {
-      etiqueta: "Páginas",
-      valor: cabecera?.paginas ?? "1 de 6",
-    },
-    {
-      etiqueta: "Carácter",
-      valor:
-        cabecera?.caracter ??
-        "CONFIDENCIAL / DISTRIBUCIÓN RESTRINGIDA - SEGURIDAD NACIONAL",
-    },
+    { etiqueta: "Carátula", valor: cab.caratula },
+    { etiqueta: "Código de documento", valor: cab.codigoDocumento },
+    { etiqueta: "Fecha", valor: cab.fecha },
+    { etiqueta: "Número de revisión", valor: cab.revision },
+    { etiqueta: "Páginas", valor: cab.paginas },
+    { etiqueta: "Carácter", valor: cab.caracter },
   ];
 
   return (
@@ -279,7 +335,7 @@ function HallazgoItem({ hallazgo }: { hallazgo: Finding }) {
   const frameworks = obtenerFrameworkNormativo(hallazgo.regla, hallazgo.modulo, hallazgo.cve);
 
   return (
-    <article className="border border-tactico bg-panel/70 p-4 sm:p-5 rounded-lg space-y-3">
+    <article className="border border-tactico bg-panel/70 p-4 sm:p-5 rounded-lg space-y-3 break-inside-avoid">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="min-w-0 space-y-1.5">
           <div className="flex flex-wrap items-center gap-2">
@@ -453,10 +509,10 @@ export function Reporte({ scan }: { scan: Scan }) {
     <section
       id="inicio-reporte"
       aria-labelledby="titulo-documento-militar"
-      className="mx-auto w-full max-w-5xl px-4 pb-20 pt-6 scroll-mt-6"
+      className="mx-auto w-full max-w-5xl px-4 pb-20 pt-6 scroll-mt-6 print:max-w-none print:p-0"
     >
       {/* Barra superior de acciones del documento */}
-      <div className="mb-4 flex flex-wrap items-center justify-between gap-3 border-b border-tactico pb-4">
+      <div className="mb-4 flex flex-wrap items-center justify-between gap-3 border-b border-tactico pb-4 print:hidden">
         <Link
           to="/"
           className="inline-flex items-center gap-2 border border-tactico bg-panel px-3 py-1.5 font-mono text-xs font-semibold text-texto hover:border-cian/60 hover:text-cian transition-colors rounded"
@@ -476,9 +532,12 @@ export function Reporte({ scan }: { scan: Scan }) {
       </div>
 
       {/* CUERPO PRINCIPAL DEL INFORME MILITAR */}
-      <article className="border border-tactico bg-panel p-6 sm:p-10 shadow-sm rounded-md text-texto">
+      <article className="border border-tactico bg-panel p-6 sm:p-10 shadow-sm rounded-md text-texto print:border-0 print:shadow-none print:p-0">
+        {/* Carátula a página completa (solo visible al imprimir) */}
+        <CaratulaImpresion scan={scan} />
+
         {/* Cabecera del documento */}
-        <div className="mt-6">
+        <div className="mt-6 print:hidden">
           <CabeceraDocumento scan={scan} />
         </div>
 
@@ -490,7 +549,7 @@ export function Reporte({ scan }: { scan: Scan }) {
         {/* SECCIONES FORMALES DEL DOCUMENTO (EN ORDEN ESTRICTO 1 AL 8) */}
         <div className="mt-10 divide-y divide-tactico/80">
           {/* 1. OBJETIVO */}
-          <section className="py-6" aria-labelledby="seccion-objetivo">
+          <section className="py-6 break-inside-avoid" aria-labelledby="seccion-objetivo">
             <h2
               id="seccion-objetivo"
               className="font-mono text-sm font-bold uppercase tracking-[0.2em] text-cian"
@@ -507,7 +566,7 @@ export function Reporte({ scan }: { scan: Scan }) {
           </section>
 
           {/* 2. ALCANCE */}
-          <section className="py-6" aria-labelledby="seccion-alcance">
+          <section className="py-6 break-inside-avoid" aria-labelledby="seccion-alcance">
             <h2
               id="seccion-alcance"
               className="font-mono text-sm font-bold uppercase tracking-[0.2em] text-cian"
@@ -523,7 +582,7 @@ export function Reporte({ scan }: { scan: Scan }) {
           </section>
 
           {/* 3. PROBLEMÁTICA ANTERIOR */}
-          <section className="py-6" aria-labelledby="seccion-problematica">
+          <section className="py-6 break-inside-avoid" aria-labelledby="seccion-problematica">
             <h2
               id="seccion-problematica"
               className="font-mono text-sm font-bold uppercase tracking-[0.2em] text-cian"
@@ -540,7 +599,7 @@ export function Reporte({ scan }: { scan: Scan }) {
           </section>
 
           {/* 4. INTRODUCCIÓN */}
-          <section className="py-6" aria-labelledby="seccion-introduccion">
+          <section className="py-6 break-inside-avoid" aria-labelledby="seccion-introduccion">
             <h2
               id="seccion-introduccion"
               className="font-mono text-sm font-bold uppercase tracking-[0.2em] text-cian"
@@ -611,23 +670,25 @@ export function Reporte({ scan }: { scan: Scan }) {
 
           {/* 6. DESARROLLO */}
           <section className="py-6" aria-labelledby="seccion-desarrollo">
-            <h2
-              id="seccion-desarrollo"
-              className="font-mono text-sm font-bold uppercase tracking-[0.2em] text-cian"
-            >
-              6. Desarrollo
-            </h2>
+            <div className="break-inside-avoid">
+              <h2
+                id="seccion-desarrollo"
+                className="font-mono text-sm font-bold uppercase tracking-[0.2em] text-cian"
+              >
+                6. Desarrollo
+              </h2>
 
-            <div className="mt-3 text-sm leading-relaxed text-texto space-y-2">
-              <p>
-                {informe?.desarrollo ??
-                  "Durante la fase de inspección multidimensional se procesaron 4 módulos de control táctico: Ingesta, Instrucciones ocultas, Unicode encubierto, Dependencias y Secretos expuestos. Se detectaron vulnerabilidades de consideración que comprometen la cadena de suministro de software militar."}
-              </p>
+              <div className="mt-3 text-sm leading-relaxed text-texto space-y-2">
+                <p>
+                  {informe?.desarrollo ??
+                    "Durante la fase de inspección multidimensional se procesaron 4 módulos de control táctico: Ingesta, Instrucciones ocultas, Unicode encubierto, Dependencias y Secretos expuestos. Se detectaron vulnerabilidades de consideración que comprometen la cadena de suministro de software militar."}
+                </p>
+              </div>
             </div>
 
             {/* Subsección: Métricas de impacto operacional proyectadas */}
             {informe?.metricasImpacto?.length ? (
-              <div className="mt-4 border border-tactico bg-panel/60 p-4 rounded">
+              <div className="mt-4 border border-tactico bg-panel/60 p-4 rounded break-inside-avoid">
                 <p className="font-mono text-[11px] font-bold uppercase tracking-[0.2em] text-texto-2">
                   Métricas de Impacto Proyectadas
                 </p>
@@ -651,7 +712,7 @@ export function Reporte({ scan }: { scan: Scan }) {
 
             {/* Subsección: Resumen Cuantitativo Operacional */}
             {resumen ? (
-              <div className="mt-5">
+              <div className="mt-5 break-inside-avoid">
                 <p className="font-mono text-[11px] font-bold uppercase tracking-[0.2em] text-texto-2">
                   Balance de Hallazgos por Severidad
                 </p>
@@ -692,7 +753,7 @@ export function Reporte({ scan }: { scan: Scan }) {
             {/* Recuadro pedagógico e institucional sobre CVE y Ponderación del Índice de Confianza */}
             <div className="mt-6 space-y-4">
               {/* Box 1: Explicación Transparente del Cálculo del Índice de Confianza */}
-              <div className="border-l-4 border-amber-500 bg-amber-500/5 p-4 rounded-r border border-tactico/60">
+              <div className="border-l-4 border-amber-500 bg-amber-500/5 p-4 rounded-r border border-tactico/60 break-inside-avoid">
                 <h3 className="font-mono text-xs font-bold uppercase tracking-[0.16em] text-amber-400">
                   Ponderación Causal y Cálculo Algorítmico del Índice de Confianza
                 </h3>
@@ -719,7 +780,7 @@ export function Reporte({ scan }: { scan: Scan }) {
               </div>
 
               {/* Box 2: Referencia CVE y Marcos Normativos */}
-              <div className="border-l-4 border-cian bg-cian/5 p-4 rounded-r border border-tactico/60">
+              <div className="border-l-4 border-cian bg-cian/5 p-4 rounded-r border border-tactico/60 break-inside-avoid">
                 <h3 className="font-mono text-xs font-bold uppercase tracking-[0.16em] text-cian">
                   Referencia Normativa: Diccionario CVE & MITRE ATLAS
                 </h3>
@@ -729,7 +790,7 @@ export function Reporte({ scan }: { scan: Scan }) {
               </div>
 
               {/* Box 3: Alineación CONEAU & Indicadores Sistemáticos de Auditoría */}
-              <div className="border-l-4 border-emerald-500 bg-emerald-500/5 p-4 rounded-r border border-tactico/60 space-y-2">
+              <div className="border-l-4 border-emerald-500 bg-emerald-500/5 p-4 rounded-r border border-tactico/60 space-y-2 break-inside-avoid">
                 <h3 className="font-mono text-xs font-bold uppercase tracking-[0.16em] text-emerald-400 flex items-center gap-2">
                   <span>🏛️</span>
                   <span>Alineación CONEAU & Indicadores Sistemáticos de Auditoría Institucional</span>
@@ -800,7 +861,7 @@ export function Reporte({ scan }: { scan: Scan }) {
           </section>
 
           {/* 7. CONCLUSIÓN */}
-          <section className="py-6" aria-labelledby="seccion-conclusion">
+          <section className="py-6 break-inside-avoid" aria-labelledby="seccion-conclusion">
             <h2
               id="seccion-conclusion"
               className="font-mono text-sm font-bold uppercase tracking-[0.2em] text-cian"

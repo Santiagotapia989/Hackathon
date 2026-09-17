@@ -8,6 +8,7 @@ import { AnalisisIA, InformeEjecutivo, NormaAplicable, Scan } from "../../shared
 const OLLAMA_HOST = process.env["ADUANA_OLLAMA_HOST"] ?? "http://localhost:11434";
 const MODELO = process.env["ADUANA_MODELO"] ?? "gemma2:2b";
 const TIMEOUT_MS = 30_000;
+const TIMEOUT_INFORME_MS = 120_000;
 const MAX_LLAMADAS = 15;
 const TEMPERATURE = 0;
 const NUM_CTX = 8192;
@@ -273,6 +274,151 @@ export function generarInformeEjecutivoFallback(scan: Scan): InformeEjecutivo {
   };
 }
 
+// Criterios técnicos de referencia que se inyectan en el contexto del modelo
+// para que el informe ejecutivo los integre explícitamente en su redacción.
+const CRITERIOS_TECNICOS = `CRITERIOS TÉCNICOS DE EVALUACIÓN (ya cargados en tu contexto; debés integrarlos explícitamente en la redacción del informe):
+
+1) OpenSSF (Open Source Security Foundation):
+   - Scorecard: checks relevantes como Maintained, Vulnerabilities, Dangerous-Workflow, Token-Permissions, Pinned-Dependencies, Signed-Releases, Branch-Protection, SAST y Dependency-Update-Tool.
+   - Best Practices Badge (niveles passing / silver / gold) y marco SLSA (Supply-chain Levels for Software Artifacts, niveles 1 a 4) para procedencia e integridad de build.
+
+2) CVSS (Common Vulnerability Scoring System, v3.1 / v4.0):
+   - Rangos de severidad: 0.0 informativo; 0.1-3.9 baja; 4.0-6.9 media; 7.0-8.9 alta; 9.0-10.0 crítica.
+   - Métricas base: vector de ataque (AV), complejidad (AC), privilegios requeridos (PR), interacción de usuario (UI), alcance (S) e impactos sobre confidencialidad, integridad y disponibilidad (C/I/A).
+   - Equivalencia con las severidades del escaneo: critica ≈ 9.0-10.0, alta ≈ 7.0-8.9, media ≈ 4.0-6.9, baja ≈ 0.1-3.9.
+
+3) CWE (Common Weakness Enumeration, MITRE):
+   - Módulo "instrucciones": CWE-506 (Embedded Malicious Code), CWE-94 (Improper Control of Generation of Code), CWE-74 (Improper Neutralization of Special Elements - Injection).
+   - Módulo "unicode": CWE-176 (Improper Handling of Unicode Encoding) y familias de ataques Trojan Source / bidireccionales.
+   - Módulo "dependencias": CWE-829 (Inclusion of Functionality from Untrusted Control Sphere), CWE-1104 (Use of Unmaintained Third Party Components), CWE-494 (Download of Code Without Integrity Check).
+   - Módulo "secretos": CWE-798 (Use of Hard-coded Credentials), CWE-312 (Cleartext Storage of Sensitive Information), CWE-259 (Use of Hard-coded Password).`;
+
+// Esquema JSON para el parámetro "format" de Ollama: obliga al modelo a
+// respetar tipos y estructura (evita que un array llegue con objetos y
+// safeParse rechace toda la respuesta).
+const FORMATO_INFORME = {
+  type: "object",
+  properties: {
+    informeEjecutivo: {
+      type: "object",
+      properties: {
+        cabecera: {
+          type: "object",
+          properties: {
+            caratula: { type: "string" },
+            codigoDocumento: { type: "string" },
+            fecha: { type: "string" },
+            revision: { type: "string" },
+            paginas: { type: "string" },
+            caracter: { type: "string" },
+          },
+          required: ["caratula", "codigoDocumento", "fecha", "revision", "paginas", "caracter"],
+        },
+        objetivo: { type: "string" },
+        alcance: { type: "string" },
+        problematicaAnterior: { type: "string" },
+        introduccion: { type: "string" },
+        indice: { type: "array", items: { type: "string" } },
+        desarrollo: { type: "string" },
+        conclusion: { type: "string" },
+        personal: {
+          type: "array",
+          items: {
+            type: "object",
+            properties: {
+              nombre: { type: "string" },
+              cargo: { type: "string" },
+              grado: { type: "string" },
+              firma: { type: "string" },
+            },
+            required: ["nombre", "cargo"],
+          },
+        },
+        desafioDetectado: { type: "string" },
+        objetivoRepo: { type: "string" },
+        metricasImpacto: { type: "array", items: { type: "string" } },
+        faseEjecucion: { type: "string" },
+      },
+      required: ["objetivo", "alcance", "problematicaAnterior", "introduccion", "desarrollo", "conclusion"],
+    },
+  },
+  required: ["informeEjecutivo"],
+} as const;
+
+// Coercea campos con tipos incorrectos (modelos chicos a veces meten un
+// objeto donde va un string). Lo que no se puede salvar se descarta: todos
+// los campos del informe son opcionales, así que un campo ausente es mejor
+// que perder el informe entero.
+function sanearInforme(raw: unknown): unknown {
+  if (typeof raw !== "object" || raw === null) return raw;
+  const o = raw as Record<string, unknown>;
+
+  const aString = (v: unknown): string | undefined =>
+    typeof v === "string"
+      ? v
+      : v == null
+        ? undefined
+        : typeof v === "object"
+          ? JSON.stringify(v)
+          : String(v);
+
+  const aListaStrings = (v: unknown): string[] | undefined => {
+    if (typeof v === "string") return [v];
+    if (!Array.isArray(v)) return undefined;
+    return v
+      .map(aString)
+      .filter((s): s is string => typeof s === "string");
+  };
+
+  const out: Record<string, unknown> = {};
+
+  for (const campo of [
+    "objetivo",
+    "alcance",
+    "problematicaAnterior",
+    "introduccion",
+    "desarrollo",
+    "conclusion",
+    "desafioDetectado",
+    "objetivoRepo",
+    "faseEjecucion",
+  ]) {
+    const v = aString(o[campo]);
+    if (v !== undefined) out[campo] = v;
+  }
+
+  for (const campo of ["indice", "metricasImpacto"]) {
+    const v = aListaStrings(o[campo]);
+    if (v !== undefined) out[campo] = v;
+  }
+
+  if (typeof o.cabecera === "object" && o.cabecera !== null) {
+    const c = o.cabecera as Record<string, unknown>;
+    const cab: Record<string, unknown> = {};
+    for (const campo of ["caratula", "codigoDocumento", "fecha", "revision", "paginas", "caracter"]) {
+      const v = aString(c[campo]);
+      if (v !== undefined) cab[campo] = v;
+    }
+    out.cabecera = cab;
+  }
+
+  if (Array.isArray(o.personal)) {
+    out.personal = o.personal
+      .filter((p) => typeof p === "object" && p !== null)
+      .map((p) => {
+        const r = p as Record<string, unknown>;
+        const item: Record<string, unknown> = {};
+        for (const campo of ["nombre", "cargo", "grado", "firma"]) {
+          const v = aString(r[campo]);
+          if (v !== undefined) item[campo] = v;
+        }
+        return item;
+      });
+  }
+
+  return out;
+}
+
 export async function generarInformeEjecutivo(
   scan: Scan,
   signal?: AbortSignal,
@@ -281,6 +427,14 @@ export async function generarInformeEjecutivo(
   if (!estado.activo) {
     return generarInformeEjecutivoFallback(scan);
   }
+
+  const hallazgosDestacados = scan.hallazgos
+    .slice(0, 20)
+    .map(
+      (h) =>
+        `- [${h.severidad.toUpperCase()}] ${h.regla} — ${h.titulo} (módulo: ${h.modulo}, archivo: ${h.archivo}${h.linea ? `, línea ${h.linea}` : ""})`,
+    )
+    .join("\n");
 
   const prompt = `Generá un informe ejecutivo estructurado en formato JSON para el siguiente escaneo de seguridad:
 - ID: ${scan.id}
@@ -291,52 +445,84 @@ export async function generarInformeEjecutivo(
 - Severidades: Críticas: ${scan.resumen?.porSeveridad.critica ?? 0}, Altas: ${scan.resumen?.porSeveridad.alta ?? 0}, Medias: ${scan.resumen?.porSeveridad.media ?? 0}, Bajas: ${scan.resumen?.porSeveridad.baja ?? 0}
 - Módulos: Instrucciones: ${scan.resumen?.porModulo.instrucciones ?? 0}, Unicode: ${scan.resumen?.porModulo.unicode ?? 0}, Dependencias: ${scan.resumen?.porModulo.dependencias ?? 0}, Secretos: ${scan.resumen?.porModulo.secretos ?? 0}
 
-Criterio de redacción: el informe se encuadra en la ciberdefensa argentina (anticipación y prevención de ciberataques y ciberexplotación, Res. 1380/2019 MinDefensa) y los hallazgos se indexan contra MITRE ATLAS (AML.T0051 prompt injection, AML.T0010 compromiso de cadena de suministro de IA, evasión por ofuscación). Redactá el desarrollo y la conclusión en esos términos, en español formal. NO inventes números de norma: el marco normativo se adjunta por fuera del modelo.
+Hallazgos destacados del escaneo:
+${hallazgosDestacados || "(sin hallazgos registrados)"}
 
-Devolvé ÚNICAMENTE un objeto JSON con la propiedad principal "informeEjecutivo" respetando exactamente la estructura pedida.`;
+${CRITERIOS_TECNICOS}
 
-  try {
-    const resp = await fetch(`${OLLAMA_HOST}/api/chat`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        model: MODELO,
-        messages: [
-          {
-            role: "system",
-            content:
-              "Sos un Arquitecto de Ciberseguridad e Investigador de Amenazas especializado en entornos de Defensa y Soberanía Tecnológica de la República Argentina. Redactás informes ejecutivos en el marco de la ciberdefensa nacional (anticipación y prevención, Res. 1380/2019) con indexación de amenazas contra sistemas de IA según MITRE ATLAS. Tu objetivo es auditar y proponer un informe ejecutivo preciso en formato JSON, en español formal.",
-          },
-          { role: "user", content: prompt },
-        ],
-        stream: false,
-        options: { temperature: TEMPERATURE, num_ctx: NUM_CTX },
-      }),
-      signal: signal ?? AbortSignal.timeout(TIMEOUT_MS),
-    });
+REQUISITOS OBLIGATORIOS DE REDACCIÓN:
+- Las secciones "objetivo", "alcance", "problematicaAnterior", "introduccion", "desarrollo" y "conclusion" deben estar MUCHO más desarrolladas y extensas: redactá cada una con un mínimo de 3 párrafos sustantivos (aproximadamente 150 a 250 palabras por sección), en prosa técnica formal y en español.
+- Integrá y citá explícitamente los criterios técnicos cargados en tu contexto: referenciá los checks de OpenSSF Scorecard, el badge de Best Practices y los niveles SLSA pertinentes; asociá las severidades detectadas a sus rangos CVSS; y nombrá los identificadores CWE correspondientes a los módulos con hallazgos.
+- Basate únicamente en los datos del escaneo provistos; no inventes hallazgos ni componentes.
+- Encuadrá la redacción en la ciberdefensa argentina (anticipación y prevención de ciberataques y ciberexplotación, Res. 1380/2019 MinDefensa) e indexá las amenazas contra sistemas de IA según MITRE ATLAS (AML.T0051 prompt injection, AML.T0010 supply chain). NO inventes números de norma: el marco normativo se adjunta por fuera del modelo.
 
-    if (!resp.ok) return generarInformeEjecutivoFallback(scan);
+Devolvé ÚNICAMENTE un objeto JSON con la propiedad principal "informeEjecutivo" respetando exactamente esta estructura:
+{
+  "informeEjecutivo": {
+    "cabecera": { "caratula": "...", "codigoDocumento": "...", "fecha": "...", "revision": "...", "paginas": "...", "caracter": "..." },
+    "objetivo": "...",
+    "alcance": "...",
+    "problematicaAnterior": "...",
+    "introduccion": "...",
+    "indice": ["..."],
+    "desarrollo": "...",
+    "conclusion": "...",
+    "personal": [{ "nombre": "...", "cargo": "...", "grado": "...", "firma": "..." }],
+    "desafioDetectado": "...",
+    "objetivoRepo": "...",
+    "metricasImpacto": ["..."],
+    "faseEjecucion": "..."
+  }
+}`;
 
-    const data = (await resp.json()) as any;
-    const contenidoRespuesta = data?.message?.content ?? "";
-    const jsonMatch = contenidoRespuesta.match(/\{[\s\S]*\}/);
-    if (!jsonMatch) return generarInformeEjecutivoFallback(scan);
+  // Un reintento: si la respuesta no trae JSON válido contra el schema,
+  // se prueba una vez más. Errores de red/HTTP no se reintentan en caliente.
+  for (let intento = 0; intento < 2; intento++) {
+    try {
+      const resp = await fetch(`${OLLAMA_HOST}/api/chat`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          model: MODELO,
+          messages: [
+            {
+              role: "system",
+              content:
+                "Sos un Arquitecto de Ciberseguridad e Investigador de Amenazas especializado en entornos de Defensa y Soberanía Tecnológica de la República Argentina. Tu objetivo es auditar y proponer mejoras y un informe ejecutivo preciso en formato JSON. Redactás secciones extensas y desarrolladas, e integrás explícitamente los criterios técnicos OpenSSF, CVSS y CWE que tenés cargados en tu contexto. Las amenazas contra sistemas de IA se indexan según MITRE ATLAS y el informe se encuadra en la ciberdefensa argentina (Res. 1380/2019).",
+            },
+            { role: "user", content: prompt },
+          ],
+          stream: false,
+          format: FORMATO_INFORME,
+          options: { temperature: TEMPERATURE, num_ctx: NUM_CTX, num_predict: 4096 },
+        }),
+        signal: signal ?? AbortSignal.timeout(TIMEOUT_INFORME_MS),
+      });
 
-    const parsed = JSON.parse(jsonMatch[0]);
-    const objInforme = parsed?.informeEjecutivo ?? parsed;
-    const validacion = InformeEjecutivo.safeParse(objInforme);
+      if (!resp.ok) return generarInformeEjecutivoFallback(scan);
 
-    if (validacion.success) {
-      // Sustentación normativa determinista: se superpone sobre lo que haya
-      // generado el modelo — las citas legales no se delegan al LLM.
-      return {
-        ...validacion.data,
-        marcoNormativo: MARCO_NORMATIVO,
-        justificacionNormativa: construirJustificacionNormativa(scan),
-      };
+      const data = (await resp.json()) as any;
+      const contenidoRespuesta = data?.message?.content ?? "";
+      const jsonMatch = contenidoRespuesta.match(/\{[\s\S]*\}/);
+      if (!jsonMatch) continue;
+
+      const parsed = JSON.parse(jsonMatch[0]);
+      const objInforme = parsed?.informeEjecutivo ?? parsed;
+      const validacion = InformeEjecutivo.safeParse(sanearInforme(objInforme));
+
+      if (validacion.success) {
+        // Sustentación normativa determinista: se superpone sobre lo que haya
+        // generado el modelo — las citas legales no se delegan al LLM.
+        return {
+          ...validacion.data,
+          marcoNormativo: MARCO_NORMATIVO,
+          justificacionNormativa: construirJustificacionNormativa(scan),
+        };
+      }
+      console.warn("[ollama] informe ejecutivo: respuesta no validó contra el schema, reintentando.");
+    } catch {
+      // Fallback silencioso ante cualquier excepción
     }
-  } catch {
-    // Fallback silencioso ante cualquier excepción
   }
 
   return generarInformeEjecutivoFallback(scan);

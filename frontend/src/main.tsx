@@ -9,7 +9,7 @@ import "./index.css";
 import { App } from "./App";
 
 // Inicializar el tema de forma inmediata
-const temaGuardado = localStorage.getItem("tema") || "dark";
+const temaGuardado = localStorage.getItem("tema-aduana") || "light";
 if (temaGuardado === "light") {
   document.documentElement.classList.add("light");
 } else {
