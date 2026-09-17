@@ -11,6 +11,7 @@ import { execSync } from "node:child_process";
 const FIXTURES = path.resolve(import.meta.dirname!, "..", "fixtures");
 
 function symlinkSafe(dir: string): void {
+  fs.rmSync(dir, { recursive: true, force: true });
   fs.mkdirSync(dir, { recursive: true });
 }
 
@@ -121,6 +122,30 @@ export function generarRepoLimpio(): string {
   return dir;
 }
 
+// ─── Repo para revisar ──────────────────────────────────────────────────────
+
+export function generarRepoRevisar(): string {
+  const dir = path.join(FIXTURES, "repo-revisar");
+  symlinkSafe(dir);
+
+  git(dir, "init");
+  git(dir, "config user.email", "aduana-demo@test.local");
+  git(dir, "config user.name", "Aduana Demo");
+
+  write(path.join(dir, "src", "index.ts"), `export function calculateTax(amount: number): number {\n  return amount * 0.21;\n}\n`);
+  write(path.join(dir, "package.json"), JSON.stringify({
+    name: "project-under-review",
+    version: "1.0.0",
+    dependencies: { "unused-imports": "^1.0.0" },
+    devDependencies: { typescript: "^5.0.0" },
+  }, null, 2) + "\n");
+  write(path.join(dir, "README.md"), `# Project Under Review\nEste repositorio requiere revisión por uso de un nombre de paquete confundible (unused-imports vs eslint-plugin-unused-imports).\n`);
+  git(dir, "add -A");
+  git(dir, "commit -m", `"feat: project setup with package under review"`);
+
+  return dir;
+}
+
 // ─── Main ───────────────────────────────────────────────────────────────────
 
 const esMain = process.argv[1]?.endsWith("generar-fixture.ts") ?? false;
@@ -128,6 +153,8 @@ if (esMain) {
   symlinkSafe(FIXTURES);
   const malicioso = generarRepoMalicioso();
   console.log(`Repo malicioso generado en ${malicioso}`);
+  const revisar = generarRepoRevisar();
+  console.log(`Repo revisar generado en ${revisar}`);
   const limpio = generarRepoLimpio();
   console.log(`Repo limpio generado en ${limpio}`);
 }

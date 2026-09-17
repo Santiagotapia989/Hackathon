@@ -3,13 +3,12 @@
 // Escanea archivos sensibles en busca de patrones maliciosos.
 // Cruza comentarios HTML y bloques base64 en archivos Markdown.
 
-import * as fs from "node:fs";
 import * as path from "node:path";
-import type { Finding } from "../../shared/contrato.ts";
-import type { ArchivoLeido } from "../archivos.ts";
-import { lineaDeIndice } from "../archivos.ts";
-import { prepararEvidencia, enmascarar } from "../evidencia.ts";
-import { idHallazgo } from "../util.ts";
+import type { Finding } from "../../shared/contrato.js";
+import type { ArchivoLeido } from "../archivos.js";
+import { lineaDeIndice } from "../archivos.js";
+import { prepararEvidencia } from "../evidencia.js";
+import { idHallazgo } from "../util.js";
 import patronesInstrucciones from "../reglas/instrucciones.json" with { type: "json" };
 import archivosSensibles from "../reglas/archivos-sensibles.json" with { type: "json" };
 
@@ -31,7 +30,6 @@ const PATRONES_SENSIBLES: string[] = archivosSensibles as unknown as string[];
 
 function esArchivoSensible(ruta: string): boolean {
   const nombre = path.basename(ruta);
-  const partes = ruta.split(/[/\\]/);
 
   for (const patron of PATRONES_SENSIBLES) {
     if (patron.endsWith("/**")) {

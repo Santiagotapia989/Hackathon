@@ -3,12 +3,11 @@
 // aplica criticidad por RuleID y downgrade por ruta.
 
 import * as fs from "node:fs";
-import * as os from "node:os";
 import * as path from "node:path";
 import { execFile, execSync } from "node:child_process";
-import type { Finding } from "../../shared/contrato.ts";
-import { prepararEvidencia, enmascarar } from "../evidencia.ts";
-import { idHallazgo } from "../util.ts";
+import type { Finding } from "../../shared/contrato.js";
+import { prepararEvidencia, enmascarar } from "../evidencia.js";
+import { idHallazgo } from "../util.js";
 import criticidadSecretos from "../reglas/criticidad-secretos.json" with { type: "json" };
 
 const CRITICIDAD: Record<string, string> = criticidadSecretos as any;
@@ -42,7 +41,8 @@ function resolverGitleaks(): string | null {
 
   // 3. PATH
   try {
-    const resultado = execSync("where gitleaks 2>nul || which gitleaks 2>/dev/null", { encoding: "utf8" }).trim();
+    const comando = process.platform === "win32" ? "where gitleaks" : "which gitleaks";
+    const resultado = execSync(comando, { encoding: "utf8", stdio: ["ignore", "pipe", "ignore"] }).trim();
     if (resultado) return resultado.split("\n")[0]!;
   } catch { /* not found */ }
 
@@ -180,8 +180,13 @@ export async function analizarSecretos(
 ): Promise<Finding[]> {
   const runner = opts.runner ?? crearGitleaksRunner();
 
-  try {
-    const { exitCode, reporte } = await runner.ejecutar(
+  // No atrapamos errores de runner.ejecutar() acá: si gitleaks no está
+  // disponible o falla, dejamos que la excepción suba. pipeline.ts la
+  // captura, marca la etapa "secretos" en error, y scoring.ts fuerza que
+  // el veredicto sea como mínimo "revisar" — "gitleaks ausente" nunca debe
+  // ser indistinguible de "no se encontraron secretos".
+  {
+    const { reporte } = await runner.ejecutar(
       dir,
       opts.tieneHistorialGit,
       opts.signal,
@@ -224,9 +229,6 @@ export async function analizarSecretos(
     }
 
     return hallazgos;
-  } catch (err) {
-    // Error de ejecución de gitleaks (no encontrado, timeout, etc.)
-    return [];
   }
 }
 

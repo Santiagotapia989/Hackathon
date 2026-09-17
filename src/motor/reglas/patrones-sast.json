@@ -1,0 +1,38 @@
+[
+  {
+    "id": "sast:c:cmd-exec",
+    "lenguaje": "c",
+    "patron": "\\b(system|execve|execvp|popen)\\s*\\(",
+    "titulo": "Ejecución de comandos del sistema en C/C++",
+    "severidad": "alta",
+    "explicacion": "Se detectó la invocación a funciones de ejecución de comandos del sistema que pueden permitir la inyección de comandos OS.",
+    "remediacion": ["Evitar el uso de system() o execve() con entrada no validada", "Utilizar APIs seguras sin invocación de shell"]
+  },
+  {
+    "id": "sast:c:unsafe-buffer",
+    "lenguaje": "c",
+    "patron": "\\b(strcpy|strcat|gets|sprintf)\\s*\\(",
+    "titulo": "Operación de buffer insegura en C/C++",
+    "severidad": "alta",
+    "explicacion": "Se detectó el uso de funciones propensas a desbordamiento de memoria buffer overflow.",
+    "remediacion": ["Reemplazar por variantes seguras con límite de tamaño como strncpy, strncat, snprintf"]
+  },
+  {
+    "id": "sast:java:runtime-exec",
+    "lenguaje": "java",
+    "patron": "\\b(Runtime\\.getRuntime\\(\\)\\.exec|ProcessBuilder)\\s*\\(",
+    "titulo": "Invocación de subproceso en Java",
+    "severidad": "alta",
+    "explicacion": "Se detectó la creación de subprocesos del sistema operativo que requieren validación estricta de argumentos.",
+    "remediacion": ["Sanitizar todos los argumentos antes de pasarlos a ProcessBuilder"]
+  },
+  {
+    "id": "sast:python:os-system",
+    "lenguaje": "python",
+    "patron": "\\b(os\\.system|subprocess\\.Popen|subprocess\\.run|eval|exec)\\s*\\(",
+    "titulo": "Ejecución dinámica de comandos o código en Python",
+    "severidad": "alta",
+    "explicacion": "Se detectó la ejecución de comandos de shell o evaluadores dinámicos de código.",
+    "remediacion": ["Evitar eval() o exec()", "Usar subprocess.run con shell=False y lista de argumentos"]
+  }
+]

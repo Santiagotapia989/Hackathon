@@ -2,9 +2,7 @@
 // Cliente para registros de npm y PyPI. Offline-first: si offline, solo listas locales.
 // Hosts allowlist, timeout 5s, cache en memoria, max 5 simultáneas.
 
-import * as dns from "node:dns/promises";
-import type { Ecosistema } from "../../shared/contrato.ts";
-import { normalizarNombre, levenshtein } from "../util.ts";
+import type { Ecosistema } from "../../shared/contrato.js";
 
 // ─── Config ─────────────────────────────────────────────────────────────────
 
@@ -13,11 +11,28 @@ const MAX_SIMULTANEAS = 5;
 
 const HOSTS_ALLOWLIST = new Set([
   "registry.npmjs.org",
+  "api.npmjs.org", // descargas semanales (verificarNpm)
   "registry.yarnpkg.com",
   "pypi.org",
   "pypi.python.org",
   "pythonhosted.org",
 ]);
+
+// Helper para obtener hosts permitidos (incluyendo mirrors locales configurados)
+function obtenerHostsPermitidos(): Set<string> {
+  const permitidos = new Set(HOSTS_ALLOWLIST);
+  const npmMirror = process.env.ADUANA_NPM_MIRROR;
+  const pypiMirror = process.env.ADUANA_PYPI_MIRROR;
+
+  if (npmMirror) {
+    try { permitidos.add(new URL(npmMirror).hostname); } catch {}
+  }
+  if (pypiMirror) {
+    try { permitidos.add(new URL(pypiMirror).hostname); } catch {}
+  }
+
+  return permitidos;
+}
 
 // ─── Cache ──────────────────────────────────────────────────────────────────
 
@@ -54,10 +69,17 @@ async function fetchSeguro(
   signal?: AbortSignal,
 ): Promise<{ status: number; body: unknown }> {
   const parsed = new URL(url);
-  if (!HOSTS_ALLOWLIST.has(parsed.hostname)) {
+  const hostsPermitidos = obtenerHostsPermitidos();
+
+  if (!hostsPermitidos.has(parsed.hostname)) {
     throw new Error(`Host no permitido: ${parsed.hostname}`);
   }
-  if (parsed.protocol !== "https:") {
+  const esMirrorConfigurado = Boolean(
+    (process.env.ADUANA_NPM_MIRROR && parsed.hostname === new URL(process.env.ADUANA_NPM_MIRROR).hostname) ||
+    (process.env.ADUANA_PYPI_MIRROR && parsed.hostname === new URL(process.env.ADUANA_PYPI_MIRROR).hostname)
+  );
+
+  if (parsed.protocol !== "https:" && !esMirrorConfigurado && process.env.ADUANA_ALLOW_HTTP !== "true") {
     throw new Error(`Solo se permiten URLs HTTPS, recibido: ${parsed.protocol}`);
   }
 
@@ -89,7 +111,10 @@ async function verificarNpm(
 
   await esperarTurno();
   try {
-    const resp = await fetchSeguro(`https://registry.npmjs.org/${encodeURIComponent(nombre)}`, signal);
+    const baseUrl = process.env.ADUANA_NPM_MIRROR
+      ? process.env.ADUANA_NPM_MIRROR.replace(/\/$/, "")
+      : "https://registry.npmjs.org";
+    const resp = await fetchSeguro(`${baseUrl}/${encodeURIComponent(nombre)}`, signal);
 
     if (resp.status === 404) {
       const entry: CacheEntry = { existe: false };
@@ -117,7 +142,17 @@ async function verificarNpm(
     try {
       const dlResp = await fetchSeguro(`https://api.npmjs.org/downloads/point/last-week/${encodeURIComponent(nombre)}`, signal);
       descargasSemanales = (dlResp.body as any)?.downloads;
-    } catch { /* ignoro si falla descargas */ }
+    } catch (err) {
+      // No es crítico para el resultado (existe/diasCreacion siguen
+      // devolviéndose igual), pero antes esto era un catch {} vacío que
+      // tragaba el error sin dejar rastro — incluido el caso real en que
+      // api.npmjs.org no estaba en la allowlist. Dejamos un log para poder
+      // diagnosticar si vuelve a fallar.
+      console.error(
+        `[registro] no se pudieron obtener las descargas semanales de "${nombre}":`,
+        err instanceof Error ? err.message : err,
+      );
+    }
 
     const entry: CacheEntry = { existe: true, datos: { diasCreacion, descargasSemanales } };
     cache.set(cacheKey, entry);
@@ -142,7 +177,10 @@ async function verificarPyPI(
 
   await esperarTurno();
   try {
-    const resp = await fetchSeguro(`https://pypi.org/pypi/${encodeURIComponent(nombre)}/json`, signal);
+    const baseUrl = process.env.ADUANA_PYPI_MIRROR
+      ? process.env.ADUANA_PYPI_MIRROR.replace(/\/$/, "")
+      : "https://pypi.org";
+    const resp = await fetchSeguro(`${baseUrl}/pypi/${encodeURIComponent(nombre)}/json`, signal);
 
     if (resp.status === 404) {
       const entry: CacheEntry = { existe: false };

@@ -1,7 +1,7 @@
 // tests/motor/scoring.test.ts
 import { describe, it, expect } from "vitest";
-import { calcularVeredicto } from "../../src/motor/scoring.ts";
-import type { Finding, Etapa } from "../../src/shared/contrato.ts";
+import { calcularVeredicto } from "../../src/motor/scoring.js";
+import type { Finding, Etapa } from "../../src/shared/contrato.js";
 
 function hallazgo(overrides: Partial<Finding> = {}): Finding {
   return {
@@ -33,21 +33,57 @@ describe("calcularVeredicto", () => {
     expect(r.veredicto).toBe("retenido");
   });
 
-  it("regla 2: IA malicioso con confianza alta → retenido", () => {
+  it("regla 2: IA malicioso con confianza alta, solo → revisar (la IA sola nunca retiene)", () => {
     const conIA = hallazgo({
       determinista: false,
       analisisIA: { clasificacion: "malicioso", confianza: 0.9, intentoManipulacion: false },
     });
     const r = calcularVeredicto([conIA], []);
+    expect(r.veredicto).toBe("revisar");
+  });
+
+  it("regla 2: IA malicioso + hallazgo determinista alta en el mismo archivo → retenido", () => {
+    const conIA = hallazgo({
+      id: "ia",
+      determinista: false,
+      archivo: "README.md",
+      analisisIA: { clasificacion: "malicioso", confianza: 0.9, intentoManipulacion: false },
+    });
+    const respaldo = hallazgo({ id: "det", severidad: "alta", determinista: true, archivo: "README.md" });
+    const r = calcularVeredicto([conIA, respaldo], []);
     expect(r.veredicto).toBe("retenido");
   });
 
-  it("regla 3: intento de manipulación → retenido aunque sea benigno", () => {
+  it("regla 2: IA malicioso + determinista alta en OTRO archivo → revisar", () => {
+    const conIA = hallazgo({
+      id: "ia",
+      determinista: false,
+      archivo: "README.md",
+      analisisIA: { clasificacion: "malicioso", confianza: 0.9, intentoManipulacion: false },
+    });
+    const respaldo = hallazgo({ id: "det", severidad: "alta", determinista: true, archivo: "src/x.ts" });
+    const r = calcularVeredicto([conIA, respaldo], []);
+    expect(r.veredicto).toBe("revisar");
+  });
+
+  it("regla 3: intento de manipulación sin respaldo → revisar, no retenido", () => {
     const conManip = hallazgo({
       determinista: false,
       analisisIA: { clasificacion: "benigno", confianza: 0.95, intentoManipulacion: true },
     });
     const r = calcularVeredicto([conManip], []);
+    expect(r.veredicto).toBe("revisar");
+  });
+
+  it("regla 3: intento de manipulación + determinista alta en el mismo archivo → retenido", () => {
+    const conManip = hallazgo({
+      id: "ia",
+      determinista: false,
+      archivo: "CLAUDE.md",
+      analisisIA: { clasificacion: "benigno", confianza: 0.95, intentoManipulacion: true },
+    });
+    const respaldo = hallazgo({ id: "det", severidad: "critica", determinista: true, archivo: "CLAUDE.md" });
+    const r = calcularVeredicto([conManip, respaldo], []);
     expect(r.veredicto).toBe("retenido");
   });
 

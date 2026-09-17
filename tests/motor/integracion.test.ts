@@ -3,8 +3,8 @@
 import { describe, it, expect, beforeAll } from "vitest";
 import * as fs from "node:fs";
 import * as path from "node:path";
-import { motor } from "../../src/motor/index.ts";
-import type { EventoMotor } from "../../src/shared/contrato.ts";
+import { motor } from "../../src/motor/index.js";
+import type { EventoMotor } from "../../src/shared/contrato.js";
 
 const FIXTURES = path.resolve(import.meta.dirname!, "..", "..", "fixtures");
 

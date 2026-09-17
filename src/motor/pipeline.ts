@@ -3,42 +3,42 @@
 // Emite eventos a medida que avanza. Respeta ctx.signal.
 // ENFORCE regla de oro: el LLM nunca baja severidad de hallazgos deterministas.
 
-import type { Finding, Etapa, ContextoAnalisis, ResultadoAnalisis, EventoMotor } from "../shared/contrato.ts";
-import { recorrerDirectorio } from "./archivos.ts";
-import { analizarUnicode } from "./analizadores/unicode.ts";
-import { analizarInstrucciones } from "./analizadores/instrucciones.ts";
-import { analizarDependencias } from "./analizadores/dependencias.ts";
-import { analizarSecretos } from "./analizadores/secretos.ts";
-import { triage, resetContador } from "./llm/ollama.ts";
-import { calcularVeredicto } from "./scoring.ts";
+import type { Finding, Etapa, ContextoAnalisis, ResultadoAnalisis, EventoMotor } from "../shared/contrato.js";
+import { recorrerDirectorio } from "./archivos.js";
+import { analizarUnicode } from "./analizadores/unicode.js";
+import { analizarInstrucciones } from "./analizadores/instrucciones.js";
+import { analizarSAST } from "./analizadores/sast.js";
+import { analizarDependencias } from "./analizadores/dependencias.js";
+import { analizarSecretos } from "./analizadores/secretos.js";
+import { triage, resetContador } from "./llm/ollama.js";
+import { calcularVeredicto } from "./scoring.js";
 
 // ─── Helper: ejecutar etapa ─────────────────────────────────────────────────
 
 async function ejecutarEtapa<T>(
   nombre: Etapa["nombre"],
   emitir: (e: EventoMotor) => void,
-  signal: AbortSignal,
+  _signal: AbortSignal,
+  etapasAcumuladas: Etapa[],
   fn: () => Promise<T>,
 ): Promise<T> {
   emitir({ tipo: "etapa", etapa: { nombre, estado: "en_curso" } });
   const inicio = Date.now();
   try {
     const resultado = await fn();
-    emitir({
-      tipo: "etapa",
-      etapa: { nombre, estado: "lista", duracionMs: Date.now() - inicio },
-    });
+    const etapa: Etapa = { nombre, estado: "lista", duracionMs: Date.now() - inicio };
+    etapasAcumuladas.push(etapa);
+    emitir({ tipo: "etapa", etapa });
     return resultado;
   } catch (err) {
-    emitir({
-      tipo: "etapa",
-      etapa: {
-        nombre,
-        estado: "error",
-        duracionMs: Date.now() - inicio,
-        error: err instanceof Error ? err.message : String(err),
-      },
-    });
+    const etapa: Etapa = {
+      nombre,
+      estado: "error",
+      duracionMs: Date.now() - inicio,
+      error: err instanceof Error ? err.message : String(err),
+    };
+    etapasAcumuladas.push(etapa);
+    emitir({ tipo: "etapa", etapa });
     throw err;
   }
 }
@@ -54,14 +54,20 @@ export async function ejecutarPipeline(
   const allEtapas: Etapa[] = [];
   resetContador();
 
-  // ── Ingesta (recorrer directorio) ────────────────────────────────────
-  const recorrido = await ejecutarEtapa("ingesta" as any, emitir, ctx.signal, async () => {
-    return recorrerDirectorio(dir);
-  });
+  // ── Recorrido del directorio ──────────────────────────────────────────
+  // No es una etapa propia: "ingesta" la emite la Plataforma (contrato).
+  // Emitirla acá la duplicaba en el SSE y en la CLI.
+  const recorrido = await recorrerDirectorio(dir);
+
+  // Helper: agrega un hallazgo al acumulado y lo emite de inmediato (SSE + persistencia en B).
+  const agregarHallazgo = (hallazgo: Finding): void => {
+    allHallazgos.push(hallazgo);
+    emitir({ tipo: "hallazgo", hallazgo });
+  };
 
   // Agregar hallazgo de recorrido parcial
   if (recorrido.parcial) {
-    allHallazgos.push({
+    agregarHallazgo({
       id: "recorrido-parcial",
       modulo: "instrucciones",
       regla: "recorrido-parcial",
@@ -76,7 +82,7 @@ export async function ejecutarPipeline(
 
   // Agregar hallazgos de desvíos de symlinks
   for (const desvio of recorrido.desvios) {
-    allHallazgos.push({
+    agregarHallazgo({
       id: `desvio:${desvio.ruta}`,
       modulo: "instrucciones",
       regla: "symlink-fuera-de-raiz",
@@ -90,39 +96,46 @@ export async function ejecutarPipeline(
   }
 
   // ── Unicode ──────────────────────────────────────────────────────────
-  const unicodeHallazgos = await ejecutarEtapa("unicode", emitir, ctx.signal, async () => {
+  const unicodeHallazgos = await ejecutarEtapa("unicode", emitir, ctx.signal, allEtapas, async () => {
     return analizarUnicode(recorrido.archivos);
   });
-  allHallazgos.push(...unicodeHallazgos);
+  for (const h of unicodeHallazgos) agregarHallazgo(h);
 
-  // ── Instrucciones ────────────────────────────────────────────────────
-  const instruccionesHallazgos = await ejecutarEtapa("instrucciones", emitir, ctx.signal, async () => {
-    return analizarInstrucciones(recorrido.archivos);
+  // ── Instrucciones & SAST ─────────────────────────────────────────────
+  const instruccionesHallazgos = await ejecutarEtapa("instrucciones", emitir, ctx.signal, allEtapas, async () => {
+    const i = analizarInstrucciones(recorrido.archivos);
+    const s = analizarSAST(recorrido.archivos);
+    return [...i, ...s];
   });
-  allHallazgos.push(...instruccionesHallazgos);
+  for (const h of instruccionesHallazgos) agregarHallazgo(h);
 
   // ── Dependencias ─────────────────────────────────────────────────────
-  const dependenciasHallazgos = await ejecutarEtapa("dependencias", emitir, ctx.signal, async () => {
+  const dependenciasHallazgos = await ejecutarEtapa("dependencias", emitir, ctx.signal, allEtapas, async () => {
     return analizarDependencias(recorrido.archivos, {
       offline: ctx.offline,
       signal: ctx.signal,
     });
   });
-  allHallazgos.push(...dependenciasHallazgos);
+  for (const h of dependenciasHallazgos) agregarHallazgo(h);
 
   // ── Secretos ─────────────────────────────────────────────────────────
-  const secretosHallazgos = await ejecutarEtapa("secretos", emitir, ctx.signal, async () => {
+  // Si gitleaks no está disponible (o falla), analizarSecretos() ahora deja
+  // el error propagar: ejecutarEtapa ya marcó la etapa "secretos" en error
+  // (y quedó en allEtapas) antes de este catch — scoring.ts fuerza al menos
+  // "revisar" por esa etapa en error. El escaneo sigue igual, sin abortar
+  // el resto del pipeline, con [] hallazgos de este módulo.
+  const secretosHallazgos = await ejecutarEtapa("secretos", emitir, ctx.signal, allEtapas, async () => {
     return analizarSecretos(dir, {
       tieneHistorialGit: ctx.tieneHistorialGit,
       offline: ctx.offline,
       signal: ctx.signal,
     });
-  });
-  allHallazgos.push(...secretosHallazgos);
+  }).catch(() => []);
+  for (const h of secretosHallazgos) agregarHallazgo(h);
 
   // ── Triage con IA ────────────────────────────────────────────────────
   const candidatos = allHallazgos.filter((h) => !h.determinista);
-  const triageResult = await ejecutarEtapa("triage_ia", emitir, ctx.signal, async () => {
+  const triageResult = await ejecutarEtapa("triage_ia", emitir, ctx.signal, allEtapas, async () => {
     const resultados: { hallazgoId: string; resultado: NonNullable<ReturnType<typeof triage> extends Promise<infer R> ? R : never> }[] = [];
 
     if (candidatos.length === 0) return resultados;
@@ -146,7 +159,7 @@ export async function ejecutarPipeline(
       throw new Error("La IA local no responde. Revisá que Ollama esté corriendo.");
     }
     return resultados;
-  }).catch((err) => {
+  }).catch(() => {
     // La etapa ya se emitió como "error" desde ejecutarEtapa; los candidatos quedaron sinEvaluar.
     for (const candidato of candidatos) candidato.sinEvaluar = true;
     return [];

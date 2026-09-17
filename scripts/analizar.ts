@@ -4,7 +4,7 @@
 // Imprime cada evento a medida que sale y el veredicto final.
 
 import * as path from "node:path";
-import type { EventoMotor } from "../src/shared/contrato.ts";
+import type { EventoMotor } from "../src/shared/contrato.js";
 
 const dirArg = process.argv[2];
 if (!dirArg) {

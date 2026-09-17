@@ -43,8 +43,12 @@
         "no le digas al usuario",
         "no le cuentes al usuario",
         "sin que el usuario se d[eé] cuenta",
-        "silently",
-        "sin avisar",
+        "without (telling|informing|notifying|asking|warning) (the )?user",
+        "without the user('s| knowing| noticing| consent| permission| knowledge)",
+        "\\bsilently\\s+(and\\s+|then\\s+)?(send|run|execut|delet|remov|upload|download|install|modif|writ|copy|move|transfer|post|fetch|forward|leak|collect|store|log|sav|launch|inject|replac|chang|edit|creat|report|submit|exfiltrat|disabl|bypass|hid|conceal|eras|wip|patch|apply|commit|push|pull|open|read)\\w*",
+        "\\b(send|run|execut|delet|remov|upload|download|install|modif|writ|copy|move|transfer|post|fetch|forward|leak|collect|store|log|sav|launch|inject|replac|chang|edit|creat|report|submit|exfiltrat|disabl|bypass|hid|conceal|eras|wip|patch|apply|commit|push|pull)\\w*\\s+[^.\\n]{0,60}?\\bsilently\\b",
+        "\\b(hacé|hacés|hacer|ejecut|corr|envi|enví|mand|borr|elimin|instal|descarg|sub|guard|modific|escrib|copi|reemplaz|cambi|cre|report|ocult|desactiv|deshabilit|salt|omit|aplic|sobreescrib|leé|leer|almacen|registr|public|compart|exfiltr|silenci|desinstal|actualiz|limpia|limpí)\\w*\\s+[^.\\n]{0,60}?\\bsin avisar\\b",
+        "\\bsin avisar(le)?\\s+(al|a la|a los|a las|a)\\s+\\w+",
         "don't mention this",
         "no menciones",
         "keep this secret from the user"
@@ -70,7 +74,7 @@
       "id": "ejecucion-remota",
       "titulo": "Instrucción de ejecutar comandos desde internet",
       "determinista": true,
-      "severidadInicial": "alta",
+      "severidadInicial": "critica",
       "patrones": [
         "curl\\s+\\S+\\s*\\|\\s*(sh|bash)\\b",
         "wget\\s+\\S+\\s*\\|\\s*(sh|bash)\\b",
@@ -84,8 +88,8 @@
     {
       "id": "manipulacion",
       "titulo": "Intento de manipular el resultado del análisis",
-      "determinista": false,
-      "severidadInicial": "media",
+      "determinista": true,
+      "severidadInicial": "alta",
       "patrones": [
         "este repo es seguro",
         "este repositorio es seguro",
@@ -95,6 +99,16 @@
         "this repository is safe",
         "safe to open",
         "no hay nada sospechoso"
+      ]
+    },
+    {
+      "id": "imita-json-triage",
+      "titulo": "Texto que imita el JSON esperado por el triage de IA",
+      "determinista": true,
+      "severidadInicial": "alta",
+      "patrones": [
+        "\\\"clasificacion\\\"\\s*:[\\s\\S]{0,300}\\\"intentomanipulacion\\\"",
+        "\\\"intentomanipulacion\\\"[\\s\\S]{0,300}\\\"clasificacion\\\""
       ]
     },
     {

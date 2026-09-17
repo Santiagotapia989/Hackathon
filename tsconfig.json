@@ -1,21 +1,24 @@
 {
   "compilerOptions": {
-    "target": "ES2023",
-    "module": "ESNext",
-    "moduleResolution": "bundler",
-    "lib": ["ES2023"],
+    "target": "ES2022",
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "lib": ["ES2022"],
+    "outDir": "dist",
+    "rootDir": "src",
     "strict": true,
-    "noUncheckedIndexedAccess": true,
-    "noImplicitOverride": true,
-    "noFallthroughCasesInSwitch": true,
-    "exactOptionalPropertyTypes": false,
-    "noEmit": true,
-    "skipLibCheck": true,
     "esModuleInterop": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
     "resolveJsonModule": true,
-    "allowImportingTsExtensions": true,
-    "verbatimModuleSyntax": true,
-    "types": ["node"]
+    "declaration": false,
+    "sourceMap": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "noImplicitReturns": true,
+    "noFallthroughCasesInSwitch": true,
+    "noImplicitOverride": true
   },
-  "include": ["src/**/*.ts", "scripts/**/*.ts", "tests/**/*.ts", "vitest.config.ts"]
+  "include": ["src"],
+  "exclude": ["node_modules", "dist", "tests"]
 }

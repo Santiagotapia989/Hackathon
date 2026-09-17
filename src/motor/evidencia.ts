@@ -3,7 +3,7 @@
 //   desinfectarTexto → marcarInvisibles → truncar → enmascarar
 
 import { z } from "zod";
-import { Finding } from "../shared/contrato.ts";
+import { Finding } from "../shared/contrato.js";
 
 export const LONGITUD_EVIDENCIA = 500;
 export const LIMITE_INPUT_PATRON = 64 * 1024; // 64 KB por coincidencia

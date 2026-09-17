@@ -2,11 +2,11 @@
 // Analizador determinístico: detecta caracteres invisibles, tags Unicode y resultados cruzados con instrucciones.
 
 import * as path from "node:path";
-import type { Finding } from "../../shared/contrato.ts";
-import type { ArchivoLeido } from "../archivos.ts";
-import { lineaDeIndice } from "../archivos.ts";
-import { prepararEvidencia, marca } from "../evidencia.ts";
-import { idHallazgo } from "../util.ts";
+import type { Finding } from "../../shared/contrato.js";
+import type { ArchivoLeido } from "../archivos.js";
+import { lineaDeIndice } from "../archivos.js";
+import { prepararEvidencia, marca } from "../evidencia.js";
+import { idHallazgo } from "../util.js";
 import archivosSensibles from "../reglas/archivos-sensibles.json" with { type: "json" };
 import patronesInstrucciones from "../reglas/instrucciones.json" with { type: "json" };
 
@@ -17,7 +17,6 @@ const PATRONES_SENSIBLES: string[] = archivosSensibles as unknown as string[];
 /** Coincidencia simple de patrones de archivos sensibles (sin picomatch, solo exact y glob básico). */
 function esArchivoSensible(ruta: string): boolean {
   const nombre = path.basename(ruta);
-  const partes = ruta.split(/[/\\]/);
   for (const patron of PATRONES_SENSIBLES) {
     if (patron.endsWith("/**")) {
       const prefijo = patron.slice(0, -3);
@@ -63,13 +62,58 @@ type CmdUnicode = {
   cp: number;
   linea: number;
   tipo: string;
-  bloque: number[]; // para tags: codepoints consecutivos; para otros: [cp]
+  bloque: number[]; // para tags: codepoints consecutivos; para selectores: el run completo; para otros: [cp]
 };
+
+// ─── Contexto Unicode ───────────────────────────────────────────────────────
+
+const RE_IDEOGRAFO_CJK = /\p{Ideographic}/u;
+const RE_EMOJI = /\p{Emoji}/u;
+
+// Escrituras donde U+200C (ZWNJ) es un carácter legítimo y necesario:
+// arábiga/persa e índicas (conjuntos y semiformas consonánticas).
+const RE_ESCRITURA_CON_ZWNJ =
+  /[\p{Script=Arabic}\p{Script=Syriac}\p{Script=Thaana}\p{Script=Nko}\p{Script=Devanagari}\p{Script=Bengali}\p{Script=Gurmukhi}\p{Script=Gujarati}\p{Script=Oriya}\p{Script=Tamil}\p{Script=Telugu}\p{Script=Kannada}\p{Script=Malayalam}\p{Script=Sinhala}\p{Script=Myanmar}\p{Script=Khmer}\p{Script=Lao}\p{Script=Thai}]/u;
+
+function esSelectorVariacion(cp: number): boolean {
+  return (cp >= 0xFE00 && cp <= 0xFE0F) || (cp >= 0xE0100 && cp <= 0xE01EF);
+}
+
+/** FE0E (texto) y FE0F (emoji) son selectores de presentación: válidos tras \p{Emoji} y en secuencias keycap. */
+function esSelectorPresentacion(cp: number): boolean {
+  return cp === 0xFE0E || cp === 0xFE0F;
+}
+
+/** Code point completo que está justo antes del índice dado (maneja pares surrogados). */
+function codePointAntes(contenido: string, indice: number): number | undefined {
+  if (indice <= 0) return undefined;
+  const cp = contenido.codePointAt(indice - 1)!;
+  if (cp >= 0xDC00 && cp <= 0xDFFF && indice - 2 >= 0) {
+    return contenido.codePointAt(indice - 2);
+  }
+  return cp;
+}
+
+function esIdeografoCJK(cp: number | undefined): boolean {
+  return cp !== undefined && RE_IDEOGRAFO_CJK.test(String.fromCodePoint(cp));
+}
+
+function esDeEscrituraConZWNJ(cp: number | undefined): boolean {
+  return cp !== undefined && RE_ESCRITURA_CON_ZWNJ.test(String.fromCodePoint(cp));
+}
+
+/** El code point visible antes de `indice` es un emoji (salta un selector de presentación intermedio). */
+function emojiAntesDe(contenido: string, indice: number): boolean {
+  let anterior = codePointAntes(contenido, indice);
+  if (anterior !== undefined && esSelectorPresentacion(anterior)) {
+    anterior = codePointAntes(contenido, indice - 1); // FE0E/FE0F son BMP: 1 code unit
+  }
+  return anterior !== undefined && RE_EMOJI.test(String.fromCodePoint(anterior));
+}
 
 // ─── Detección ──────────────────────────────────────────────────────────────
 
-function detectarInvisibles(contenido: string, ruta: string): CmdUnicode[] {
-  const cmds: CmdUnicode[] = [];
+function detectarInvisibles(contenido: string): CmdUnicode[] {
   const vistos = new Map<number, CmdUnicode>(); // cp → cmd activo
   const resultados: CmdUnicode[] = [];
   const limite = Math.min(contenido.length, 500_000); // proteger contra archivos gigantes
@@ -105,13 +149,50 @@ function detectarInvisibles(contenido: string, ruta: string): CmdUnicode[] {
 
     // Zero-width: U+200B–U+200F, U+2060–U+2064
     if ((cp >= 0x200B && cp <= 0x200F) || (cp >= 0x2060 && cp <= 0x2064)) {
+      const inicio = i - (cp > 0xFFFF ? 2 : 1);
+      const siguiente = i < contenido.length ? contenido.codePointAt(i) : undefined;
+
+      // U+200C (ZWNJ) junto a caracteres de escrituras que lo usan
+      // (arábiga/persa, índicas) es legítimo: no se reporta.
+      if (cp === 0x200C) {
+        const anterior = codePointAntes(contenido, inicio);
+        if (esDeEscrituraConZWNJ(anterior) || esDeEscrituraConZWNJ(siguiente)) continue;
+      }
+
+      // U+200D (ZWJ) entre emojis forma secuencias legítimas (👨‍👩‍👧, ❤️‍🔥).
+      if (cp === 0x200D) {
+        const esEmoji = (c: number | undefined) =>
+          c !== undefined && RE_EMOJI.test(String.fromCodePoint(c));
+        if (emojiAntesDe(contenido, inicio) && esEmoji(siguiente)) continue;
+      }
+
       resultados.push({ cp, linea: lineaDeIndice(contenido, i), tipo: "unicode-ancho-cero", bloque: [cp] });
       continue;
     }
 
-    // Variation selectors: U+FE00–U+FE0F, U+E0100–U+E01EF
-    if ((cp >= 0xFE00 && cp <= 0xFE0F) || (cp >= 0xE0100 && cp <= 0xE01EF)) {
-      resultados.push({ cp, linea: lineaDeIndice(contenido, i), tipo: "unicode-selector-variacion", bloque: [cp] });
+    // Variation selectors: U+FE00–U+FE0F, U+E0100–U+E01EF — acumular el run
+    // completo antes de decidir.
+    if (esSelectorVariacion(cp)) {
+      const inicio = i - (cp > 0xFFFF ? 2 : 1);
+      const linea = lineaDeIndice(contenido, inicio);
+      const bloque: number[] = [cp];
+      while (i < limite) {
+        const cpSig = contenido.codePointAt(i)!;
+        if (!esSelectorVariacion(cpSig)) break;
+        bloque.push(cpSig);
+        i += cpSig > 0xFFFF ? 2 : 1;
+      }
+
+      // Se reporta solo: (a) runs de 2+ selectores consecutivos, o
+      // (b) un FE00–FE0D / E0100–E01EF aislado que no siga a un ideograma CJK.
+      // Un FE0E/FE0F aislado es un selector de presentación legítimo
+      // (válido tras \p{Emoji} y en secuencias keycap) y nunca se reporta.
+      const reportar =
+        bloque.length >= 2 ||
+        (!esSelectorPresentacion(bloque[0]!) && !esIdeografoCJK(codePointAntes(contenido, inicio)));
+      if (reportar) {
+        resultados.push({ cp: bloque[0]!, linea, tipo: "unicode-selector-variacion", bloque });
+      }
       continue;
     }
   }
@@ -143,7 +224,7 @@ function esCodigo(ruta: string): boolean {
 export function analizarArchivoUnicode(archivo: ArchivoLeido): Finding[] {
   const { ruta, contenido } = archivo;
   const hallazgos: Finding[] = [];
-  const cmds = detectarInvisibles(contenido, ruta);
+  const cmds = detectarInvisibles(contenido);
 
   // Agrupar tags por secuencia
   const tags = cmds.filter((c) => c.tipo === "unicode-tags-oculto");
@@ -231,19 +312,20 @@ export function analizarArchivoUnicode(archivo: ArchivoLeido): Finding[] {
   const vsPorArchivo = otros.filter((c) => c.tipo === "unicode-selector-variacion");
   if (vsPorArchivo.length > 0) {
     const primera = vsPorArchivo[0]!;
+    const cps = vsPorArchivo.flatMap((c) => c.bloque);
     hallazgos.push({
       id: idHallazgo("unicode-selector-variacion", ruta),
       modulo: "unicode",
       regla: "unicode-selector-variacion",
-      titulo: `${vsPorArchivo.length} selectores de variación fuera de contexto de emoji`,
+      titulo: `${cps.length} selectores de variación fuera de contexto de emoji`,
       severidad: "media",
       determinista: true,
       archivo: ruta,
       linea: primera.linea,
       evidencia: prepararEvidencia(
-        vsPorArchivo.map((c) => marca(c.cp)).join(" ")
+        cps.map((cp) => marca(cp)).join(" ")
       ),
-      explicacion: `Se encontraron ${vsPorArchivo.length} selectores de variación Unicode fuera de un emoji visible. Pueden contener datos ocultos.`,
+      explicacion: `Se encontraron ${cps.length} selectores de variación Unicode fuera de un emoji visible. Pueden contener datos ocultos.`,
     });
   }
 
