@@ -111,7 +111,7 @@ function SelloVeredicto({ scan }: { scan: Scan }) {
       </div>
 
       {/* Tarjetas Principales de Alto Nivel: Índice de Confianza y Veredicto Vinculante */}
-      <div className="grid gap-4 sm:grid-cols-2">
+      <div className="grid gap-4 grid-cols-2">
         {/* Tarjeta 1: Hero Índice de Confianza */}
         <div className="flex items-center justify-between border-2 border-cian/60 bg-cian/10 p-5 rounded-lg shadow-lg">
           <div className="space-y-1">

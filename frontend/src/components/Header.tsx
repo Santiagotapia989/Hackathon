@@ -2,9 +2,11 @@ import { NavLink } from "react-router-dom";
 import { useEffect, useRef, useState } from "react";
 import { EscudoAduana } from "./EscudoAduana";
 
+const CLAVE_TEMA = "tema-aduana";
+
 const enlaceClase = ({ isActive }: { isActive: boolean }) =>
   [
-    "border-b-2 px-3 py-2 font-mono text-xs uppercase tracking-widest transition-colors",
+    "border-b-2 px-3 py-2 font-mono text-sm uppercase tracking-widest transition-colors",
     isActive
       ? "border-cian text-cian font-bold"
       : "border-transparent text-texto-2 hover:border-tactico hover:text-texto",
@@ -38,7 +40,7 @@ function IconoPerfil() {
 export function Header({ timeline }: HeaderProps) {
   const [tema, setTema] = useState(() => {
     if (typeof window !== "undefined") {
-      return localStorage.getItem("tema") || "light";
+      return localStorage.getItem(CLAVE_TEMA) || "light";
     }
     return "light";
   });
@@ -53,7 +55,7 @@ export function Header({ timeline }: HeaderProps) {
     } else {
       root.classList.remove("light");
     }
-    localStorage.setItem("tema", tema);
+    localStorage.setItem(CLAVE_TEMA, tema);
   }, [tema]);
 
   useEffect(() => {
@@ -113,7 +115,7 @@ export function Header({ timeline }: HeaderProps) {
                   type="button"
                   onClick={timeline.onToggle}
                   className={[
-                    "border-b-2 px-3 py-2 font-mono text-[13px] uppercase tracking-[0.14em] transition-colors",
+                    "border-b-2 px-3 py-2 font-mono text-sm uppercase tracking-[0.14em] transition-colors",
                     !timeline.colapsado
                       ? "border-cian text-cian font-bold"
                       : "border-transparent text-texto-2 hover:border-tactico hover:text-texto",
