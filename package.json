@@ -9,6 +9,7 @@
   },
   "scripts": {
     "build": "tsc -p tsconfig.json",
+    "prepare": "npm run build",
     "server": "tsx watch src/plataforma/server.ts",
     "server:stub": "cross-env ADUANA_MOTOR=stub tsx watch src/plataforma/server.ts",
     "mcp": "tsx src/plataforma/mcp.ts",
@@ -16,6 +17,7 @@
     "db:reset": "tsx src/plataforma/scripts/db-reset.ts",
     "db:seed": "tsx src/plataforma/scripts/db-seed.ts",
     "motor": "tsx scripts/analizar.ts",
+    "escanear-repo": "tsx scripts/escanear-repo-remoto.ts",
     "generar-fixtures": "tsx scripts/generar-fixture.ts",
     "test:demo": "tsx scripts/test-demo.ts",
     "test": "vitest run",
@@ -25,7 +27,7 @@
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.12.0",
     "adm-zip": "^0.5.16",
-    "better-sqlite3": "^11.9.1",
+    "better-sqlite3": "^13.0.3",
     "commander": "^12.1.0",
     "express": "^4.21.2",
     "picocolors": "^1.1.1",
@@ -43,7 +45,10 @@
     "vitest": "^3.1.1"
   },
   "allowScripts": {
-    "esbuild@0.28.2": true
+    "esbuild@0.28.2": true,
+    "better-sqlite3@13.0.3": true,
+    "better-sqlite3@11.10.0": true,
+    "better-sqlite3@11.9.1": true
   },
   "engines": {
     "node": ">=20"

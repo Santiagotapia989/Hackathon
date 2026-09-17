@@ -38,17 +38,21 @@ export function usarMotorStub(): boolean {
   return process.env.ADUANA_MOTOR === "stub";
 }
 
-// ─── Detección de red / modo offline ───────────────────────────────────────
+// ─── Detección de red / modo offline (POR DEFECTO 100% OFFLINE POR SOBERANÍA) ─
 
-let offline = process.env.ADUANA_OFFLINE === "1";
-const forzadoOffline = process.env.ADUANA_OFFLINE === "1";
+const forzadoOnline = process.env.ADUANA_OFFLINE === "0" || process.env.ADUANA_OFFLINE === "false";
+let offline = !forzadoOnline;
 
 export function estaOffline(): boolean {
   return offline;
 }
 
 async function chequearRed(): Promise<void> {
-  if (forzadoOffline) return; // no pisar el flag forzado
+  if (!forzadoOnline) {
+    // Por defecto, se garantiza soberanía e independencia 100% offline
+    offline = true;
+    return;
+  }
   const controlador = new AbortController();
   const timeout = setTimeout(() => controlador.abort(), 3_000);
   try {

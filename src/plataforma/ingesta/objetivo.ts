@@ -1,6 +1,7 @@
 // Parseo y validación del "objetivo" que llega en CrearScanBody:
 // "npm:<nombre>" | "pypi:<nombre>" | URL de repo (github.com / gitlab.com).
 
+import fs from "node:fs";
 import type { Ecosistema } from "../../shared/contrato.js";
 
 export type ObjetivoParseado =
@@ -40,6 +41,10 @@ export function parsearObjetivo(entrada: string): ObjetivoParseado {
 
   if (valor.startsWith("https://") || valor.startsWith("http://")) {
     return { tipo: "repo", url: normalizarUrlRepo(valor) };
+  }
+
+  if (fs.existsSync(valor)) {
+    return { tipo: "repo", url: valor };
   }
 
   throw new ObjetivoInvalidoError(`No se entendió el objetivo "${entrada}". ${EJEMPLO}`);

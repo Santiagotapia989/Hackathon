@@ -40,12 +40,14 @@ async function descargarNpm(
   tmpDir: string,
   signal?: AbortSignal,
 ): Promise<void> {
+  await fs.mkdir(tmpDir, { recursive: true });
   let stdout: string;
+  const comandoNpm = process.platform === "win32" ? "npm.cmd" : "npm";
   try {
     const resultado = await execFileAsync(
-      "npm",
+      comandoNpm,
       ["pack", nombre, "--ignore-scripts", "--pack-destination", tmpDir, "--json"],
-      { timeout: LIMITES.timeoutCloneMs, signal },
+      { timeout: LIMITES.timeoutCloneMs, signal, shell: process.platform === "win32" },
     );
     stdout = resultado.stdout;
   } catch (err) {
@@ -56,13 +58,19 @@ async function descargarNpm(
     throw new DescargaFallidaError(`No se pudo descargar el paquete npm: ${mensaje}`);
   }
 
-  let info: Array<{ filename: string }>;
+  let filename: string | undefined;
   try {
-    info = JSON.parse(stdout);
+    const jsonMatch = stdout.match(/[\{\[][\s\S]*[\}\]]/);
+    const parsed = JSON.parse(jsonMatch ? jsonMatch[0] : stdout);
+    if (Array.isArray(parsed)) {
+      filename = parsed[0]?.filename;
+    } else if (typeof parsed === "object" && parsed !== null) {
+      const primerValor = Object.values(parsed)[0] as { filename?: string } | undefined;
+      filename = primerValor?.filename;
+    }
   } catch {
     throw new DescargaFallidaError("Respuesta inesperada de npm pack.");
   }
-  const filename = info[0]?.filename;
   if (!filename) throw new DescargaFallidaError("npm pack no devolvió un archivo.");
 
   const rutaTgz = path.join(tmpDir, filename);

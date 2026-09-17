@@ -16,21 +16,37 @@ export function calcularVeredicto(
   );
   if (criticoDeterminista) return { veredicto: "retenido", resumen: construirResumen(hallazgos) };
 
-  // 2. Algún análisisIA.clasificacion === "malicioso" con confianza ≥ 0.8 → RETENIDO
+  // La IA sola nunca retiene: un hallazgo solo sube a retenido por IA si en
+  // el mismo archivo hay además un hallazgo determinista alta o crítica.
+  const archivosConRespaldo = new Set(
+    hallazgos
+      .filter((h) => h.determinista && (h.severidad === "alta" || h.severidad === "critica"))
+      .map((h) => h.archivo),
+  );
+  const conRespaldo = (h: Finding): boolean => archivosConRespaldo.has(h.archivo);
+
+  // 2. Algún análisisIA.clasificacion === "malicioso" con confianza ≥ 0.8,
+  //    con respaldo determinista en el mismo archivo → RETENIDO
   const maliciosoIA = hallazgos.some(
-    (h) => h.analisisIA?.clasificacion === "malicioso" && h.analisisIA.confianza >= 0.8,
+    (h) =>
+      h.analisisIA?.clasificacion === "malicioso" &&
+      h.analisisIA.confianza >= 0.8 &&
+      conRespaldo(h),
   );
   if (maliciosoIA) return { veredicto: "retenido", resumen: construirResumen(hallazgos) };
 
-  // 3. Algún análisisIA.intentoManipulacion → RETENIDO
-  const manipulacion = hallazgos.some((h) => h.analisisIA?.intentoManipulacion);
+  // 3. Algún análisisIA.intentoManipulacion con respaldo determinista en el
+  //    mismo archivo → RETENIDO
+  const manipulacion = hallazgos.some((h) => h.analisisIA?.intentoManipulacion && conRespaldo(h));
   if (manipulacion) return { veredicto: "retenido", resumen: construirResumen(hallazgos) };
 
-  // 4. Algún ALTA, algún IA no-benigno, algún sinEvaluar, o alguna etapa en error → REVISAR
+  // 4. Algún ALTA, algún IA no-benigno o con intento de manipulación, algún
+  //    sinEvaluar, o alguna etapa en error → REVISAR
   const tieneAlta = hallazgos.some((h) => h.severidad === "alta");
   const tieneIAOtra = hallazgos.some((h) => {
-    const c = h.analisisIA?.clasificacion;
-    return c === "malicioso" || c === "sospechoso";
+    const ia = h.analisisIA;
+    if (!ia) return false;
+    return ia.clasificacion === "malicioso" || ia.clasificacion === "sospechoso" || ia.intentoManipulacion;
   });
   const tieneSinEvaluar = hallazgos.some((h) => h.sinEvaluar);
   const etapaConError = etapas.some((e) => e.estado === "error");

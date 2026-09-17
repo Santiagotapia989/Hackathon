@@ -4,7 +4,7 @@
 
 import fs from "node:fs/promises";
 import path from "node:path";
-import type { ContextoAnalisis, Etapa, EventoMotor } from "../shared/contrato.js";
+import type { ContextoAnalisis, Etapa, EventoMotor, Scan } from "../shared/contrato.js";
 import type { ObjetivoParseado } from "./ingesta/objetivo.js";
 import { clonarRepo } from "./ingesta/repo.js";
 import { descargarPaquete } from "./ingesta/paquete.js";
@@ -12,6 +12,7 @@ import { motor } from "./motor.js";
 import { emitirEventoScan, terminarCanalScan } from "./bus.js";
 import * as db from "./db.js";
 import { RUTA_CUARENTENA, estaOffline } from "./config.js";
+import { generarInformeEjecutivo } from "../motor/llm/ollama.js";
 
 export async function ejecutarScan(
   id: string,
@@ -37,10 +38,10 @@ export async function ejecutarScan(
 
     const inicioIngesta = Date.now();
     try {
-      await fs.mkdir(dir, { recursive: true });
       if (parseado.tipo === "repo") {
         await clonarRepo(parseado.url, dir, signal);
       } else {
+        await fs.mkdir(dir, { recursive: true });
         const tmpDir = path.join(dir, "..", `${id}-tmp`);
         await fs.mkdir(tmpDir, { recursive: true });
         try {
@@ -87,8 +88,32 @@ export async function ejecutarScan(
     }
 
     const duracionMs = Date.now() - inicio;
-    db.finalizarScan(id, { veredicto: resultado.veredicto, resumen: resultado.resumen, duracionMs });
-    emitirEventoScan(id, "veredicto", { veredicto: resultado.veredicto, resumen: resultado.resumen });
+
+    const scanParaInforme: Scan = {
+      id,
+      tipo,
+      objetivo,
+      estado: "terminado",
+      etapas,
+      veredicto: resultado.veredicto,
+      resumen: resultado.resumen,
+      hallazgos: db.obtenerHallazgos(id),
+      creadoEn: new Date(inicio).toISOString(),
+      duracionMs,
+    };
+    const informeEjecutivo = await generarInformeEjecutivo(scanParaInforme, signal);
+
+    db.finalizarScan(id, {
+      veredicto: resultado.veredicto,
+      resumen: resultado.resumen,
+      duracionMs,
+      informeEjecutivo,
+    });
+    emitirEventoScan(id, "veredicto", {
+      veredicto: resultado.veredicto,
+      resumen: resultado.resumen,
+      informeEjecutivo,
+    });
   } finally {
     await fs.rm(dir, { recursive: true, force: true }).catch(() => {});
     terminarCanalScan(id);

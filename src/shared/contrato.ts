@@ -78,6 +78,43 @@ export const Resumen = z.object({
 });
 export type Resumen = z.infer<typeof Resumen>;
 
+// ─── Informe Ejecutivo ──────────────────────────────────────────────────────
+
+export const CabeceraInforme = z.object({
+  caratula: z.string(),
+  codigoDocumento: z.string(),
+  fecha: z.string(),
+  revision: z.string(),
+  paginas: z.string(),
+  caracter: z.string(),
+});
+export type CabeceraInforme = z.infer<typeof CabeceraInforme>;
+
+export const PersonalInforme = z.object({
+  nombre: z.string(),
+  cargo: z.string(),
+  grado: z.string().optional(),
+  firma: z.string().optional(),
+});
+export type PersonalInforme = z.infer<typeof PersonalInforme>;
+
+export const InformeEjecutivo = z.object({
+  cabecera: CabeceraInforme.optional(),
+  objetivo: z.string().optional(),
+  alcance: z.string().optional(),
+  problematicaAnterior: z.string().optional(),
+  introduccion: z.string().optional(),
+  indice: z.array(z.string()).optional(),
+  desarrollo: z.string().optional(),
+  conclusion: z.string().optional(),
+  personal: z.array(PersonalInforme).optional(),
+  desafioDetectado: z.string().optional(),
+  objetivoRepo: z.string().optional(),
+  metricasImpacto: z.array(z.string()).optional(),
+  faseEjecucion: z.string().optional(),
+});
+export type InformeEjecutivo = z.infer<typeof InformeEjecutivo>;
+
 export const Scan = z.object({
   id: z.string(),
   tipo: z.enum(["repo", "paquete"]),
@@ -87,6 +124,7 @@ export const Scan = z.object({
   veredicto: Veredicto.optional(),
   resumen: Resumen.optional(),
   hallazgos: z.array(Finding),
+  informeEjecutivo: InformeEjecutivo.optional(),
   creadoEn: z.string(),                       // ISO 8601
   duracionMs: z.number().optional(),
   error: z.string().optional(),

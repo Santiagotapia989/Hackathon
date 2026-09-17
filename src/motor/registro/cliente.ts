@@ -18,6 +18,22 @@ const HOSTS_ALLOWLIST = new Set([
   "pythonhosted.org",
 ]);
 
+// Helper para obtener hosts permitidos (incluyendo mirrors locales configurados)
+function obtenerHostsPermitidos(): Set<string> {
+  const permitidos = new Set(HOSTS_ALLOWLIST);
+  const npmMirror = process.env.ADUANA_NPM_MIRROR;
+  const pypiMirror = process.env.ADUANA_PYPI_MIRROR;
+
+  if (npmMirror) {
+    try { permitidos.add(new URL(npmMirror).hostname); } catch {}
+  }
+  if (pypiMirror) {
+    try { permitidos.add(new URL(pypiMirror).hostname); } catch {}
+  }
+
+  return permitidos;
+}
+
 // ─── Cache ──────────────────────────────────────────────────────────────────
 
 type CacheEntry = { existe: boolean | null; datos?: { diasCreacion?: number; descargasSemanales?: number } };
@@ -53,10 +69,17 @@ async function fetchSeguro(
   signal?: AbortSignal,
 ): Promise<{ status: number; body: unknown }> {
   const parsed = new URL(url);
-  if (!HOSTS_ALLOWLIST.has(parsed.hostname)) {
+  const hostsPermitidos = obtenerHostsPermitidos();
+
+  if (!hostsPermitidos.has(parsed.hostname)) {
     throw new Error(`Host no permitido: ${parsed.hostname}`);
   }
-  if (parsed.protocol !== "https:") {
+  const esMirrorConfigurado = Boolean(
+    (process.env.ADUANA_NPM_MIRROR && parsed.hostname === new URL(process.env.ADUANA_NPM_MIRROR).hostname) ||
+    (process.env.ADUANA_PYPI_MIRROR && parsed.hostname === new URL(process.env.ADUANA_PYPI_MIRROR).hostname)
+  );
+
+  if (parsed.protocol !== "https:" && !esMirrorConfigurado && process.env.ADUANA_ALLOW_HTTP !== "true") {
     throw new Error(`Solo se permiten URLs HTTPS, recibido: ${parsed.protocol}`);
   }
 
@@ -88,7 +111,10 @@ async function verificarNpm(
 
   await esperarTurno();
   try {
-    const resp = await fetchSeguro(`https://registry.npmjs.org/${encodeURIComponent(nombre)}`, signal);
+    const baseUrl = process.env.ADUANA_NPM_MIRROR
+      ? process.env.ADUANA_NPM_MIRROR.replace(/\/$/, "")
+      : "https://registry.npmjs.org";
+    const resp = await fetchSeguro(`${baseUrl}/${encodeURIComponent(nombre)}`, signal);
 
     if (resp.status === 404) {
       const entry: CacheEntry = { existe: false };
@@ -151,7 +177,10 @@ async function verificarPyPI(
 
   await esperarTurno();
   try {
-    const resp = await fetchSeguro(`https://pypi.org/pypi/${encodeURIComponent(nombre)}/json`, signal);
+    const baseUrl = process.env.ADUANA_PYPI_MIRROR
+      ? process.env.ADUANA_PYPI_MIRROR.replace(/\/$/, "")
+      : "https://pypi.org";
+    const resp = await fetchSeguro(`${baseUrl}/pypi/${encodeURIComponent(nombre)}/json`, signal);
 
     if (resp.status === 404) {
       const entry: CacheEntry = { existe: false };

@@ -22,8 +22,10 @@ afterAll(async () => {
 type RespuestaJsonRpc = { jsonrpc: "2.0"; id?: number; result?: any; error?: any };
 
 async function hablarMcp(mensajes: object[], env: Record<string, string>, timeoutMs = 15_000): Promise<RespuestaJsonRpc[]> {
-  const proceso = spawn("npx", ["tsx", "src/plataforma/mcp.ts"], {
+  const cmd = process.platform === "win32" ? "npx.cmd" : "npx";
+  const proceso = spawn(cmd, ["tsx", "src/plataforma/mcp.ts"], {
     cwd: RAIZ,
+    shell: true,
     env: { ...process.env, ...env },
     stdio: ["pipe", "pipe", "pipe"],
   });

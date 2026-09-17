@@ -2,6 +2,7 @@
 
 import { execFile } from "node:child_process";
 import { promisify } from "node:util";
+import fsSync from "node:fs";
 import fs from "node:fs/promises";
 import path from "node:path";
 import { LIMITES } from "../config.js";
@@ -20,8 +21,7 @@ export async function clonarRepo(
   destino: string,
   signal?: AbortSignal,
 ): Promise<ResultadoClon> {
-  if (process.env.NODE_ENV === "test" && !url.startsWith("https://")) {
-    // Solo en tests: permite apuntar a un fixture local sin pasar por red/git.
+  if (fsSync.existsSync(url) || (process.env.NODE_ENV === "test" && !url.startsWith("https://"))) {
     await fs.cp(url, destino, { recursive: true });
   } else {
     await ejecutarGitClone(url, destino, signal);
@@ -37,27 +37,35 @@ export async function clonarRepo(
   return { bytes };
 }
 
+export function argsGitClone(url: string, destino: string): string[] {
+  const nullHooks = process.platform === "win32" ? "NUL" : "/dev/null";
+  return [
+    "-c",
+    "core.symlinks=false",
+    "-c",
+    "protocol.file.allow=never",
+    "-c",
+    "credential.helper=",
+    "-c",
+    `core.hooksPath=${nullHooks}`,
+    "-c",
+    "core.filter=never",
+    "clone",
+    "--no-recurse-submodules",
+    "--",
+    url,
+    destino,
+  ];
+}
+
 async function ejecutarGitClone(url: string, destino: string, signal?: AbortSignal): Promise<void> {
   try {
-    await execFileAsync(
-      "git",
-      [
-        "-c",
-        "core.symlinks=false",
-        "-c",
-        "protocol.file.allow=never",
-        "clone",
-        "--no-recurse-submodules",
-        "--",
-        url,
-        destino,
-      ],
-      {
-        timeout: LIMITES.timeoutCloneMs,
-        env: { ...process.env, GIT_TERMINAL_PROMPT: "0" },
-        signal,
-      },
-    );
+    await execFileAsync("git", argsGitClone(url, destino), {
+      timeout: LIMITES.timeoutCloneMs,
+      env: { ...process.env, GIT_TERMINAL_PROMPT: "0" },
+      signal,
+      shell: process.platform === "win32",
+    });
   } catch (err) {
     const mensaje = err instanceof Error ? err.message : String(err);
     throw new ClonadoFallidoError(`No se pudo clonar el repositorio: ${mensaje}`);

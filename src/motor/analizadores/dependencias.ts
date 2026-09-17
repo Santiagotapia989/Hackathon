@@ -24,16 +24,24 @@ const SCRIPTS_CON_URL = /https?:\/\//i;
 
 // ─── Typosquatting ─────────────────────────────────────────────────────────
 
+// Un paquete con más de este tiempo publicado en el registro no se marca
+// como typosquatting: un atacante no espera un año para cosechar.
+export const ANTIGUEDAD_MINIMA_TYPOSQUAT_DIAS = 365;
+
 export function buscarTyposquatting(
   nombre: string,
   topList: string[],
 ): string | null {
   const norm = normalizarNombre(nombre);
-  if (topList.includes(norm)) return null; // es popular, no es typosquatting
+  // Nombres cortos toleran menos edición: menos de 8 caracteres solo admite
+  // distancia 1, si no cualquier nombre común colisiona.
+  const maxDist = norm.length < 8 ? 1 : 2;
 
   for (const top of topList) {
-    const dist = levenshtein(norm, top);
-    if (dist >= 1 && dist <= 2) return top;
+    const normTop = normalizarNombre(top);
+    if (norm === normTop) return null; // es el paquete popular (mismo nombre, con o sin scope)
+    const dist = levenshtein(norm, normTop);
+    if (dist >= 1 && dist <= maxDist) return top;
   }
   return null;
 }
@@ -130,9 +138,16 @@ async function analizarPackageJson(
       });
     }
 
-    // 2. Typosquatting contra top list
+    // 2. Verificación de existencia en registro (se adelanta: la antigüedad
+    //    del paquete decide si un nombre similar cuenta como typosquatting)
+    const resultado = await verificarNombre(ecosistema, nombre, opts);
+    const esAntiguo =
+      resultado.diasCreacion !== undefined &&
+      resultado.diasCreacion > ANTIGUEDAD_MINIMA_TYPOSQUAT_DIAS;
+
+    // 3. Typosquatting contra top list
     const sugerencia = buscarTyposquatting(nombre, topList);
-    if (sugerencia && !confundible) {
+    if (sugerencia && !confundible && !esAntiguo) {
       hallazgos.push({
         id: idHallazgo("dep-typosquatting", archivo.ruta),
         modulo: "dependencias",
@@ -147,9 +162,7 @@ async function analizarPackageJson(
       });
     }
 
-    // 3. Verificación de existencia en registro
-    const resultado = await verificarNombre(ecosistema, nombre, opts);
-
+    // 4. Dependencia alucinada
     if (resultado.existe === false && !confundible) {
       hallazgos.push({
         id: idHallazgo("dep-paquete-alucinado", archivo.ruta),
@@ -165,7 +178,7 @@ async function analizarPackageJson(
       });
     }
 
-    // 4. Paquete nuevo o poco usado
+    // 5. Paquete nuevo o poco usado
     if (resultado.existe === true) {
       const esNuevo = resultado.diasCreacion !== undefined && resultado.diasCreacion < 30;
       const esPocoUsado = resultado.descargasSemanales !== undefined && resultado.descargasSemanales < 100;
@@ -234,9 +247,16 @@ async function analizarRequirements(
       });
     }
 
+    // Verificar existencia (se adelanta: la antigüedad decide si un nombre
+    // similar cuenta como typosquatting)
+    const resultado = await verificarNombre(ecosistema, nombre, opts);
+    const esAntiguo =
+      resultado.diasCreacion !== undefined &&
+      resultado.diasCreacion > ANTIGUEDAD_MINIMA_TYPOSQUAT_DIAS;
+
     // Typosquatting
     const sugerencia = buscarTyposquatting(nombre, topList);
-    if (sugerencia && !confundible) {
+    if (sugerencia && !confundible && !esAntiguo) {
       hallazgos.push({
         id: idHallazgo("dep-typosquatting", archivo.ruta),
         modulo: "dependencias",
@@ -251,9 +271,6 @@ async function analizarRequirements(
         remediacion: [`Reemplazar por ${sugerencia}`],
       });
     }
-
-    // Verificar existencia
-    const resultado = await verificarNombre(ecosistema, nombre, opts);
 
     if (resultado.existe === false && !confundible) {
       hallazgos.push({

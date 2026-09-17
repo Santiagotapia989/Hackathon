@@ -36,7 +36,12 @@ describe("recorrerDirectorio", () => {
     const fuera = await tmpDir();
     dirsCreados.push(fuera);
     await fs.writeFile(path.join(fuera, "secreto.txt"), "fuera de la raíz");
-    await fs.symlink(path.join(fuera, "secreto.txt"), path.join(dir, "enlace.txt"));
+    try {
+      await fs.symlink(path.join(fuera, "secreto.txt"), path.join(dir, "enlace.txt"));
+    } catch (err: any) {
+      if (process.platform === "win32" && err?.code === "EPERM") return; // En Windows requiere modo desarrollador / elevado
+      throw err;
+    }
 
     const r = await recorrerDirectorio(dir);
     expect(r.archivos).toHaveLength(0); // nunca se sigue el contenido del symlink
@@ -48,7 +53,12 @@ describe("recorrerDirectorio", () => {
     const dir = await tmpDir();
     dirsCreados.push(dir);
     await fs.writeFile(path.join(dir, "real.txt"), "contenido real");
-    await fs.symlink(path.join(dir, "real.txt"), path.join(dir, "enlace.txt"));
+    try {
+      await fs.symlink(path.join(dir, "real.txt"), path.join(dir, "enlace.txt"));
+    } catch (err: any) {
+      if (process.platform === "win32" && err?.code === "EPERM") return;
+      throw err;
+    }
 
     const r = await recorrerDirectorio(dir);
     expect(r.desvios).toHaveLength(0);

@@ -7,6 +7,7 @@ import type { Finding, Etapa, ContextoAnalisis, ResultadoAnalisis, EventoMotor }
 import { recorrerDirectorio } from "./archivos.js";
 import { analizarUnicode } from "./analizadores/unicode.js";
 import { analizarInstrucciones } from "./analizadores/instrucciones.js";
+import { analizarSAST } from "./analizadores/sast.js";
 import { analizarDependencias } from "./analizadores/dependencias.js";
 import { analizarSecretos } from "./analizadores/secretos.js";
 import { triage, resetContador } from "./llm/ollama.js";
@@ -53,10 +54,10 @@ export async function ejecutarPipeline(
   const allEtapas: Etapa[] = [];
   resetContador();
 
-  // ── Ingesta (recorrer directorio) ────────────────────────────────────
-  const recorrido = await ejecutarEtapa("ingesta" as any, emitir, ctx.signal, allEtapas, async () => {
-    return recorrerDirectorio(dir);
-  });
+  // ── Recorrido del directorio ──────────────────────────────────────────
+  // No es una etapa propia: "ingesta" la emite la Plataforma (contrato).
+  // Emitirla acá la duplicaba en el SSE y en la CLI.
+  const recorrido = await recorrerDirectorio(dir);
 
   // Helper: agrega un hallazgo al acumulado y lo emite de inmediato (SSE + persistencia en B).
   const agregarHallazgo = (hallazgo: Finding): void => {
@@ -100,9 +101,11 @@ export async function ejecutarPipeline(
   });
   for (const h of unicodeHallazgos) agregarHallazgo(h);
 
-  // ── Instrucciones ────────────────────────────────────────────────────
+  // ── Instrucciones & SAST ─────────────────────────────────────────────
   const instruccionesHallazgos = await ejecutarEtapa("instrucciones", emitir, ctx.signal, allEtapas, async () => {
-    return analizarInstrucciones(recorrido.archivos);
+    const i = analizarInstrucciones(recorrido.archivos);
+    const s = analizarSAST(recorrido.archivos);
+    return [...i, ...s];
   });
   for (const h of instruccionesHallazgos) agregarHallazgo(h);
 

@@ -11,6 +11,7 @@ import {
   Resumen,
   Veredicto,
   EventoAgente,
+  InformeEjecutivo,
 } from "../shared/contrato.js";
 import { RUTA_DB } from "./config.js";
 
@@ -31,7 +32,8 @@ CREATE TABLE IF NOT EXISTS scans (
   etapas_json TEXT NOT NULL DEFAULT '[]',
   error TEXT,
   creado_en TEXT NOT NULL,
-  duracion_ms INTEGER
+  duracion_ms INTEGER,
+  informe_ejecutivo_json TEXT
 );
 CREATE TABLE IF NOT EXISTS hallazgos (
   id TEXT NOT NULL,
@@ -46,6 +48,12 @@ CREATE TABLE IF NOT EXISTS eventos_agente (
 );
 `);
 
+try {
+  db.exec(`ALTER TABLE scans ADD COLUMN informe_ejecutivo_json TEXT;`);
+} catch {
+  // Columna ya existente
+}
+
 // ─── Filas crudas ───────────────────────────────────────────────────────────
 
 interface FilaScan {
@@ -59,6 +67,7 @@ interface FilaScan {
   error: string | null;
   creado_en: string;
   duracion_ms: number | null;
+  informe_ejecutivo_json: string | null;
 }
 
 function filaAScan(fila: FilaScan, hallazgos: Finding[]): Scan {
@@ -71,6 +80,7 @@ function filaAScan(fila: FilaScan, hallazgos: Finding[]): Scan {
     resumen: fila.resumen_json ? JSON.parse(fila.resumen_json) : undefined,
     etapas: JSON.parse(fila.etapas_json),
     hallazgos,
+    informeEjecutivo: fila.informe_ejecutivo_json ? JSON.parse(fila.informe_ejecutivo_json) : undefined,
     creadoEn: fila.creado_en,
     duracionMs: fila.duracion_ms ?? undefined,
     error: fila.error ?? undefined,
@@ -117,11 +127,17 @@ export function marcarError(id: string, mensaje: string, duracionMs?: number): v
 
 export function finalizarScan(
   id: string,
-  datos: { veredicto: Veredicto; resumen: Resumen; duracionMs: number },
+  datos: { veredicto: Veredicto; resumen: Resumen; duracionMs: number; informeEjecutivo?: InformeEjecutivo },
 ): void {
   db.prepare(
-    `UPDATE scans SET estado = 'terminado', veredicto = ?, resumen_json = ?, duracion_ms = ? WHERE id = ?`,
-  ).run(datos.veredicto, JSON.stringify(datos.resumen), datos.duracionMs, id);
+    `UPDATE scans SET estado = 'terminado', veredicto = ?, resumen_json = ?, duracion_ms = ?, informe_ejecutivo_json = ? WHERE id = ?`,
+  ).run(
+    datos.veredicto,
+    JSON.stringify(datos.resumen),
+    datos.duracionMs,
+    datos.informeEjecutivo ? JSON.stringify(datos.informeEjecutivo) : null,
+    id,
+  );
 }
 
 export function marcarInterrumpidosPorReinicio(): void {

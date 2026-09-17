@@ -13,8 +13,12 @@ function copiarSiExiste(origen: string, destino: string): void {
   for (const sufijo of ["", "-wal", "-shm"]) {
     const o = origen + sufijo;
     const d = destino + sufijo;
-    if (fs.existsSync(o)) fs.copyFileSync(o, d);
-    else fs.rmSync(d, { force: true });
+    try {
+      if (fs.existsSync(o)) fs.copyFileSync(o, d);
+      else fs.rmSync(d, { force: true });
+    } catch {
+      // Ignorar bloqueos en archivos -wal / -shm si el servidor está activo
+    }
   }
 }
 
