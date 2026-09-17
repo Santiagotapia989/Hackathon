@@ -52,6 +52,19 @@ const apiReal = {
     return HealthSchema.parse(datos);
   },
 
+  async generarTokenAprobacion(
+    id: string,
+    confirmacionCritica = false,
+  ): Promise<{ token: string; veredicto: string }> {
+    return pedir<{ token: string; veredicto: string }>(
+      `/api/scans/${id}/token`,
+      {
+        method: "POST",
+        body: JSON.stringify({ confirmacionCritica }),
+      },
+    );
+  },
+
   suscribirseScan(id: string, cb: (e: ScanEvento) => void): () => void {
     const fuente = new EventSource(`/api/scans/${id}/events`);
     const escuchar = (tipo: ScanEvento["tipo"]) => (ev: MessageEvent) => {
@@ -90,6 +103,14 @@ const apiMock = {
   async obtenerHealth(): Promise<Health> {
     await new Promise((r) => setTimeout(r, 150));
     return obtenerHealthMock();
+  },
+
+  async generarTokenAprobacion(
+    _id: string,
+    _confirmacionCritica = false,
+  ): Promise<{ token: string; veredicto: string }> {
+    await new Promise((r) => setTimeout(r, 300));
+    return { token: "SIVAR-DEMO-1234-ABCD", veredicto: "revisar" };
   },
 
   suscribirseScan(id: string, cb: (e: ScanEvento) => void): () => void {

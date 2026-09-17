@@ -6,6 +6,7 @@ import { randomUUID } from "node:crypto";
 import {
   CheckPackageBody,
   CheckRepoBody,
+  ConfirmarScanBody,
   EventoAgente,
   type ResultadoAgente,
   type Veredicto,
@@ -122,6 +123,44 @@ agenteRouter.post("/agente/check-repo", async (req, res) => {
     veredicto: resultado.veredicto,
     resumen: resultado.resumen,
   });
+});
+
+// El agente presenta el token que el operador generó en el reporte web.
+// El token está atado al scanId y es de un solo uso: una verificación exitosa
+// lo consume, así no puede reutilizarse para otro escaneo ni dos veces.
+agenteRouter.post("/agente/confirmar", (req, res) => {
+  const parseo = ConfirmarScanBody.safeParse(req.body);
+  if (!parseo.success) {
+    res.status(400).json({ error: "Body inválido: se espera { scanId: string, token: string }." });
+    return;
+  }
+  const { scanId, token } = parseo.data;
+
+  const scan = db.obtenerScan(scanId);
+  if (!scan) {
+    res.status(404).json({ error: "Escaneo no encontrado." });
+    return;
+  }
+  if (scan.veredicto === "liberado") {
+    res.json({ autorizado: true, veredicto: scan.veredicto });
+    return;
+  }
+  if (!db.verificarTokenAprobacion(scanId, token)) {
+    res.status(403).json({
+      autorizado: false,
+      error: "Token inválido o ya utilizado. Pedile al operador que genere uno nuevo en el reporte.",
+    });
+    return;
+  }
+
+  registrarEvento(
+    scan.tipo === "repo" ? "abrir_repo" : "instalar",
+    scan.objetivo,
+    "permitido",
+    `Aprobado por el operador mediante token (veredicto original: ${scan.veredicto}).`,
+    scanId,
+  );
+  res.json({ autorizado: true, veredicto: scan.veredicto });
 });
 
 agenteRouter.get("/agente/events", (req, res) => {

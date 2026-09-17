@@ -3,6 +3,7 @@
 
 import fs from "node:fs";
 import path from "node:path";
+import { randomBytes } from "node:crypto";
 import Database from "better-sqlite3";
 import {
   Scan,
@@ -45,6 +46,12 @@ CREATE TABLE IF NOT EXISTS eventos_agente (
   id TEXT PRIMARY KEY,
   fecha TEXT NOT NULL,
   json TEXT NOT NULL
+);
+CREATE TABLE IF NOT EXISTS tokens_aprobacion (
+  scan_id TEXT PRIMARY KEY REFERENCES scans(id),
+  token TEXT NOT NULL UNIQUE,
+  usado INTEGER NOT NULL DEFAULT 0,
+  creado_en TEXT NOT NULL
 );
 `);
 
@@ -160,6 +167,39 @@ export function obtenerHallazgos(scanId: string): Finding[] {
     .prepare(`SELECT json FROM hallazgos WHERE scan_id = ?`)
     .all(scanId) as { json: string }[];
   return filas.map((fila) => Finding.parse(JSON.parse(fila.json)));
+}
+
+// ─── Tokens de aprobación humana ────────────────────────────────────────────
+// Un token por escaneo: autoriza a un agente de IA a continuar pese a un
+// veredicto "revisar"/"retenido". De un solo uso — se marca al verificarse.
+
+export function generarTokenAprobacion(scanId: string): string {
+  const existente = db
+    .prepare(`SELECT token FROM tokens_aprobacion WHERE scan_id = ? AND usado = 0`)
+    .get(scanId) as { token: string } | undefined;
+  if (existente) return existente.token;
+
+  const grupos = Array.from({ length: 3 }, () =>
+    randomBytes(2).toString("hex").toUpperCase(),
+  );
+  const token = `SIVAR-${grupos.join("-")}`;
+
+  db.prepare(
+    `INSERT INTO tokens_aprobacion (scan_id, token, usado, creado_en)
+     VALUES (?, ?, 0, ?)
+     ON CONFLICT (scan_id) DO UPDATE SET token = excluded.token, usado = 0, creado_en = excluded.creado_en`,
+  ).run(scanId, token, new Date().toISOString());
+  return token;
+}
+
+export function verificarTokenAprobacion(scanId: string, token: string): boolean {
+  const fila = db
+    .prepare(`SELECT usado FROM tokens_aprobacion WHERE scan_id = ? AND token = ?`)
+    .get(scanId, token.trim().toUpperCase()) as { usado: number } | undefined;
+  if (!fila || fila.usado !== 0) return false;
+
+  db.prepare(`UPDATE tokens_aprobacion SET usado = 1 WHERE scan_id = ?`).run(scanId);
+  return true;
 }
 
 // ─── Eventos de agente ──────────────────────────────────────────────────────

@@ -121,5 +121,33 @@ server.tool(
   },
 );
 
+interface RespuestaConfirmar {
+  autorizado: boolean;
+  veredicto?: string;
+}
+
+server.tool(
+  "confirm_repo",
+  "Llamá a esta herramienta SOLO después de que el operador humano te pase el " +
+    "token de aprobación que generó en el reporte web de un escaneo con " +
+    "veredicto REVISAR o BLOQUEADO. Si el token valida, podés continuar.",
+  { scanId: z.string().min(1), token: z.string().min(1) },
+  async ({ scanId, token }) => {
+    try {
+      const resultado = await llamarApi<RespuestaConfirmar>("/api/agente/confirmar", {
+        scanId,
+        token,
+      });
+      const texto = resultado.autorizado
+        ? `AUTORIZADO: el operador aprobó el objetivo del escaneo ${scanId} (veredicto: ${resultado.veredicto}). Podés continuar.`
+        : "NO AUTORIZADO.";
+      return { content: [{ type: "text", text: texto }] };
+    } catch (err) {
+      const mensaje = err instanceof Error ? err.message : MENSAJE_SERVIDOR_CAIDO;
+      return { content: [{ type: "text", text: `NO AUTORIZADO: ${mensaje}` }], isError: true };
+    }
+  },
+);
+
 const transport = new StdioServerTransport();
 await server.connect(transport);

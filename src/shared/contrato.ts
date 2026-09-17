@@ -179,6 +179,10 @@ export type EventoAgente = z.infer<typeof EventoAgente>;
 export const CrearScanBody = z.object({ objetivo: z.string().min(1).max(300) });
 export const CheckPackageBody = z.object({ ecosistema: Ecosistema, nombre: z.string().min(1).max(214) });
 export const CheckRepoBody = z.object({ url: z.string().url() });
+export const ConfirmarScanBody = z.object({
+  scanId: z.string().min(1),
+  token: z.string().min(1),
+});
 export const ErrorHttp = z.object({ error: z.string() });
 
 // Nombres de eventos SSE

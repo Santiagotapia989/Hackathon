@@ -1,5 +1,6 @@
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { Link } from "react-router-dom";
+import { api } from "../lib/api";
 import type {
   Finding,
   Modulo,
@@ -185,6 +186,115 @@ function BalanceHallazgos({ scan }: { scan: Scan }) {
   );
 }
 
+// Token de aprobación para agentes de IA: el operador lo genera acá y se lo
+// pasa a la IA para que continúe pese al dictamen. Con veredicto RETENIDO
+// exige una segunda confirmación explícita antes de emitirlo (la API también
+// lo exige, no es solo cosmético). Solo visible en pantalla, nunca en print.
+function AprobacionToken({ scan }: { scan: Scan }) {
+  const esRetenido = scan.veredicto === "retenido";
+  const [token, setToken] = useState<string | null>(null);
+  const [pidiendoConfirmacion, setPidiendoConfirmacion] = useState(false);
+  const [cargando, setCargando] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [copiado, setCopiado] = useState(false);
+
+  async function generar() {
+    setCargando(true);
+    setError(null);
+    try {
+      const r = await api.generarTokenAprobacion(scan.id, esRetenido);
+      setToken(r.token);
+    } catch (err) {
+      setError(
+        err instanceof Error ? err.message : "No se pudo generar el token.",
+      );
+    } finally {
+      setCargando(false);
+      setPidiendoConfirmacion(false);
+    }
+  }
+
+  async function copiar() {
+    if (!token) return;
+    await navigator.clipboard.writeText(token);
+    setCopiado(true);
+    setTimeout(() => setCopiado(false), 2000);
+  }
+
+  if (token) {
+    return (
+      <div className="mt-3 rounded border border-cian/50 bg-noche/60 p-3 space-y-1.5 print:hidden">
+        <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-texto-2">
+          Token de aprobación · un solo uso · pegáselo a la IA
+        </p>
+        <div className="flex flex-wrap items-center gap-3">
+          <code className="font-mono text-sm font-bold tracking-widest text-cian">
+            {token}
+          </code>
+          <button
+            type="button"
+            onClick={copiar}
+            className="border border-tactico bg-panel px-3 py-1 font-mono text-xs font-semibold text-texto hover:border-cian/60 hover:text-cian transition-colors rounded"
+          >
+            {copiado ? "Copiado ✓" : "Copiar"}
+          </button>
+        </div>
+        <p className="font-mono text-[10px] leading-snug text-texto-2">
+          Junto con el ID del escaneo: {scan.id}
+        </p>
+      </div>
+    );
+  }
+
+  if (esRetenido && pidiendoConfirmacion) {
+    return (
+      <div className="mt-3 rounded border border-sello-retenido bg-sello-retenido/10 p-3 space-y-2 print:hidden">
+        <p className="font-mono text-[11px] font-bold uppercase tracking-[0.15em] text-sello-retenido">
+          Confirmación de riesgo crítico
+        </p>
+        <p className="font-mono text-[11px] leading-snug text-texto-2">
+          El dictamen es RETENIDO. Generar un token autoriza a la IA a continuar
+          pese al riesgo. Confirmá que leíste el informe y aceptás la
+          responsabilidad.
+        </p>
+        <div className="flex flex-wrap gap-2 pt-1">
+          <button
+            type="button"
+            onClick={generar}
+            disabled={cargando}
+            className="border border-sello-retenido bg-sello-retenido/20 px-3 py-1.5 font-mono text-xs font-semibold text-sello-retenido transition-colors rounded disabled:opacity-50"
+          >
+            {cargando ? "Generando…" : "Confirmar y generar token"}
+          </button>
+          <button
+            type="button"
+            onClick={() => setPidiendoConfirmacion(false)}
+            className="border border-tactico bg-panel px-3 py-1.5 font-mono text-xs font-semibold text-texto-2 hover:text-texto transition-colors rounded"
+          >
+            Cancelar
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="mt-3 print:hidden">
+      <button
+        type="button"
+        onClick={() => (esRetenido ? setPidiendoConfirmacion(true) : generar())}
+        disabled={cargando}
+        className="border border-tactico bg-panel px-3 py-1.5 font-mono text-xs font-semibold text-texto hover:border-cian/60 hover:text-cian transition-colors rounded disabled:opacity-50"
+      >
+        {cargando ? "Generando…" : "Generar token de aprobación"}
+      </button>
+      {error && (
+        <p className="mt-1 font-mono text-[11px] text-sello-retenido">{error}</p>
+      )}
+    </div>
+  );
+}
+
 function SelloVeredicto({ scan }: { scan: Scan }) {
   const veredicto: Veredicto = scan.veredicto ?? "revisar";
   const color = colorVeredicto[veredicto];
@@ -250,6 +360,7 @@ function SelloVeredicto({ scan }: { scan: Scan }) {
             <p className="font-mono text-[11px] font-medium text-texto-2">
               {subtituloVeredicto(veredicto, confianza, sinHallazgos)}
             </p>
+            {veredicto !== "liberado" && <AprobacionToken scan={scan} />}
           </div>
           <div
             aria-hidden="true"

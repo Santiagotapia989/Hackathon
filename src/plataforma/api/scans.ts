@@ -95,6 +95,37 @@ scansRouter.get("/scans/:id/events", (req, res) => {
   });
 });
 
+// Token de aprobación humana: el operador lo genera desde el reporte y se lo
+// pasa al agente de IA para que pueda continuar pese a un veredicto
+// "revisar"/"retenido". Para "retenido" el body debe traer
+// { confirmacionCritica: true } — segunda confirmación obligatoria.
+scansRouter.post("/scans/:id/token", (req, res) => {
+  const scan = db.obtenerScan(req.params.id);
+  if (!scan) {
+    res.status(404).json({ error: "Escaneo no encontrado." });
+    return;
+  }
+  if (scan.estado !== "terminado" || !scan.veredicto) {
+    res.status(400).json({ error: "El escaneo todavía no terminó." });
+    return;
+  }
+  if (scan.veredicto === "liberado") {
+    res.status(400).json({ error: "El escaneo está liberado: no requiere token." });
+    return;
+  }
+  if (
+    scan.veredicto === "retenido" &&
+    (req.body as { confirmacionCritica?: boolean })?.confirmacionCritica !== true
+  ) {
+    res.status(400).json({
+      error: "Veredicto RETENIDO: se requiere una confirmación explícita de riesgo crítico.",
+    });
+    return;
+  }
+
+  res.json({ token: db.generarTokenAprobacion(scan.id), veredicto: scan.veredicto });
+});
+
 scansRouter.get("/scans/:id/reporte-defensa", (req, res) => {
   const scan = db.obtenerScan(req.params.id);
   if (!scan) {
