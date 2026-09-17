@@ -10,7 +10,14 @@ const enlaceClase = ({ isActive }: { isActive: boolean }) =>
       : "border-transparent text-texto-2 hover:border-tactico hover:text-texto",
   ].join(" ");
 
-export function Header() {
+interface HeaderProps {
+  timeline?: {
+    colapsado: boolean;
+    onToggle: () => void;
+  };
+}
+
+export function Header({ timeline }: HeaderProps) {
   const [tema, setTema] = useState(() => {
     if (typeof window !== "undefined") {
       return localStorage.getItem("tema") || "dark";
@@ -72,12 +79,20 @@ export function Header() {
               <NavLink to="/" className={enlaceClase} end>
                 Nuevo escaneo
               </NavLink>
-              <NavLink to="/historial" className={enlaceClase}>
-                Historial
-              </NavLink>
-              <NavLink to="/agente" className={enlaceClase}>
-                Agente
-              </NavLink>
+              {timeline ? (
+                <button
+                  type="button"
+                  onClick={timeline.onToggle}
+                  className={[
+                    "border-b-2 px-3 py-2 font-mono text-[13px] uppercase tracking-[0.14em] transition-colors",
+                    !timeline.colapsado
+                      ? "border-cian text-cian font-bold"
+                      : "border-transparent text-texto-2 hover:border-tactico hover:text-texto",
+                  ].join(" ")}
+                >
+                  {timeline.colapsado ? "▶ Timeline" : "▲ Timeline"}
+                </button>
+              ) : null}
             </nav>
 
             <button
