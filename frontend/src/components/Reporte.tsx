@@ -30,6 +30,22 @@ const colorVeredicto: Record<Veredicto, string> = {
   retenido: "var(--color-sello-retenido)",
 };
 
+function subtituloVeredicto(
+  veredicto: Veredicto,
+  confianza: { porcentaje: number },
+  sinHallazgos: boolean
+): string {
+  if (veredicto === "revisar") {
+    return sinHallazgos
+      ? `Sin hallazgos puntuales · Revisión obligatoria por diseño de seguridad (confianza ${confianza.porcentaje}%)`
+      : `Confianza moderada (${confianza.porcentaje}%) · Revisión obligatoria por diseño`;
+  }
+  if (veredicto === "retenido") {
+    return `Confianza crítica (${confianza.porcentaje}%) · Despliegue bloqueado`;
+  }
+  return `Confianza plena (${confianza.porcentaje}%) · Integridad verificada`;
+}
+
 const formatoFecha = new Intl.DateTimeFormat("es-AR", {
   day: "2-digit",
   month: "2-digit",
@@ -58,6 +74,7 @@ function SelloVeredicto({ scan }: { scan: Scan }) {
   const veredicto: Veredicto = scan.veredicto ?? "revisar";
   const color = colorVeredicto[veredicto];
   const confianza = calcularConfianza(scan);
+  const sinHallazgos = scan.hallazgos.length === 0;
 
   return (
     <div className="space-y-4">
@@ -138,7 +155,7 @@ function SelloVeredicto({ scan }: { scan: Scan }) {
               {verboVeredicto[veredicto]}
             </h2>
             <p className="font-mono text-[11px] font-medium text-texto-2">
-              Dictamen Operativo Binding
+              {subtituloVeredicto(veredicto, confianza, sinHallazgos)}
             </p>
           </div>
           <div
@@ -609,17 +626,7 @@ export function Reporte({ scan }: { scan: Scan }) {
 
             {/* Recuadro pedagógico e institucional sobre CVE y Ponderación del Índice de Confianza */}
             <div className="mt-6 space-y-4">
-              {/* Box 1: Referencia CVE y Marcos Normativos */}
-              <div className="border-l-4 border-cian bg-cian/5 p-4 rounded-r border border-tactico/60">
-                <h3 className="font-mono text-xs font-bold uppercase tracking-[0.16em] text-cian">
-                  Referencia Normativa: Diccionario CVE & Marcos Internacionales (OWASP / MITRE ATLAS / NIST / ISO)
-                </h3>
-                <p className="mt-1 text-xs leading-relaxed text-texto-2">
-                  Un <strong>CVE</strong> cataloga fallos de seguridad conocidos (<span className="font-mono text-cian font-semibold">CVE-2026-XXXXX</span>). Cada hallazgo se indexa formalmente contra los taxonomías <strong>OWASP Top 10 para LLM</strong>, <strong>MITRE ATLAS (Adversarial Threat Landscape for AI)</strong>, <strong>NIST Cybersecurity Framework</strong> e <strong>ISO/IEC 27001</strong> para garantizar interoperabilidad técnica y cumplimiento operacional.
-                </p>
-              </div>
-
-              {/* Box 2: Explicación Transparente del Cálculo del Índice de Confianza */}
+              {/* Box 1: Explicación Transparente del Cálculo del Índice de Confianza */}
               <div className="border-l-4 border-amber-500 bg-amber-500/5 p-4 rounded-r border border-tactico/60">
                 <h3 className="font-mono text-xs font-bold uppercase tracking-[0.16em] text-amber-400">
                   Ponderación Causal y Cálculo Algorítmico del Índice de Confianza
@@ -646,26 +653,17 @@ export function Reporte({ scan }: { scan: Scan }) {
                 </p>
               </div>
 
-              {/* Box 3: Garantía de Revisión de Amenazas con IA Local */}
-              <div className="border-l-4 border-purple-500 bg-purple-500/5 p-4 rounded-r border border-tactico/60">
-                <h3 className="font-mono text-xs font-bold uppercase tracking-[0.16em] text-purple-300 flex items-center gap-2">
-                  <span>🤖</span>
-                  <span>Garantía de Verificación por IA Local (Triage Soberano)</span>
+              {/* Box 2: Referencia CVE y Marcos Normativos */}
+              <div className="border-l-4 border-cian bg-cian/5 p-4 rounded-r border border-tactico/60">
+                <h3 className="font-mono text-xs font-bold uppercase tracking-[0.16em] text-cian">
+                  Referencia Normativa: Diccionario CVE & Marcos Internacionales (OWASP / MITRE ATLAS / NIST / ISO)
                 </h3>
                 <p className="mt-1 text-xs leading-relaxed text-texto-2">
-                  ¿Cómo se garantiza la precisión en la evaluación de amenazas? Aduana implementa un <strong>Pipeline de Doble Verificación</strong>:
+                  Un <strong>CVE</strong> cataloga fallos de seguridad conocidos (<span className="font-mono text-cian font-semibold">CVE-2026-XXXXX</span>). Cada hallazgo se indexa formalmente contra los taxonomías <strong>OWASP Top 10 para LLM</strong>, <strong>MITRE ATLAS (Adversarial Threat Landscape for AI)</strong>, <strong>NIST Cybersecurity Framework</strong> e <strong>ISO/IEC 27001</strong> para garantizar interoperabilidad técnica y cumplimiento operacional.
                 </p>
-                <ol className="mt-2 text-xs space-y-1 font-mono text-texto-2">
-                  <li className="flex items-start gap-2">
-                    <span className="text-purple-400 font-bold">1. Fase Determinista:</span> Detección léxica estricta de secuencias Unicode BIDI (Trojan Source), firmas Gitleaks y vulnerabilidades auditadas sin falsos positivos.
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <span className="text-purple-400 font-bold">2. Triage LLM Soberano:</span> Un modelo local soberano (Ollama Llama-3.2) analiza el contexto semántico de cada amenaza, evalúa posibles intentos de manipulaciones de prompt (Jailbreaks) y certifica el grado de certeza sin enviar ni un solo byte fuera de la infraestructura.
-                  </li>
-                </ol>
               </div>
 
-              {/* Box 4: Alineación CONEAU & Indicadores Sistemáticos de Auditoría */}
+              {/* Box 3: Alineación CONEAU & Indicadores Sistemáticos de Auditoría */}
               <div className="border-l-4 border-emerald-500 bg-emerald-500/5 p-4 rounded-r border border-tactico/60 space-y-2">
                 <h3 className="font-mono text-xs font-bold uppercase tracking-[0.16em] text-emerald-400 flex items-center gap-2">
                   <span>🏛️</span>
@@ -707,6 +705,15 @@ export function Reporte({ scan }: { scan: Scan }) {
                   <p className="mt-1 text-xs text-texto-2">
                     No se evidenciaron instrucciones maliciosas, caracteres invisibles, vulnerabilidades CVE ni secretos expuestos.
                   </p>
+                  {scan.veredicto === "revisar" || scan.veredicto === "retenido" ? (
+                    <p className="mt-2 font-mono text-[11px] leading-relaxed text-texto-2">
+                      El dictamen{" "}
+                      <strong style={{ color: colorVeredicto[scan.veredicto] }}>
+                        {verboVeredicto[scan.veredicto]}
+                      </strong>{" "}
+                      se mantiene por diseño de seguridad: la revisión humana es obligatoria aun sin hallazgos puntuales, y el Índice de Confianza refleja ese techo ({calcularConfianza(scan).porcentaje}%).
+                    </p>
+                  ) : null}
                 </div>
               ) : (
                 <div className="mt-3 grid gap-6">

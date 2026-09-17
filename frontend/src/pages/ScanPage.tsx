@@ -62,7 +62,16 @@ export function ScanPage() {
 
   return (
     <div className="min-h-svh bg-noche text-texto">
-      <Header />
+      <Header
+        timeline={
+          scan?.estado === "terminado"
+            ? {
+                colapsado: timelineColapsado,
+                onToggle: () => setTimelineColapsado((prev) => !prev),
+              }
+            : undefined
+        }
+      />
 
       {isLoading ? (
         <section className="mx-auto w-full max-w-6xl px-4 pt-12">
@@ -118,13 +127,6 @@ export function ScanPage() {
                 <span className="h-2 w-2 rounded-full bg-emerald-400" />
                 TIMELINE DEL ANÁLISIS COMPLETADO (COLAPSADO POR DEFECTO)
               </span>
-              <button
-                type="button"
-                onClick={() => setTimelineColapsado((prev) => !prev)}
-                className="inline-flex items-center gap-2 rounded border border-cian/60 bg-panel/90 px-3 py-1.5 font-bold text-cian hover:bg-cian/20 hover:text-white transition-all shadow-md"
-              >
-                <span>{timelineColapsado ? "▶ Ver Timeline Completo" : "▲ Colapsar Timeline"}</span>
-              </button>
             </div>
 
             <div
