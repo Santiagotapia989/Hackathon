@@ -428,27 +428,14 @@ function SelloVeredicto({ scan }: { scan: Scan }) {
               {confianza.etiqueta}
             </p>
           </div>
-          <div className="flex flex-col items-center gap-3 shrink-0">
-            <div className="h-14 w-14 rounded-full border-2 border-cian/80 bg-noche/80 flex items-center justify-center shrink-0">
-              <span className="font-mono text-xs font-extrabold text-cian">
-                {confianza.porcentaje >= 80
-                  ? "ALTO"
-                  : confianza.porcentaje >= 40
-                    ? "MEDIO"
-                    : "CRÍTICO"}
-              </span>
-            </div>
-            <div className="h-14 w-14 rounded-full border-2 border-cian/80 bg-white flex items-center justify-center shrink-0 relative overflow-hidden">
-              <span className="font-mono text-xs font-extrabold text-cian">
-                ISO
-              </span>
-              <img
-                src="/iso.png"
-                alt="Logo ISO"
-                className="absolute inset-0 h-full w-full object-cover"
-                onError={(e) => e.currentTarget.remove()}
-              />
-            </div>
+          <div className="h-14 w-14 rounded-full border-2 border-cian/80 bg-noche/80 flex items-center justify-center shrink-0">
+            <span className="font-mono text-xs font-extrabold text-[#2A5CAA]">
+              {confianza.porcentaje >= 80
+                ? "ALTO"
+                : confianza.porcentaje >= 40
+                  ? "MEDIO"
+                  : "CRÍTICO"}
+            </span>
           </div>
         </div>
       </div>
