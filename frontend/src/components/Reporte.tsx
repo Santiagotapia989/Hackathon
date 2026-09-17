@@ -330,7 +330,7 @@ function CaratulaImpresion({ scan }: { scan: Scan }) {
         </h1>
       </div>
 
-      <div className="-mt-6 flex flex-col items-center gap-6">
+      <div className="-mt-20 flex flex-col items-center gap-6">
         <img
           src="/logo.png"
           alt="Logo FIE"
