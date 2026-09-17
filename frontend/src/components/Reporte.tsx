@@ -110,32 +110,9 @@ function SelloVeredicto({ scan }: { scan: Scan }) {
         </div>
       </div>
 
-      {/* Tarjetas Principales de Alto Nivel: Índice de Confianza y Veredicto Vinculante */}
+      {/* Tarjetas Principales de Alto Nivel: Veredicto Vinculante e Índice de Confianza */}
       <div className="grid gap-4 grid-cols-2">
-        {/* Tarjeta 1: Hero Índice de Confianza */}
-        <div className="flex items-center justify-between border-2 border-cian/60 bg-cian/10 p-5 rounded-lg shadow-lg">
-          <div className="space-y-1">
-            <span className="font-mono text-[10px] font-bold uppercase tracking-[0.2em] text-cian">
-              MÉTRICA GLOBAL DE SEGURIDAD
-            </span>
-            <div className="flex items-baseline gap-2">
-              <span className="font-mono text-3xl sm:text-4xl font-black text-cian">
-                {confianza.porcentaje}%
-              </span>
-              <span className="font-mono text-xs font-semibold text-texto-2">/ 100%</span>
-            </div>
-            <p className="font-mono text-[11px] font-medium text-texto font-sans">
-              {confianza.etiqueta}
-            </p>
-          </div>
-          <div className="h-14 w-14 rounded-full border-2 border-cian/80 bg-noche/80 flex items-center justify-center shrink-0">
-            <span className="font-mono text-xs font-extrabold text-cian">
-              {confianza.porcentaje >= 80 ? "ALTO" : confianza.porcentaje >= 40 ? "MEDIO" : "CRÍTICO"}
-            </span>
-          </div>
-        </div>
-
-        {/* Tarjeta 2: Hero Veredicto Vinculante */}
+        {/* Tarjeta 1: Hero Veredicto Vinculante */}
         <div
           className="flex items-center justify-between border-2 p-5 rounded-lg shadow-lg"
           style={{
@@ -164,6 +141,29 @@ function SelloVeredicto({ scan }: { scan: Scan }) {
             style={{ borderColor: color, backgroundColor: `${color}20` }}
           >
             <span className="h-4 w-4 rounded-full animate-pulse" style={{ backgroundColor: color }} />
+          </div>
+        </div>
+
+        {/* Tarjeta 2: Hero Índice de Confianza */}
+        <div className="flex items-center justify-between border-2 border-cian/60 bg-cian/10 p-5 rounded-lg shadow-lg">
+          <div className="space-y-1">
+            <span className="font-mono text-[10px] font-bold uppercase tracking-[0.2em] text-cian">
+              MÉTRICA GLOBAL DE SEGURIDAD
+            </span>
+            <div className="flex items-baseline gap-2">
+              <span className="font-mono text-3xl sm:text-4xl font-black text-cian">
+                {confianza.porcentaje}%
+              </span>
+              <span className="font-mono text-xs font-semibold text-texto-2">/ 100%</span>
+            </div>
+            <p className="font-mono text-[11px] font-medium text-texto font-sans">
+              {confianza.etiqueta}
+            </p>
+          </div>
+          <div className="h-14 w-14 rounded-full border-2 border-cian/80 bg-noche/80 flex items-center justify-center shrink-0">
+            <span className="font-mono text-xs font-extrabold text-cian">
+              {confianza.porcentaje >= 80 ? "ALTO" : confianza.porcentaje >= 40 ? "MEDIO" : "CRÍTICO"}
+            </span>
           </div>
         </div>
       </div>
