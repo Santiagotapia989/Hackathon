@@ -1,215 +1,174 @@
-# Aduana
+<div align="center">
 
-**Control de seguridad local para agentes de IA que programan.**
+# 🏆 HACKATHON CYBER.AR 2026
 
-Proyecto presentado en el **Hackathon Nacional de Ciberdefensa CYBER.AR 2026** — *"La Ciberdefensa necesita de todos"* — dentro del **Eje 2: Inteligencia artificial para la defensa de redes e infraestructura**.
+### Hackathon Nacional de Ciberdefensa — *"La Ciberdefensa necesita de todos"*
+
+<img src="frontend/public/logo.png" alt="Aduana" width="140" />
+
+## Eje 2 — Inteligencia artificial para la defensa de redes e infraestructura
+
+> Desarrollar herramientas basadas en inteligencia artificial que permitan **detectar, priorizar y responder** ante ataques, con capacidad de **ejecución local** y **resistencia frente a intentos de manipulación**.
+
+</div>
 
 ---
 
-## El problema
+# 🛂 ADUANA
+
+**Control de seguridad local para agentes de IA que programan.**
+
+Aduana se para como una aduana real entre el mundo exterior y el agente de IA: antes de que un repositorio o un paquete llegue al asistente, lo descarga en un entorno aislado, lo analiza (sin ejecutar nada de su contenido) y emite un veredicto vinculante:
+
+### 🟢 LIBERADO · 🟡 REVISAR · 🔴 RETENIDO
+
+El agente consulta a Aduana por **MCP** (`check_package`, `check_repo`) antes de instalar o abrir algo, y una persona puede seguir el análisis en vivo desde la API, la CLI o la interfaz web, que genera un **informe ejecutivo formal imprimible** con sustentación normativa.
+
+---
+
+## ⚠️ El problema
 
 Los asistentes de IA para programar (Cursor, Claude Code, Copilot, agentes MCP) instalan paquetes y clonan repositorios de terceros sin que un humano revise el contenido antes. Eso abre una superficie de ataque nueva y poco vigilada:
 
-- **Prompt injection oculta.** Instrucciones invisibles (caracteres Unicode Tags, comentarios HTML, bloques base64) escondidas en un `README.md` o `.cursorrules` que intentan manipular al agente para que filtre secretos o ejecute comandos.
-- **Typosquatting y dependencias maliciosas.** Paquetes con nombres confundibles o scripts `postinstall` que ejecutan código al instalar.
-- **Secretos filtrados.** Tokens y credenciales versionados en el historial de un repo que el agente termina leyendo y, potencialmente, reenviando.
+- **Prompt injection oculta** — instrucciones invisibles (caracteres Unicode Tags, comentarios HTML, bloques base64) escondidas en un `README.md` o `.cursorrules` que intentan manipular al agente para que filtre secretos o ejecute comandos.
+- **Typosquatting y dependencias maliciosas** — paquetes con nombres confundibles o scripts `postinstall` que ejecutan código al instalar.
+- **Secretos filtrados** — tokens y credenciales versionados en el historial de un repo que el agente termina leyendo y, potencialmente, reenviando.
 
-## La solución
-
-**Aduana** se para como una aduana real entre el mundo exterior y el agente de IA: antes de que un repo o un paquete llegue al asistente, lo descarga en un entorno aislado, lo analiza (sin ejecutar nada de su contenido) y emite un veredicto:
-
-🟢 **liberado** · 🟡 **revisar** · 🔴 **retenido**
-
-El agente consulta a Aduana por MCP (`check_package`, `check_repo`) antes de instalar o abrir algo, y una persona puede seguir el análisis en vivo desde la API, la CLI o la interfaz web.
-
-### Motores de detección (deterministas + IA)
+## 🔍 Módulos de detección (deterministas + IA soberana)
 
 | Módulo | Qué detecta |
 |---|---|
-| **Unicode** | Caracteres invisibles, Unicode Tags (mensajes ocultos), controles bidireccionales, ancho-cero |
 | **Instrucciones** | Patrones de manipulación dirigidos a agentes de IA en archivos sensibles (README, `.cursorrules`, etc.) |
+| **Unicode oculto** | Caracteres invisibles, Unicode Tags (mensajes encubiertos), controles bidireccionales, ancho-cero — con vista "rayos X" del texto aparente vs. interpretado |
 | **Dependencias** | Typosquatting, paquetes inexistentes o recién creados, scripts de instalación sospechosos |
-| **Secretos** | Tokens y credenciales en el árbol y en el historial de git (vía `gitleaks`) |
-| **Triage con IA** *(opcional, local)* | Un modelo servido por **Ollama** ayuda a clasificar candidatos ambiguos — nunca puede bajar la severidad de un hallazgo determinista |
+| **Credenciales** | Tokens y secretos en el árbol y en el historial de git (vía `gitleaks`) |
+| **Triage con IA** *(opcional, 100% local)* | Un modelo servido por **Ollama** clasifica candidatos ambiguos — **nunca puede bajar la severidad de un hallazgo determinista** |
 
-## Por qué encaja en el Eje 2 y en la soberanía tecnológica
+## ⚖️ Marco normativo y de amenazas
 
-- **Ejecuta 100% en infraestructura propia.** El servidor escucha solo en `127.0.0.1`, nunca en `0.0.0.0`. El triage por IA usa **Ollama local**; si no está disponible, el sistema sigue funcionando en modo *fail-safe* (los hallazgos deterministas ya alcanzan para el veredicto).
-- **No depende de servicios externos** para analizar: las únicas conexiones salientes son a los registros públicos de paquetes (npm/PyPI) y a hosts de repos permitidos (GitHub/GitLab), sobre una allowlist explícita.
-- **Nunca ejecuta código del contenido analizado.** Todo lo descargado vive en cuarentena (`/tmp/aduana/<id>`) y se borra al terminar, se haya usado o no.
-- **Adopción real:** se integra al flujo existente de cualquier agente de IA vía MCP (protocolo estándar), sin cambiar cómo la persona ya trabaja.
+El informe ejecutivo se emite con sustentación normativa **determinista** (las citas legales nunca las genera el LLM — están fuera de su alcance estructuralmente):
 
-## Estado del proyecto
+| Marco | Rol |
+|---|---|
+| **MITRE ATLAS** | Framework técnico de amenazas contra sistemas con IA: `AML.T0051` (LLM Prompt Injection), `AML.T0010` (AI Supply Chain Compromise), evasión por ofuscación. Aduana es una mitigación de frontera que intercepta el kill-chain en el punto de ingesta. |
+| **Res. 1380/2019 — MinDefensa, Art. 1°** | Ciberdefensa = *anticipar y prevenir* ciberataques y ciberexplotación: la evaluación en cuarentena antes de la ingesta es anticipación por diseño. |
+| **Ley 23.554 · Decreto 703/18 · Res. 829/19 · Res. 1523/19** | Defensa Nacional, DPDN, Estrategia Nacional de Ciberseguridad e Infraestructuras Críticas de Información. |
+
+## 🇦🇷 Por qué encaja en el Eje 2
+
+| Requisito del eje | Cómo lo cumple Aduana |
+|---|---|
+| **Detectar** | 4 analizadores deterministas + SAST + triage semántico con LLM local |
+| **Priorizar** | Severidades, Índice de Confianza con penalizaciones ponderadas y techos por veredicto |
+| **Responder** | Respuesta preventiva: el veredicto vinculante retiene el artefacto *antes* del daño, con remediación obligatoria por hallazgo |
+| **Ejecución local** | Solo `127.0.0.1`, Ollama local, cuarentena aislada con limpieza garantizada, egreso por allowlist explícita |
+| **Resistencia a manipulación** | Doble capa: detecta prompt injection contra el agente **y** el propio sistema es resistente — el LLM nunca puede degradar hallazgos deterministas, el input va en delimitador `<contenido_no_confiable>` neutralizado con cap anti Model-DoS |
+| **Control de datos** | Nada sale de la máquina; sin Ollama el sistema sigue dando veredicto (*fail-safe*) |
+
+## 📊 Estado del proyecto
 
 | Componente | Estado |
 |---|---|
-| **Motor de análisis** (`src/motor/`) | ✅ Completo — 4 analizadores + SAST + triage IA + scoring + InformeEjecutivo |
-| **Plataforma** (`src/plataforma/`) — API, ingesta, cola, SSE, DB, CLI, MCP | ✅ Completo |
-| **Integración Motor + Plataforma** | ✅ Mergeada, typecheck/build/tests en verde (136/136) |
-| **Frontend** (`frontend/`) | ✅ Rediseño UI/UX — build y lint en verde |
+| **Motor de análisis** (`src/motor/`) | ✅ 4 analizadores + SAST + triage IA + scoring + InformeEjecutivo |
+| **Plataforma** (`src/plataforma/`) | ✅ API, ingesta, cola, SSE, DB, CLI, MCP |
+| **Integración Motor + Plataforma** | ✅ Typecheck/build/tests en verde (136/136) |
+| **Frontend** (`frontend/`) | ✅ UI/UX completa — informe imprimible con carátula formal |
 
-## Arquitectura
+## 🏗️ Arquitectura
 
 ```
 src/
-├── shared/contrato.ts     # Contrato congelado: tipos compartidos entre motor, plataforma y front
-├── motor/                 # Analizadores deterministas + triage IA + veredicto
-│   ├── analizadores/      # unicode, instrucciones, dependencias, secretos
-│   ├── llm/ollama.ts       # Cliente del modelo local
+├── shared/contrato.ts      # Contrato congelado: tipos compartidos entre motor, plataforma y front
+├── motor/                  # Analizadores deterministas + triage IA + veredicto
+│   ├── analizadores/       # unicode, instrucciones, dependencias, secretos
+│   ├── llm/ollama.ts       # Cliente del modelo local + sustentación normativa determinista
 │   ├── registro/cliente.ts # Verificación de paquetes en npm/PyPI (allowlist de hosts)
 │   └── pipeline.ts         # Orquesta los analizadores y calcula el veredicto
 └── plataforma/             # API HTTP, ingesta, persistencia, MCP, CLI
     ├── api/                # /scans, /agente, /health
     ├── ingesta/            # Clonado de repos y descarga de paquetes (cuarentena)
-    ├── db.ts                # SQLite (WAL)
-    ├── mcp.ts               # Servidor MCP por stdio (check_package, check_repo)
-    ├── cli.ts               # CLI `aduana scan <objetivo>`
-    └── server.ts            # Express en 127.0.0.1
+    ├── db.ts               # SQLite (WAL)
+    ├── mcp.ts              # Servidor MCP por stdio (check_package, check_repo)
+    ├── cli.ts              # CLI `aduana scan <objetivo>`
+    └── server.ts           # Express en 127.0.0.1
 
 frontend/
-├── src/pages/             # Inicio, historial, escaneo y agente
-├── src/components/        # Layout, inspección en curso y reporte
-├── src/lib/               # Cliente API, mocks, schemas y utilidades
-└── tests/                 # Pruebas auxiliares del frontend
+├── src/pages/              # Inicio, historial, escaneo y agente
+├── src/components/         # Header, inspección en curso y reporte formal imprimible
+├── src/lib/                # Cliente API, mocks, schemas y utilidades
+└── tests/                  # Pruebas auxiliares del frontend
 ```
 
-## Frontend
+## 🖥️ Frontend
 
-### Objetivo del frontend
+Interfaz de control previo: ingesta de objetivos, seguimiento en vivo del pipeline (SSE) e informe ejecutivo con formato de documento formal — dictamen, balance de hallazgos interactivo, detalle por módulo e impresión con carátula institucional.
 
-Brindar un punto de control previo y visual para evaluar el riesgo de incorporar código externo en flujos asistidos por agentes, facilitando la detección temprana de instrucciones ocultas, caracteres invisibles, dependencias sospechosas y secretos expuestos.
-
-### Alcance del sistema
-
-- La interfaz permite ingresar objetivos de inspección, consultar el estado del análisis, revisar hallazgos y presentar el informe final.
-- El frontend consume la API bajo `/api` para crear escaneos, obtener el historial, consultar un escaneo puntual y suscribirse a eventos de progreso.
-- El procesamiento, almacenamiento y ejecución de las reglas de análisis corresponden al backend/servicio de inspección.
-- El modo `VITE_USE_MOCKS=true` permite demostrar el flujo completo de la interfaz sin depender del backend.
-- El frontend no ejecuta el código inspeccionado: solo muestra evidencia, métricas y resultados devueltos por la capa de análisis.
-
-### Funcionalidades
-
-- Creación de inspecciones a partir de una URL de repositorio o un paquete con prefijo `npm:` / `pypi:`.
-- Detección automática del tipo de objetivo ingresado.
-- Listado de los últimos elementos inspeccionados y acceso al historial completo.
-- Seguimiento de escaneos en curso mediante eventos y actualización periódica.
-- Visualización del informe final con veredicto, severidad, módulo, evidencia, remediación y contexto de CVEs cuando corresponde.
-- Comparación entre texto visual aparente y texto interpretado para hallazgos Unicode/invisibles.
-- Impresión del documento desde la vista del reporte.
-- Modo demostración con mocks para correr la interfaz sin backend.
-
-### Casos de uso
-
-- Control previo de seguridad antes de habilitar código o dependencias para agentes autónomos.
-- Revisión de riesgos de cadena de suministro: instrucciones ocultas, caracteres invisibles, dependencias alucinadas y secretos expuestos.
-- Triage visual de hallazgos por severidad y módulo para priorizar remediaciones.
-- Demostración funcional del producto durante el hackathon sin necesidad de levantar servicios externos.
-- Generación de una vista formal del informe para revisión técnica u operativa.
-
-### Frameworks y librerías del frontend
-
-- React 18
-- TypeScript
-- Vite
-- Tailwind CSS 4
-- TanStack Query
-- React Router
-- Zod
-- Oxlint
-- Fontsource: Atkinson Hyperlegible y JetBrains Mono
-
-### Configuración del frontend
+- **Stack:** React 18 · TypeScript · Vite · Tailwind CSS 4 · TanStack Query · React Router · Zod · Oxlint
+- **Tipografía:** Atkinson Hyperlegible + JetBrains Mono (Fontsource)
+- **Rutas:** `/` nueva inspección · `/escaneos/:id` escaneo e informe · `/historial` · `/agente`
+- **Demo sin backend:** `VITE_USE_MOCKS=true` corre la interfaz con datos sintéticos
 
 ```bash
 cd frontend
 npm install
-```
-
-Creá un archivo `.env` a partir de `frontend/.env.example`.
-
-- `VITE_USE_MOCKS=true`: corre la interfaz con datos de demostración, sin backend.
-- `VITE_USE_MOCKS=false` o variable ausente: usa la API real bajo `/api`.
-
-Cuando corre contra backend, Vite proxifica `/api` hacia `http://localhost:3000`.
-
-### Scripts del frontend
-
-Desde `frontend/`:
-
-```bash
-npm run dev      # levanta el servidor de desarrollo
+npm run dev      # http://localhost:5173 (proxifica /api → :3000)
 npm run build    # typecheck + build de producción
 npm run lint     # oxlint
 npm test         # pruebas de seguridad
-npm run preview  # sirve el build generado
 ```
 
-### Rutas principales del frontend
-
-- `/`: creación de una nueva inspección.
-- `/escaneos/:id`: estado del escaneo e informe final.
-- `/historial`: listado de inspecciones anteriores.
-- `/agente`: vista relacionada con el agente.
-
-## Uso rápido del backend
+## ⚙️ Backend — uso rápido
 
 ```bash
 npm install
 
-# Levantar la API (motor real)
-npm run server
-# … o con un motor de prueba, sin el análisis real:
-npm run server:stub
+npm run server       # API real en 127.0.0.1:3000
+npm run server:stub  # API con motor de prueba, sin análisis real
 
-# Analizar un directorio local directamente con el motor (sin pasar por HTTP)
-npm run motor -- ./algun-directorio
+npm run motor -- ./algun-directorio          # análisis directo, sin HTTP
+npm run cli -- scan npm:picocolors           # CLI end-to-end
+npm run cli -- scan https://github.com/o/r
 
-# CLI end-to-end contra la API
-npm run cli -- scan npm:picocolors
-npm run cli -- scan https://github.com/owner/repo
-
-# Servidor MCP por stdio (para conectar un agente de IA)
-npm run mcp
-
-# Base de datos de demo
-npm run db:reset && npm run db:seed
+npm run mcp          # servidor MCP por stdio (para conectar un agente)
+npm run db:reset && npm run db:seed          # base de demo
 ```
 
-### API HTTP (resumen)
+### API HTTP
 
 | Método | Ruta | Qué hace |
 |---|---|---|
-| `POST` | `/api/scans` | Crea un escaneo (`{ objetivo: "npm:<n>" \| "pypi:<n>" \| "https://github.com/<owner>/<repo>" }`), responde `201 { id }` |
-| `GET` | `/api/scans/:id/events` | Stream SSE del escaneo: `etapa` → `hallazgo` → `veredicto` (incluye `informeEjecutivo`) |
-| `GET` | `/api/scans/:id` | Escaneo completo con objeto `Scan` e `informeEjecutivo` |
-| `GET` | `/api/scans/:id/reporte-defensa` | Reporte estructurado de cumplimiento normativo (NIST, ISO 27001/31000, MITRE ATLAS) |
+| `POST` | `/api/scans` | Crea un escaneo (`npm:` / `pypi:` / URL de repo), responde `201 { id }` |
+| `GET` | `/api/scans/:id/events` | Stream SSE: `etapa` → `hallazgo` → `veredicto` |
+| `GET` | `/api/scans/:id` | Escaneo completo con `informeEjecutivo` |
+| `GET` | `/api/scans/:id/reporte-defensa` | Reporte estructurado de cumplimiento normativo |
 | `GET` | `/api/health` | Estado de Ollama, gitleaks y modo offline |
-| `POST` | `/api/agente/check-package` | Usado por el MCP para chequear un paquete antes de instalarlo |
-| `POST` | `/api/agente/check-repo` | Usado por el MCP para escanear un repo antes de abrirlo |
+| `POST` | `/api/agente/check-package` | Chequeo de paquete antes de instalar (MCP) |
+| `POST` | `/api/agente/check-repo` | Escaneo de repo antes de abrirlo (MCP) |
 
-## Testing
-
-Backend:
+## 🧪 Testing
 
 ```bash
+# Backend
 npm run typecheck   # TypeScript estricto, 0 errores
-npm run build       # Compilación completa a dist/
-npm test            # Vitest — 136 tests pasados (motor + plataforma + integración)
+npm run build       # Compilación a dist/
+npm test            # Vitest — motor + plataforma + integración
+
+# Frontend
+cd frontend && npm run lint && npm run build && npm test
 ```
 
-Frontend:
+> **Requisito:** [`gitleaks`](https://github.com/gitleaks/gitleaks) instalado (o en `bin/`) para que el módulo de credenciales detecte hallazgos reales; sin él, el motor degrada en *fail-safe* sin romper el resto del análisis.
 
-```bash
-cd frontend
-npm run lint        # Oxlint
-npm run build       # TypeScript + Vite build
-npm test            # Pruebas de seguridad del frontend
-```
+## ✅ Condiciones del hackathon
 
-Requiere [`gitleaks`](https://github.com/gitleaks/gitleaks) instalado en el sistema (o en `bin/`) para que el módulo de secretos detecte hallazgos reales; si no está disponible, el motor degrada en modo *fail-safe* sin hallazgos de ese módulo, sin romper el resto del análisis.
+- **Solo datos simulados o públicos** — los fixtures de demo son sintéticos; el análisis real solo consulta metadata pública de npm/PyPI, nunca ejecuta contenido inspeccionado.
+- **Demostración funcional** — flujo completo de punta a punta: escaneo → eventos en vivo → veredicto → limpieza de cuarentena → MCP → informe formal imprimible.
+- **Soberanía tecnológica** — todo el análisis corre local, sin enviar datos a terceros.
 
-## Condiciones del hackathon cumplidas
+---
 
-- **Solo datos simulados o públicos.** Los fixtures de demo (`repo-limpio`, `repo-malicioso`) son sintéticos; el análisis de paquetes reales solo consulta metadata pública de npm/PyPI, nunca ejecuta su contenido.
-- **Demostración funcional.** Flujo completo probado de punta a punta: creación de escaneo → eventos en vivo por SSE → veredicto → limpieza de cuarentena → consulta MCP desde un agente → visualización en el frontend.
-- **Soberanía tecnológica.** Todo el análisis corre local, sin enviar datos a terceros.
+<div align="center">
+
+**Documento emitido por la plataforma soberana Aduana** · Eje 2 — IA para la defensa de redes e infraestructura
+
+</div>
