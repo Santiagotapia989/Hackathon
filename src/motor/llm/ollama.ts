@@ -3,7 +3,7 @@
 // Fallback si Ollama no está disponible: la etapa triage_ia queda en error.
 
 import { z } from "zod";
-import { AnalisisIA, InformeEjecutivo, Scan } from "../../shared/contrato.js";
+import { AnalisisIA, InformeEjecutivo, NormaAplicable, Scan } from "../../shared/contrato.js";
 
 const OLLAMA_HOST = process.env["ADUANA_OLLAMA_HOST"] ?? "http://localhost:11434";
 const MODELO = process.env["ADUANA_MODELO"] ?? "gemma2:2b";
@@ -167,6 +167,55 @@ export async function triage(
   return null;
 }
 
+// ─── Sustentación normativa (determinista) ─────────────────────────────────
+// Las citas legales nunca las genera el LLM: son datos fijos para evitar
+// alucinaciones normativas. Se inyectan tanto en el fallback como sobre la
+// respuesta validada del modelo.
+
+const MARCO_NORMATIVO: NormaAplicable[] = [
+  {
+    norma: "Ley 23.554 — Defensa Nacional",
+    aporte: "La Defensa Nacional tiene por finalidad garantizar la soberanía, la integridad territorial y la capacidad de autodeterminación.",
+    cumplimiento: "La inspección protege el activo «agente de IA + base de código» como recurso del instrumento digital.",
+  },
+  {
+    norma: "Decreto 703/18 — Directiva de Política de Defensa Nacional",
+    aporte: "La política de ciberdefensa se orienta a la reducción gradual de vulnerabilidades en activos estratégicos.",
+    cumplimiento: "El escaneo previo a la ingesta reduce la superficie de ataque de la cadena de suministro de software.",
+  },
+  {
+    norma: "Resolución 1380/2019 — Ministerio de Defensa, Art. 1°",
+    aporte: "Define la ciberdefensa como acciones y capacidades para anticipar y prevenir ciberataques y ciberexplotación.",
+    cumplimiento: "El artefacto fue evaluado en cuarentena aislada antes de cualquier ingesta al entorno operativo: anticipación y prevención por diseño.",
+  },
+  {
+    norma: "Resolución 829/19 — Estrategia Nacional de Ciberseguridad",
+    aporte: "Establece principios y objetivos para la protección de las Infraestructuras Críticas de Información del país.",
+    cumplimiento: "El pipeline preserva la confidencialidad, integridad y disponibilidad del activo evaluado sin egreso de datos.",
+  },
+  {
+    norma: "Resolución 1523/19, Anexo II",
+    aporte: "Define las Infraestructuras Críticas de Información esenciales para las funciones vitales del Estado.",
+    cumplimiento: "Marco que habilita tratar el entorno de desarrollo asistido por IA como activo protegible.",
+  },
+  {
+    norma: "MITRE ATLAS — Adversarial Threat Landscape for AI Systems",
+    aporte: "Taxonomía de tácticas y técnicas de amenazas adversarias contra sistemas con IA: prompt injection (AML.T0051), compromiso de la cadena de suministro de IA (AML.T0010) y evasión por ofuscación.",
+    cumplimiento: "Cada hallazgo se indexa contra ATLAS; la inspección intercepta el kill-chain en el punto de ingesta, antes de que el contenido alcance el contexto del agente.",
+  },
+];
+
+function construirJustificacionNormativa(scan: Scan): string {
+  const veredicto = scan.veredicto ?? "retenido";
+  if (veredicto === "retenido") {
+    return "Conforme a la definición de ciberdefensa del Art. 1° de la Res. 1380/2019 (anticipar y prevenir ciberataques y ciberexplotación), un artefacto con vectores de afectación activos —indexados contra MITRE ATLAS— no puede ingresar al entorno operativo. La retención constituye la medida preventiva prevista para evitar la ocurrencia del incidente.";
+  }
+  if (veredicto === "revisar") {
+    return "Conforme a la Res. 1380/2019, el artefacto requiere supervisión humana obligatoria y remediación de las observaciones indexadas contra MITRE ATLAS previo a su habilitación en el entorno operativo.";
+  }
+  return "El artefacto no presenta vectores indexables en MITRE ATLAS ni hallazgos deterministas: se libera a entorno controlado conforme al ciclo anticipación–prevención de la Res. 1380/2019.";
+}
+
 // ─── Informe Ejecutivo ──────────────────────────────────────────────────────
 
 export function generarInformeEjecutivoFallback(scan: Scan): InformeEjecutivo {
@@ -195,7 +244,10 @@ export function generarInformeEjecutivoFallback(scan: Scan): InformeEjecutivo {
       "2. Objetivo y Alcance Técnico",
       "3. Diagnóstico de Hallazgos y Severidad",
       "4. Veredicto Final y Dictamen de Liberación",
+      "5. Marco Normativo",
     ],
+    marcoNormativo: MARCO_NORMATIVO,
+    justificacionNormativa: construirJustificacionNormativa(scan),
     desarrollo: `El proceso de escaneo finalizó con veredicto '${scan.veredicto ?? "retenido"}'. Se detectaron ${totalHallazgos} hallazgo(s) distribuidos en: Críticos: ${criticas}, Altos: ${altas}, Medios: ${medias}, Bajos: ${bajas}.`,
     conclusion: scan.veredicto === "liberado"
       ? "El componente evaluado cumple con los criterios mínimos de seguridad requeridos. Liberado para entorno controlado."
@@ -239,6 +291,8 @@ export async function generarInformeEjecutivo(
 - Severidades: Críticas: ${scan.resumen?.porSeveridad.critica ?? 0}, Altas: ${scan.resumen?.porSeveridad.alta ?? 0}, Medias: ${scan.resumen?.porSeveridad.media ?? 0}, Bajas: ${scan.resumen?.porSeveridad.baja ?? 0}
 - Módulos: Instrucciones: ${scan.resumen?.porModulo.instrucciones ?? 0}, Unicode: ${scan.resumen?.porModulo.unicode ?? 0}, Dependencias: ${scan.resumen?.porModulo.dependencias ?? 0}, Secretos: ${scan.resumen?.porModulo.secretos ?? 0}
 
+Criterio de redacción: el informe se encuadra en la ciberdefensa argentina (anticipación y prevención de ciberataques y ciberexplotación, Res. 1380/2019 MinDefensa) y los hallazgos se indexan contra MITRE ATLAS (AML.T0051 prompt injection, AML.T0010 compromiso de cadena de suministro de IA, evasión por ofuscación). Redactá el desarrollo y la conclusión en esos términos, en español formal. NO inventes números de norma: el marco normativo se adjunta por fuera del modelo.
+
 Devolvé ÚNICAMENTE un objeto JSON con la propiedad principal "informeEjecutivo" respetando exactamente la estructura pedida.`;
 
   try {
@@ -251,7 +305,7 @@ Devolvé ÚNICAMENTE un objeto JSON con la propiedad principal "informeEjecutivo
           {
             role: "system",
             content:
-              "Sos un Arquitecto de Ciberseguridad e Investigador de Amenazas especializado en entornos de Defensa y Soberanía Tecnológica. Tu objetivo es auditar y proponer mejoras y un informe ejecutivo preciso en formato JSON.",
+              "Sos un Arquitecto de Ciberseguridad e Investigador de Amenazas especializado en entornos de Defensa y Soberanía Tecnológica de la República Argentina. Redactás informes ejecutivos en el marco de la ciberdefensa nacional (anticipación y prevención, Res. 1380/2019) con indexación de amenazas contra sistemas de IA según MITRE ATLAS. Tu objetivo es auditar y proponer un informe ejecutivo preciso en formato JSON, en español formal.",
           },
           { role: "user", content: prompt },
         ],
@@ -273,7 +327,13 @@ Devolvé ÚNICAMENTE un objeto JSON con la propiedad principal "informeEjecutivo
     const validacion = InformeEjecutivo.safeParse(objInforme);
 
     if (validacion.success) {
-      return validacion.data;
+      // Sustentación normativa determinista: se superpone sobre lo que haya
+      // generado el modelo — las citas legales no se delegan al LLM.
+      return {
+        ...validacion.data,
+        marcoNormativo: MARCO_NORMATIVO,
+        justificacionNormativa: construirJustificacionNormativa(scan),
+      };
     }
   } catch {
     // Fallback silencioso ante cualquier excepción

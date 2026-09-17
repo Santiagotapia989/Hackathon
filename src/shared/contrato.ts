@@ -98,6 +98,13 @@ export const PersonalInforme = z.object({
 });
 export type PersonalInforme = z.infer<typeof PersonalInforme>;
 
+export const NormaAplicable = z.object({
+  norma: z.string(),
+  aporte: z.string(),
+  cumplimiento: z.string(),
+});
+export type NormaAplicable = z.infer<typeof NormaAplicable>;
+
 export const InformeEjecutivo = z.object({
   cabecera: CabeceraInforme.optional(),
   objetivo: z.string().optional(),
@@ -112,6 +119,8 @@ export const InformeEjecutivo = z.object({
   objetivoRepo: z.string().optional(),
   metricasImpacto: z.array(z.string()).optional(),
   faseEjecucion: z.string().optional(),
+  marcoNormativo: z.array(NormaAplicable).optional(),
+  justificacionNormativa: z.string().optional(),
 });
 export type InformeEjecutivo = z.infer<typeof InformeEjecutivo>;
 

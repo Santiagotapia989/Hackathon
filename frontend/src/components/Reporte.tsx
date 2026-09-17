@@ -46,6 +46,17 @@ function subtituloVeredicto(
   return `Confianza plena (${confianza.porcentaje}%) · Integridad verificada`;
 }
 
+// Fallback de sustentación normativa para escaneos antiguos o mocks que no
+// traen los campos emitidos por el motor (contenido espejo de ollama.ts).
+const MARCO_NORMATIVO_FALLBACK = [
+  { norma: "Ley 23.554 — Defensa Nacional", aporte: "Garantizar la soberanía, la integridad territorial y la capacidad de autodeterminación.", cumplimiento: "La inspección protege el activo «agente de IA + base de código» como recurso del instrumento digital." },
+  { norma: "Decreto 703/18 — DPDN", aporte: "La ciberdefensa se orienta a la reducción gradual de vulnerabilidades en activos estratégicos.", cumplimiento: "El escaneo previo a la ingesta reduce la superficie de ataque de la cadena de suministro." },
+  { norma: "Res. 1380/2019 — MinDefensa, Art. 1°", aporte: "Ciberdefensa: anticipar y prevenir ciberataques y ciberexplotación.", cumplimiento: "Evaluación en cuarentena aislada antes de la ingesta: anticipación y prevención por diseño." },
+  { norma: "Res. 829/19 — Estrategia Nacional de Ciberseguridad", aporte: "Protección de las Infraestructuras Críticas de Información.", cumplimiento: "El pipeline preserva confidencialidad, integridad y disponibilidad sin egreso de datos." },
+  { norma: "Res. 1523/19, Anexo II", aporte: "Define las Infraestructuras Críticas de Información.", cumplimiento: "Marco que habilita tratar el entorno de desarrollo asistido por IA como activo protegible." },
+  { norma: "MITRE ATLAS", aporte: "Taxonomía de tácticas y técnicas de amenazas adversarias contra sistemas con IA (AML.T0051 prompt injection, AML.T0010 supply chain).", cumplimiento: "Cada hallazgo se indexa contra ATLAS; la inspección intercepta el kill-chain en el punto de ingesta." },
+];
+
 const formatoFecha = new Intl.DateTimeFormat("es-AR", {
   day: "2-digit",
   month: "2-digit",
@@ -544,6 +555,60 @@ export function Reporte({ scan }: { scan: Scan }) {
             </div>
           </section>
 
+          {/* 5. MARCO NORMATIVO Y CONFORMIDAD */}
+          <section className="py-6" aria-labelledby="seccion-marco-normativo">
+            <h2
+              id="seccion-marco-normativo"
+              className="font-mono text-sm font-bold uppercase tracking-[0.2em] text-cian"
+            >
+              5. Marco Normativo
+            </h2>
+            <div className="mt-3 text-sm leading-relaxed text-texto space-y-2">
+              <p>
+                El presente informe se emite en el marco de la ciberdefensa
+                definida por el Art. 1° de la Resolución 1380/2019 del
+                Ministerio de Defensa: acciones y capacidades para anticipar y
+                prevenir ciberataques y ciberexplotación. La inspección operada
+                constituye una medida de anticipación y prevención — el
+                artefacto fue evaluado en cuarentena aislada antes de cualquier
+                ingesta al entorno operativo.
+              </p>
+            </div>
+
+            {/* Tabla de normas aplicables */}
+            <div className="mt-4 overflow-x-auto rounded border border-tactico/60">
+              <table className="w-full text-left font-mono text-xs">
+                <thead className="bg-noche/60 border-b border-tactico/50 text-texto-2 uppercase text-[10px] tracking-wider">
+                  <tr>
+                    <th scope="col" className="px-4 py-2.5 font-semibold">Norma</th>
+                    <th scope="col" className="px-4 py-2.5 font-semibold">Qué establece</th>
+                    <th scope="col" className="px-4 py-2.5 font-semibold">Cumplimiento en esta inspección</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-tactico/40">
+                  {(informe?.marcoNormativo ?? MARCO_NORMATIVO_FALLBACK).map((item) => (
+                    <tr key={item.norma}>
+                      <td className="px-4 py-2.5 align-top font-bold text-cian whitespace-nowrap">{item.norma}</td>
+                      <td className="px-4 py-2.5 align-top text-texto-2">{item.aporte}</td>
+                      <td className="px-4 py-2.5 align-top text-texto-2">{item.cumplimiento}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            {informe?.justificacionNormativa ? (
+              <div className="mt-4 border-l-4 border-cian bg-cian/5 p-4 rounded-r border border-tactico/60">
+                <h3 className="font-mono text-xs font-bold uppercase tracking-[0.16em] text-cian">
+                  Justificación normativa del dictamen
+                </h3>
+                <p className="mt-1 text-xs leading-relaxed text-texto-2">
+                  {informe.justificacionNormativa}
+                </p>
+              </div>
+            ) : null}
+          </section>
+
           {/* 6. DESARROLLO */}
           <section className="py-6" aria-labelledby="seccion-desarrollo">
             <h2
@@ -656,10 +721,10 @@ export function Reporte({ scan }: { scan: Scan }) {
               {/* Box 2: Referencia CVE y Marcos Normativos */}
               <div className="border-l-4 border-cian bg-cian/5 p-4 rounded-r border border-tactico/60">
                 <h3 className="font-mono text-xs font-bold uppercase tracking-[0.16em] text-cian">
-                  Referencia Normativa: Diccionario CVE & Marcos Internacionales (OWASP / MITRE ATLAS / NIST / ISO)
+                  Referencia Normativa: Diccionario CVE & MITRE ATLAS
                 </h3>
                 <p className="mt-1 text-xs leading-relaxed text-texto-2">
-                  Un <strong>CVE</strong> cataloga fallos de seguridad conocidos (<span className="font-mono text-cian font-semibold">CVE-2026-XXXXX</span>). Cada hallazgo se indexa formalmente contra los taxonomías <strong>OWASP Top 10 para LLM</strong>, <strong>MITRE ATLAS (Adversarial Threat Landscape for AI)</strong>, <strong>NIST Cybersecurity Framework</strong> e <strong>ISO/IEC 27001</strong> para garantizar interoperabilidad técnica y cumplimiento operacional.
+                  Un <strong>CVE</strong> cataloga fallos de seguridad conocidos (<span className="font-mono text-cian font-semibold">CVE-2026-XXXXX</span>). Cada hallazgo se indexa formalmente contra <strong>MITRE ATLAS (Adversarial Threat Landscape for Artificial Intelligence Systems)</strong> — prompt injection <span className="font-mono">AML.T0051</span>, compromiso de cadena de suministro de IA <span className="font-mono">AML.T0010</span> y evasión por ofuscación — para garantizar interoperabilidad técnica y cumplimiento operacional.
                 </p>
               </div>
 

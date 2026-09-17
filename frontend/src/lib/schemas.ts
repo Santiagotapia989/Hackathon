@@ -89,6 +89,13 @@ export const PersonalInformeSchema = z.object({
 });
 export type PersonalInforme = z.infer<typeof PersonalInformeSchema>;
 
+export const NormaAplicableSchema = z.object({
+  norma: z.string(),
+  aporte: z.string(),
+  cumplimiento: z.string(),
+});
+export type NormaAplicable = z.infer<typeof NormaAplicableSchema>;
+
 export const InformeEjecutivoSchema = z.object({
   // Cabecera formal militar
   cabecera: CabeceraInformeSchema.optional(),
@@ -108,6 +115,10 @@ export const InformeEjecutivoSchema = z.object({
   objetivoRepo: z.string().optional(),
   metricasImpacto: z.array(z.string()).optional(),
   faseEjecucion: z.string().optional(),
+
+  // Sustentación normativa (determinista, no generada por el LLM)
+  marcoNormativo: z.array(NormaAplicableSchema).optional(),
+  justificacionNormativa: z.string().optional(),
 });
 export type InformeEjecutivo = z.infer<typeof InformeEjecutivoSchema>;
 
