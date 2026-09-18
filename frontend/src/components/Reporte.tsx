@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Link } from "react-router-dom";
-import { api } from "../lib/api";
+import { api, USE_MOCKS } from "../lib/api";
 import type {
   Finding,
   Modulo,
@@ -1363,29 +1363,31 @@ export function Reporte({ scan }: { scan: Scan }) {
             </div>
           </section>
 
-          {/* MARCO NORMATIVO — desplegable a todo el ancho al pie del informe;
-              en el documento impreso sigue apareciendo como sección 5 */}
-          <section
-            className="py-6 print:hidden"
-            aria-labelledby="seccion-marco-normativo-pantalla"
-          >
-            <button
-              type="button"
-              id="seccion-marco-normativo-pantalla"
-              onClick={() => setMarcoAbierto((v) => !v)}
-              aria-expanded={marcoAbierto}
-              aria-controls="contenido-marco-normativo"
-              className="w-full border border-tactico bg-panel px-4 py-3.5 font-mono text-xs font-bold uppercase tracking-[0.2em] text-cian hover:border-cian/60 hover:bg-cian/5 transition-colors rounded flex items-center justify-between"
+          {/* MARCO NORMATIVO — desplegable a todo el ancho al pie del informe,
+              solo en modo mock; en el documento impreso sigue siendo la sección 5 */}
+          {USE_MOCKS && (
+            <section
+              className="py-6 print:hidden"
+              aria-labelledby="seccion-marco-normativo-pantalla"
             >
-              <span>Marco Normativo</span>
-              <span aria-hidden="true">{marcoAbierto ? "▲" : "▼"}</span>
-            </button>
-            {marcoAbierto && (
-              <div id="contenido-marco-normativo" className="mt-4">
-                <ContenidoMarcoNormativo informe={informe} />
-              </div>
-            )}
-          </section>
+              <button
+                type="button"
+                id="seccion-marco-normativo-pantalla"
+                onClick={() => setMarcoAbierto((v) => !v)}
+                aria-expanded={marcoAbierto}
+                aria-controls="contenido-marco-normativo"
+                className="w-full border border-tactico bg-panel px-4 py-3.5 font-mono text-xs font-bold uppercase tracking-[0.2em] text-cian hover:border-cian/60 hover:bg-cian/5 transition-colors rounded flex items-center justify-between"
+              >
+                <span>Marco Normativo</span>
+                <span aria-hidden="true">{marcoAbierto ? "▲" : "▼"}</span>
+              </button>
+              {marcoAbierto && (
+                <div id="contenido-marco-normativo" className="mt-4">
+                  <ContenidoMarcoNormativo informe={informe} />
+                </div>
+              )}
+            </section>
+          )}
         </div>
 
         {/* Pie formal del documento */}
