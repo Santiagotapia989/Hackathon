@@ -54,6 +54,27 @@ El informe ejecutivo se emite con sustentación normativa **determinista** (las 
 | **Res. 1380/2019 — MinDefensa, Art. 1°** | Ciberdefensa = *anticipar y prevenir* ciberataques y ciberexplotación: la evaluación en cuarentena antes de la ingesta es anticipación por diseño. |
 | **Ley 23.554 · Decreto 703/18 · Res. 829/19 · Res. 1523/19** | Defensa Nacional, DPDN, Estrategia Nacional de Ciberseguridad e Infraestructuras Críticas de Información. |
 
+## 🔑 Workflow del operador — aprobación humana por token
+
+Cuando el dictamen es `REVISAR` o `RETENIDO`, continuar **no es una decisión de la IA ni del sistema**: la toma un operador humano mediante un token de aprobación. La IA solo puede asumir el riesgo de un artefacto vulnerable cuando el operador lo habilita explícitamente.
+
+1. **La IA consulta SIAR antes de actuar.** `POST /api/agente/check-repo` (o `check-package`, o las tools MCP `check_repo` / `check_package`) devuelve `{ scanId, veredicto }`.
+2. **`LIBERADO`** → la IA continúa con normalidad, sin intervención humana.
+3. **`REVISAR` / `RETENIDO`** → la IA se detiene: no clona ni instala. Le indica al operador que abra el informe en `http://localhost:5173/escaneos/<scanId>`.
+4. **El operador evalúa el informe** — hallazgos, evidencia y remediación — y si decide asumir el riesgo, aprieta **"Generar token de aprobación"** en la tarjeta del dictamen (`POST /api/scans/:id/token`). Con `RETENIDO` la interfaz exige una **doble confirmación** con advertencia de riesgo crítico: aprobar implica aceptar el riesgo.
+5. **El operador le entrega el token a la IA** (formato `SIVAR-XXXX-XXXX-XXXX`). La IA lo presenta en `POST /api/agente/confirmar` con `{ scanId, token }` (o la tool MCP `confirm_repo`).
+6. **Solo con `{ autorizado: true }` la IA continúa.** La aprobación queda registrada como decisión humana sobre el veredicto original.
+
+### Garantías del token
+
+| Propiedad | Garantía |
+|---|---|
+| **Atado al escaneo** | Un token generado para otro `scanId` no autoriza nada |
+| **Un solo uso** | Una verificación exitosa lo consume; ante un `403` hay que regenerarlo |
+| **Uno por escaneo** | Generar un token nuevo invalida el anterior |
+| **Fail-closed** | Sin token válido la IA no puede abrir el artefacto: el riesgo solo se asume por habilitación humana |
+| **Trazable** | La aprobación queda persistida junto al escaneo como decisión del operador |
+
 ## 🇦🇷 Por qué encaja en el Eje 2
 
 | Requisito del eje | Cómo lo cumple SIAR |
