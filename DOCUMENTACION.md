@@ -104,6 +104,10 @@ type InformeEjecutivo = {
 ## 5. Cumplimiento Normativo y Cobertura MITRE ATLAS
 
 * **NIST SP 800-30 & ISO 31000**: Evaluación de riesgos basada en matrices de severidad determinista (Crítica, Alta, Media, Baja).
+* **Índice de Confianza Técnico — ponderación causal por gravedad** (sin ejes de probabilidad):
+  * Base `100%`; penalización por hallazgo según severidad: **Crítica −45 / Alta −25 / Media −10 / Baja −5** puntos.
+  * Resultado acotado entre `12.5%` y `99.8%`; techos por dictamen: **RETENIDO ≤ 32.5%**, **REVISAR ≤ 74.0%**.
+  * Disparadores causales del dictamen: crítico determinista (credencial filtrada, Trojan Source), IA maliciosa (confianza ≥ 0.8) o intento de manipulación con respaldo determinista → **RETENIDO**; hallazgo alta, IA sospechosa/maliciosa, `sinEvaluar` o etapa en error → **REVISAR** (fail-safe); sin hallazgos → **LIBERADO 99.8%**.
 * **NIST SSDF (Secure Software Development Framework)**: Control preventivo antes del consumo de componentes externos.
 * **ISO 27001**: Controles de confidencialidad e integridad sobre secretos y credenciales.
 * **MITRE ATLAS AML.T0051**: Detección de inyecciones de prompt estáticas en artefactos de software.

@@ -80,30 +80,46 @@ export function obtenerFrameworkNormativo(
   };
 }
 
+// Matriz de ponderación del Índice de Confianza: penalización en puntos
+// por cada hallazgo según su severidad, sobre una base de 100%.
+export const ponderacionSeveridad: Record<Severidad, number> = {
+  critica: 45,
+  alta: 25,
+  media: 10,
+  baja: 5,
+};
+
+export const CONFIANZA_BASE = 100;
+export const CONFIANZA_PISO = 12.5;
+export const CONFIANZA_MAXIMA = 99.8;
+export const TECHO_RETENIDO = 32.5;
+export const TECHO_REVISAR = 74.0;
+
 export function calcularConfianza(scan: {
   veredicto?: string;
   resumen?: { porSeveridad: Record<Severidad, number> };
   hallazgos: Array<{ severidad: Severidad }>;
 }): { porcentaje: number; etiqueta: string } {
   if (scan.veredicto === "liberado" && scan.hallazgos.length === 0) {
-    return { porcentaje: 99.8, etiqueta: "Certeza Absoluta (Integridad Verificada)" };
+    return { porcentaje: CONFIANZA_MAXIMA, etiqueta: "Certeza Absoluta (Integridad Verificada)" };
   }
 
-  const criticas = scan.resumen?.porSeveridad.critica ?? scan.hallazgos.filter(h => h.severidad === "critica").length;
-  const altas = scan.resumen?.porSeveridad.alta ?? scan.hallazgos.filter(h => h.severidad === "alta").length;
-  const medias = scan.resumen?.porSeveridad.media ?? scan.hallazgos.filter(h => h.severidad === "media").length;
-  const bajas = scan.resumen?.porSeveridad.baja ?? scan.hallazgos.filter(h => h.severidad === "baja").length;
+  const conteo = (sev: Severidad) =>
+    scan.resumen?.porSeveridad[sev] ?? scan.hallazgos.filter(h => h.severidad === sev).length;
 
-  let penalizacion = (criticas * 45) + (altas * 25) + (medias * 10) + (bajas * 5);
-  let resultado = Math.max(12.5, Math.min(99.8, 100 - penalizacion));
+  const penalizacion = ordenSeveridad.reduce(
+    (acc, sev) => acc + conteo(sev) * ponderacionSeveridad[sev],
+    0,
+  );
+  let resultado = Math.max(CONFIANZA_PISO, Math.min(CONFIANZA_MAXIMA, CONFIANZA_BASE - penalizacion));
 
   if (scan.veredicto === "retenido") {
-    resultado = Math.min(resultado, 32.5);
+    resultado = Math.min(resultado, TECHO_RETENIDO);
     return { porcentaje: Number(resultado.toFixed(1)), etiqueta: "Confianza Crítica - Compromiso Severo" };
   }
 
   if (scan.veredicto === "revisar") {
-    resultado = Math.min(resultado, 74.0);
+    resultado = Math.min(resultado, TECHO_REVISAR);
     return { porcentaje: Number(resultado.toFixed(1)), etiqueta: "Confianza Moderada - Requiere Auditoría" };
   }
 

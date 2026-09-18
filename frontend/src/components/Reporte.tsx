@@ -16,6 +16,12 @@ import {
   ordenSeveridad,
   calcularConfianza,
   obtenerFrameworkNormativo,
+  ponderacionSeveridad,
+  CONFIANZA_BASE,
+  CONFIANZA_PISO,
+  CONFIANZA_MAXIMA,
+  TECHO_RETENIDO,
+  TECHO_REVISAR,
 } from "../lib/severidad";
 import { formatearDuracion, marcarInvisibles } from "../lib/texto";
 
@@ -967,6 +973,133 @@ export function Reporte({ scan }: { scan: Scan }) {
                   )}
                 </tbody>
               </table>
+            </div>
+
+            {/* Cálculo algorítmico del Índice de Confianza y ponderación
+                causal por gravedad de hallazgos */}
+            <div className="mt-4 space-y-4">
+              <h3 className="font-mono text-xs font-bold uppercase tracking-[0.16em] text-cian">
+                Cálculo Algorítmico del Índice de Confianza y Ponderación
+                Causal por Gravedad de Hallazgos
+              </h3>
+              <p className="text-xs leading-relaxed text-texto-2">
+                El modelo es determinista y causal: no pondera la probabilidad
+                de que un ataque ocurra, sino el impacto de la gravedad de los
+                hallazgos efectivamente detectados sobre una base de{" "}
+                {CONFIANZA_BASE}%. Un único hallazgo crítico determinista — una
+                credencial filtrada, código Trojan Source — fuerza el dictamen
+                RETENIDO y colapsa el índice, porque compromete la operación
+                completa. MITRE ATLAS indexa cada vector de afectación para su
+                trazabilidad normativa; la ponderación numérica es propia de la
+                plataforma:
+              </p>
+
+              <div className="overflow-x-auto rounded border border-tactico/60 print:overflow-visible">
+                <table className="w-full text-left font-mono text-xs print:text-[10px]">
+                  <thead className="bg-noche/60 border-b border-tactico/50 text-texto-2 uppercase text-[10px] tracking-wider">
+                    <tr>
+                      <th
+                        scope="col"
+                        className="px-4 py-2.5 font-semibold print:px-2.5 print:py-2"
+                      >
+                        Vector de afectación (módulo)
+                      </th>
+                      <th
+                        scope="col"
+                        className="px-4 py-2.5 font-semibold print:px-2.5 print:py-2"
+                      >
+                        Indexación MITRE
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-tactico/40">
+                    {ordenModulos.map((mod) => (
+                      <tr key={mod} className="break-inside-avoid">
+                        <td className="px-4 py-2.5 align-top font-bold text-cian print:px-2.5 print:py-2">
+                          {etiquetaModulo[mod]}
+                        </td>
+                        <td className="px-4 py-2.5 align-top text-texto-2 print:px-2.5 print:py-2">
+                          {obtenerFrameworkNormativo("", mod).mitre}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+
+              <div className="overflow-x-auto rounded border border-tactico/60 print:overflow-visible">
+                <table className="w-full text-left font-mono text-xs print:text-[10px]">
+                  <thead className="bg-noche/60 border-b border-tactico/50 text-texto-2 uppercase text-[10px] tracking-wider">
+                    <tr>
+                      <th
+                        scope="col"
+                        className="px-4 py-2.5 font-semibold print:px-2.5 print:py-2"
+                      >
+                        Condición
+                      </th>
+                      <th
+                        scope="col"
+                        className="px-4 py-2.5 font-semibold print:px-2.5 print:py-2"
+                      >
+                        Efecto sobre el índice
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-tactico/40">
+                    {ordenSeveridad.map((sev) => (
+                      <tr key={sev} className="break-inside-avoid">
+                        <td className="px-4 py-2.5 align-top print:px-2.5 print:py-2">
+                          <EtiquetaSeveridad severidad={sev} />
+                        </td>
+                        <td className="px-4 py-2.5 align-top text-texto-2 print:px-2.5 print:py-2">
+                          −{ponderacionSeveridad[sev]} pts por hallazgo
+                        </td>
+                      </tr>
+                    ))}
+                    <tr className="break-inside-avoid">
+                      <td className="px-4 py-2.5 align-top font-bold text-sello-retenido print:px-2.5 print:py-2">
+                        Dictamen RETENIDO — disparador causal: hallazgo crítico
+                        determinista (credencial filtrada, Trojan Source), IA
+                        maliciosa (confianza ≥ 0.8) o intento de manipulación
+                        con respaldo determinista
+                      </td>
+                      <td className="px-4 py-2.5 align-top text-texto-2 print:px-2.5 print:py-2">
+                        Techo absoluto de {TECHO_RETENIDO}%
+                      </td>
+                    </tr>
+                    <tr className="break-inside-avoid">
+                      <td className="px-4 py-2.5 align-top font-bold text-sello-revisar print:px-2.5 print:py-2">
+                        Dictamen REVISAR — disparador causal: hallazgo ALTA, IA
+                        sospechosa/maliciosa, hallazgo sin evaluar o etapa en
+                        error (fail-safe)
+                      </td>
+                      <td className="px-4 py-2.5 align-top text-texto-2 print:px-2.5 print:py-2">
+                        Techo absoluto de {TECHO_REVISAR}%
+                      </td>
+                    </tr>
+                    <tr className="break-inside-avoid">
+                      <td className="px-4 py-2.5 align-top font-bold text-sello-liberado print:px-2.5 print:py-2">
+                        LIBERADO — sin hallazgos ni etapas en error
+                      </td>
+                      <td className="px-4 py-2.5 align-top text-texto-2 print:px-2.5 print:py-2">
+                        {CONFIANZA_MAXIMA}% (integridad verificada)
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+
+              <p className="text-[11px] leading-relaxed text-texto-2/80">
+                Índice resultante = max({CONFIANZA_PISO}, min({CONFIANZA_MAXIMA},{" "}
+                {CONFIANZA_BASE} − Σ penalizaciones)), acotado luego por el techo
+                del dictamen. Ejemplo: 1 hallazgo crítico + 1 medio →{" "}
+                {CONFIANZA_BASE} − {ponderacionSeveridad.critica} −{" "}
+                {ponderacionSeveridad.media} ={" "}
+                {CONFIANZA_BASE -
+                  ponderacionSeveridad.critica -
+                  ponderacionSeveridad.media}
+                %.
+              </p>
             </div>
 
             {informe?.justificacionNormativa ? (
