@@ -4,7 +4,7 @@
 
 ### Hackathon Nacional de Ciberdefensa — *"La Ciberdefensa necesita de todos"*
 
-<img src="frontend/public/logo.png" alt="Aduana" width="140" />
+<img src="frontend/public/logo.png" alt="SIAR" width="140" />
 
 ## Eje 2 — Inteligencia artificial para la defensa de redes e infraestructura
 
@@ -14,15 +14,15 @@
 
 ---
 
-# 🛂 ADUANA
+# 🛂 SIAR
 
-**Control de seguridad local para agentes de IA que programan.**
+**Sistema de Inspección de Archivos y Repositorios** — control de seguridad local para agentes de IA que programan.
 
-Aduana se para como una aduana real entre el mundo exterior y el agente de IA: antes de que un repositorio o un paquete llegue al asistente, lo descarga en un entorno aislado, lo analiza (sin ejecutar nada de su contenido) y emite un veredicto vinculante:
+SIAR se para como una aduana real entre el mundo exterior y el agente de IA: antes de que un repositorio o un paquete llegue al asistente, lo descarga en un entorno aislado, lo analiza (sin ejecutar nada de su contenido) y emite un veredicto vinculante:
 
 ### 🟢 LIBERADO · 🟡 REVISAR · 🔴 RETENIDO
 
-El agente consulta a Aduana por **MCP** (`check_package`, `check_repo`) antes de instalar o abrir algo, y una persona puede seguir el análisis en vivo desde la API, la CLI o la interfaz web, que genera un **informe ejecutivo formal imprimible** con sustentación normativa.
+El agente consulta a SIAR por **MCP** (`check_package`, `check_repo`) antes de instalar o abrir algo, y una persona puede seguir el análisis en vivo desde la API, la CLI o la interfaz web, que genera un **informe ejecutivo formal imprimible** con sustentación normativa.
 
 ---
 
@@ -50,13 +50,13 @@ El informe ejecutivo se emite con sustentación normativa **determinista** (las 
 
 | Marco | Rol |
 |---|---|
-| **MITRE ATLAS** | Framework técnico de amenazas contra sistemas con IA: `AML.T0051` (LLM Prompt Injection), `AML.T0010` (AI Supply Chain Compromise), evasión por ofuscación. Aduana es una mitigación de frontera que intercepta el kill-chain en el punto de ingesta. |
+| **MITRE ATLAS** | Framework técnico de amenazas contra sistemas con IA: `AML.T0051` (LLM Prompt Injection), `AML.T0010` (AI Supply Chain Compromise), evasión por ofuscación. SIAR es una mitigación de frontera que intercepta el kill-chain en el punto de ingesta. |
 | **Res. 1380/2019 — MinDefensa, Art. 1°** | Ciberdefensa = *anticipar y prevenir* ciberataques y ciberexplotación: la evaluación en cuarentena antes de la ingesta es anticipación por diseño. |
 | **Ley 23.554 · Decreto 703/18 · Res. 829/19 · Res. 1523/19** | Defensa Nacional, DPDN, Estrategia Nacional de Ciberseguridad e Infraestructuras Críticas de Información. |
 
 ## 🇦🇷 Por qué encaja en el Eje 2
 
-| Requisito del eje | Cómo lo cumple Aduana |
+| Requisito del eje | Cómo lo cumple SIAR |
 |---|---|
 | **Detectar** | 4 analizadores deterministas + SAST + triage semántico con LLM local |
 | **Priorizar** | Severidades, Índice de Confianza con penalizaciones ponderadas y techos por veredicto |
@@ -106,7 +106,7 @@ Interfaz de control previo: ingesta de objetivos, seguimiento en vivo del pipeli
 - **Stack:** React 18 · TypeScript · Vite · Tailwind CSS 4 · TanStack Query · React Router · Zod · Oxlint
 - **Tipografía:** Atkinson Hyperlegible + JetBrains Mono (Fontsource)
 - **Rutas:** `/` nueva inspección · `/escaneos/:id` escaneo e informe · `/historial` · `/agente`
-- **Demo sin backend:** `VITE_USE_MOCKS=true` corre la interfaz con datos sintéticos
+- **Demo sin backend:** `VITE_USE_MOCKS=true` (en `frontend/.env`) corre la interfaz con datos sintéticos — incluye los escaneos demo `demo-001` (repo C4ISR, retenido), `demo-002` (`npm:date-fns`, liberado) y `demo-003` (repo logístico, revisar)
 
 ```bash
 cd frontend
@@ -169,6 +169,6 @@ cd frontend && npm run lint && npm run build && npm test
 
 <div align="center">
 
-**Documento emitido por la plataforma soberana Aduana** · Eje 2 — IA para la defensa de redes e infraestructura
+**Documento emitido por la plataforma soberana SIAR** · Eje 2 — IA para la defensa de redes e infraestructura
 
 </div>

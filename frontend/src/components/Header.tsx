@@ -149,7 +149,7 @@ export function Header({ timeline }: HeaderProps) {
                 >
                   <div className="border-b border-tactico/60 px-4 py-3">
                     <p className="font-sans text-sm font-bold text-texto">
-                      Usuario SIVAR
+                      Usuario SIAR
                     </p>
                     <p className="font-mono text-[11px] text-texto-2">
                       operador@fie.undef
