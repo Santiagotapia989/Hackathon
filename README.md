@@ -2,7 +2,7 @@
 
 # 🏆 HACKATHON CYBER.AR 2026
 
-### Hackathon Nacional de Ciberdefensa — *"La Ciberdefensa necesita de todos"*
+### Hackathon Nacional de Ciberdefensa — *"La Ciberdefensa depende de todos"*
 
 <img src="frontend/public/logo.png" alt="SIAR" width="140" />
 
